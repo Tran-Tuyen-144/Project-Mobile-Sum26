@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../theme/app_colors.dart';
 import '../../widgets/section_title.dart';
 import '../../widgets/soft_card.dart';
 
 class CustomerHomeScreen extends StatelessWidget {
-  const CustomerHomeScreen({super.key});
+  final VoidCallback onOpenBooking;
+  final VoidCallback onOpenOrder;
+  final VoidCallback onOpenServices;
+  final VoidCallback onOpenMap;
+  final VoidCallback onOpenCommunity;
+
+  const CustomerHomeScreen({
+    super.key,
+    required this.onOpenBooking,
+    required this.onOpenOrder,
+    required this.onOpenServices,
+    required this.onOpenMap,
+    required this.onOpenCommunity,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +27,9 @@ class CustomerHomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _WelcomeBanner(),
+          _WelcomeBanner(
+            onExplore: onOpenBooking,
+          ),
 
           const SizedBox(height: 24),
 
@@ -32,7 +46,7 @@ class CustomerHomeScreen extends StatelessWidget {
                   icon: Icons.event_seat_rounded,
                   title: 'Đặt bàn',
                   color: AppColors.peach,
-                  onTap: () => context.push('/booking'),
+                  onTap: onOpenBooking,
                 ),
               ),
               const SizedBox(width: 12),
@@ -41,7 +55,7 @@ class CustomerHomeScreen extends StatelessWidget {
                   icon: Icons.local_cafe_rounded,
                   title: 'Gọi món',
                   color: AppColors.primarySoft,
-                  onTap: () => context.push('/order'),
+                  onTap: onOpenOrder,
                 ),
               ),
             ],
@@ -56,7 +70,7 @@ class CustomerHomeScreen extends StatelessWidget {
                   icon: Icons.map_rounded,
                   title: 'Tìm quán',
                   color: AppColors.sky,
-                  onTap: () => context.push('/map'),
+                  onTap: onOpenMap,
                 ),
               ),
               const SizedBox(width: 12),
@@ -65,7 +79,7 @@ class CustomerHomeScreen extends StatelessWidget {
                   icon: Icons.forum_rounded,
                   title: 'Cộng đồng',
                   color: AppColors.lavender,
-                  onTap: () => context.push('/community'),
+                  onTap: onOpenCommunity,
                 ),
               ),
             ],
@@ -76,24 +90,28 @@ class CustomerHomeScreen extends StatelessWidget {
           SectionTitle(
             title: 'Chi nhánh gần bạn',
             actionText: 'Xem thêm',
-            onActionTap: () => context.push('/map'),
+            onActionTap: onOpenMap,
           ),
 
           const SizedBox(height: 12),
 
-          const _BranchList(),
+          _BranchList(
+            onOpenMap: onOpenMap,
+          ),
 
           const SizedBox(height: 26),
 
           SectionTitle(
             title: 'Dịch vụ nổi bật',
             actionText: 'Tất cả',
-            onActionTap: () => context.push('/services'),
+            onActionTap: onOpenServices,
           ),
 
           const SizedBox(height: 12),
 
-          const _ServicePreview(),
+          _ServicePreview(
+            onOpenServices: onOpenServices,
+          ),
         ],
       ),
     );
@@ -101,7 +119,11 @@ class CustomerHomeScreen extends StatelessWidget {
 }
 
 class _WelcomeBanner extends StatelessWidget {
-  const _WelcomeBanner();
+  final VoidCallback onExplore;
+
+  const _WelcomeBanner({
+    required this.onExplore,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +163,7 @@ class _WelcomeBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
-                  onPressed: () => context.push('/booking'),
+                  onPressed: onExplore,
                   icon: const Icon(Icons.pets_rounded),
                   label: const Text('Khám phá ngay'),
                 ),
@@ -210,7 +232,11 @@ class _QuickActionCard extends StatelessWidget {
 }
 
 class _BranchList extends StatelessWidget {
-  const _BranchList();
+  final VoidCallback onOpenMap;
+
+  const _BranchList({
+    required this.onOpenMap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -248,7 +274,7 @@ class _BranchList extends StatelessWidget {
             width: 230,
             child: SoftCard(
               color: item['color'] as Color,
-              onTap: () => context.push('/map'),
+              onTap: onOpenMap,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -280,31 +306,38 @@ class _BranchList extends StatelessWidget {
 }
 
 class _ServicePreview extends StatelessWidget {
-  const _ServicePreview();
+  final VoidCallback onOpenServices;
+
+  const _ServicePreview({
+    required this.onOpenServices,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       children: [
         _ServiceTile(
           icon: Icons.spa_rounded,
           title: 'Spa thú cưng',
           subtitle: 'Tắm, massage, chăm sóc lông nhẹ nhàng.',
           color: AppColors.peach,
+          onTap: onOpenServices,
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         _ServiceTile(
           icon: Icons.local_hotel_rounded,
           title: 'Khách sạn thú cưng',
           subtitle: 'Gửi bé yêu khi bạn bận đi học, đi làm.',
           color: AppColors.mint,
+          onTap: onOpenServices,
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         _ServiceTile(
           icon: Icons.medical_services_rounded,
           title: 'Bệnh viện thú y',
           subtitle: 'Tra cứu phòng khám và dịch vụ gần nhất.',
           color: AppColors.sky,
+          onTap: onOpenServices,
         ),
       ],
     );
@@ -316,19 +349,21 @@ class _ServiceTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
+  final VoidCallback onTap;
 
   const _ServiceTile({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.color,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return SoftCard(
       color: Colors.white,
-      onTap: () => context.push('/services'),
+      onTap: onTap,
       child: Row(
         children: [
           CircleAvatar(

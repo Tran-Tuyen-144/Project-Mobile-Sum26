@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../booking_confirm/booking_confirm_data.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
@@ -210,9 +212,18 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
               onPressed: selectedTable == null
                   ? null
                   : () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Đã tạo giao diện đặt bàn mẫu.'),
+                final tableName = tables
+                    .firstWhere((item) => item.id == selectedTable)
+                    .name;
+
+                context.push(
+                  '/booking-confirm',
+                  extra: BookingConfirmData(
+                    branch: branches[selectedBranch],
+                    day: days[selectedDay],
+                    time: times[selectedTime],
+                    guests: selectedGuest,
+                    tableName: tableName,
                   ),
                 );
               },

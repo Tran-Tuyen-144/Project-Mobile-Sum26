@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import '../screens/customer/profile/customer_profile_screen.dart';
 import '../screens/role_select_screen.dart';
 import '../screens/customer/customer_shell_screen.dart';
-import '../screens/customer/booking/customer_booking_screen.dart';
-import '../screens/customer/placeholder_feature_screen.dart';
+import '../screens/customer/booking/customer_drink_order_screen.dart';
+import '../screens/customer/notifications/customer_notification_screen.dart';
+import '../screens/customer/booking_confirm/booking_confirm_data.dart';
+import '../screens/customer/booking_confirm/booking_confirm_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -20,10 +22,23 @@ final GoRouter appRouter = GoRouter(
     ),
 
     GoRoute(
+      path: '/notifications',
+      name: 'notifications',
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Thông báo'),
+          ),
+          body: const CustomerNotificationScreen(),
+        );
+      },
+    ),
+
+    GoRoute(
       path: '/customer',
       name: 'customer',
       builder: (context, state) {
-        return const CustomerShellScreen();
+        return const CustomerShellScreen(initialIndex: 0);
       },
     ),
 
@@ -31,11 +46,67 @@ final GoRouter appRouter = GoRouter(
       path: '/booking',
       name: 'booking',
       builder: (context, state) {
+        return const CustomerShellScreen(initialIndex: 1);
+      },
+    ),
+
+    GoRoute(
+      path: '/services',
+      name: 'services',
+      builder: (context, state) {
+        return const CustomerShellScreen(initialIndex: 2);
+      },
+    ),
+
+    GoRoute(
+      path: '/map',
+      name: 'map',
+      builder: (context, state) {
+        return const CustomerShellScreen(initialIndex: 3);
+      },
+    ),
+
+    GoRoute(
+      path: '/community',
+      name: 'community',
+      builder: (context, state) {
+        return const CustomerShellScreen(initialIndex: 4);
+      },
+    ),
+
+    GoRoute(
+      path: '/profile',
+      name: 'profile',
+      builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Đặt bàn'),
+            title: const Text('Hồ sơ cá nhân'),
           ),
-          body: const CustomerBookingScreen(),
+          body: const CustomerProfileScreen(),
+        );
+      },
+    ),
+
+    GoRoute(
+      path: '/booking-confirm',
+      name: 'booking-confirm',
+      builder: (context, state) {
+        final data = state.extra as BookingConfirmData?;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Xác nhận đặt bàn'),
+          ),
+          body: BookingConfirmScreen(
+            data: data ??
+                const BookingConfirmData(
+                  branch: 'PetHub Quận 1',
+                  day: 'Hôm nay',
+                  time: '18:00',
+                  guests: 2,
+                  tableName: 'Bàn A1',
+                ),
+          ),
         );
       },
     ),
@@ -46,70 +117,13 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Gọi món'),
+            title: const Text('Gọi nước trước'),
           ),
-          body: const PlaceholderFeatureScreen(
-            icon: Icons.local_cafe_rounded,
-            title: 'Gọi món',
-            subtitle:
-            'Màn này sẽ dùng để chọn nước, bánh ngọt và đặt món trước khi đến quán.',
-          ),
-        );
-      },
-    ),
-
-    GoRoute(
-      path: '/services',
-      name: 'services',
-      builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Dịch vụ thú cưng'),
-          ),
-          body: const PlaceholderFeatureScreen(
-            icon: Icons.spa_rounded,
-            title: 'Dịch vụ thú cưng',
-            subtitle:
-            'Màn này sẽ có spa, khách sạn thú cưng, bệnh viện thú y và grooming.',
-          ),
-        );
-      },
-    ),
-
-    GoRoute(
-      path: '/map',
-      name: 'map',
-      builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Bản đồ'),
-          ),
-          body: const PlaceholderFeatureScreen(
-            icon: Icons.map_rounded,
-            title: 'Bản đồ',
-            subtitle:
-            'Màn này trước mắt làm UI giả lập bản đồ, sau đó mới gắn Google Maps API.',
-          ),
-        );
-      },
-    ),
-
-    GoRoute(
-      path: '/community',
-      name: 'community',
-      builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Cộng đồng'),
-          ),
-          body: const PlaceholderFeatureScreen(
-            icon: Icons.forum_rounded,
-            title: 'Cộng đồng',
-            subtitle:
-            'Màn này sẽ có bài viết, hình ảnh thú cưng và bình luận.',
-          ),
+          body: const CustomerDrinkOrderScreen(),
         );
       },
     ),
   ],
+
+
 );

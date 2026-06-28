@@ -1,20 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import 'map/customer_map_screen.dart';
 import '../../theme/app_colors.dart';
 import 'customer_home_screen.dart';
 import 'placeholder_feature_screen.dart';
-import 'booking/customer_booking_screen.dart';
 
+import 'booking/customer_booking_screen.dart';
+import 'services/customer_services_screen.dart';
+import 'community/customer_community_screen.dart';
 class CustomerShellScreen extends StatefulWidget {
-  const CustomerShellScreen({super.key});
+  final int initialIndex;
+
+  const CustomerShellScreen({
+    super.key,
+    this.initialIndex = 0,
+  });
 
   @override
   State<CustomerShellScreen> createState() => _CustomerShellScreenState();
 }
 
 class _CustomerShellScreenState extends State<CustomerShellScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   final List<String> _titles = const [
     'PetHub',
@@ -24,119 +31,139 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
     'Cộng đồng',
   ];
 
-  void _backToRoleSelect() {
-    // Nếu màn này được mở bằng context.push('/customer')
-    // thì context.pop() sẽ quay về màn chọn chức vụ.
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
+
+  void _goToTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  void _handleBack() {
+    // Nếu đang ở tab khác Home thì quay về Home trước
+    if (_currentIndex != 0) {
+      setState(() {
+        _currentIndex = 0;
+      });
+      return;
+    }
+
+    // Nếu đang ở Home thì mới quay về màn chọn chức vụ
     if (context.canPop()) {
       context.pop();
     } else {
-      // Trường hợp không còn màn trước đó trong stack,
-      // đưa về thẳng màn chọn chức vụ.
       context.go('/');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> screens = const [
-      CustomerHomeScreen(),
-
-      CustomerBookingScreen(),
-
-      PlaceholderFeatureScreen(
-        icon: Icons.spa_rounded,
-        title: 'Dịch vụ thú cưng',
-        subtitle:
-        'Màn này sẽ có spa, khách sạn thú cưng, bệnh viện thú y và grooming.',
+    final List<Widget> screens = [
+      CustomerHomeScreen(
+        onOpenBooking: () => _goToTab(1),
+        onOpenOrder: () => context.push('/order'),
+        onOpenServices: () => _goToTab(2),
+        onOpenMap: () => _goToTab(3),
+        onOpenCommunity: () => _goToTab(4),
       ),
 
-      PlaceholderFeatureScreen(
-        icon: Icons.map_rounded,
-        title: 'Bản đồ',
-        subtitle:
-        'Màn này trước mắt làm UI giả lập bản đồ, sau đó mới gắn Google Maps API.',
-      ),
+      const CustomerBookingScreen(),
 
-      PlaceholderFeatureScreen(
-        icon: Icons.forum_rounded,
-        title: 'Cộng đồng',
-        subtitle: 'Màn này sẽ có bài viết, hình ảnh thú cưng và bình luận.',
-      ),
+      const CustomerServicesScreen(),
+
+      const CustomerMapScreen(),
+
+      const CustomerCommunityScreen(),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: _backToRoleSelect,
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            onPressed: _handleBack,
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          ),
+          title: Text(_titles[_currentIndex]),
+          actions: [
+            IconButton(
+              onPressed: () {
+                context.push('/notifications');
+              },
+              icon: const Icon(Icons.notifications_none_rounded),
+            ),
+            IconButton(
+              onPressed: () {
+                context.push('/profile');
+              },
+              icon: const Icon(Icons.person_outline_rounded),
+            ),
+          ],
         ),
-        title: Text(_titles[_currentIndex]),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_none_rounded),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.person_outline_rounded),
-          ),
-        ],
-      ),
 
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
+        body: IndexedStack(
+          index: _currentIndex,
+          children: screens,
+        ),
 
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(
-              Icons.home_rounded,
-              color: AppColors.primary,
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(
+                Icons.home_rounded,
+                color: AppColors.primary,
+              ),
+              label: 'Home',
             ),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.event_seat_outlined),
-            selectedIcon: Icon(
-              Icons.event_seat_rounded,
-              color: AppColors.primary,
+            NavigationDestination(
+              icon: Icon(Icons.event_seat_outlined),
+              selectedIcon: Icon(
+                Icons.event_seat_rounded,
+                color: AppColors.primary,
+              ),
+              label: 'Đặt bàn',
             ),
-            label: 'Đặt bàn',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.spa_outlined),
-            selectedIcon: Icon(
-              Icons.spa_rounded,
-              color: AppColors.primary,
+            NavigationDestination(
+              icon: Icon(Icons.spa_outlined),
+              selectedIcon: Icon(
+                Icons.spa_rounded,
+                color: AppColors.primary,
+              ),
+              label: 'Dịch vụ',
             ),
-            label: 'Dịch vụ',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(
-              Icons.map_rounded,
-              color: AppColors.primary,
+            NavigationDestination(
+              icon: Icon(Icons.map_outlined),
+              selectedIcon: Icon(
+                Icons.map_rounded,
+                color: AppColors.primary,
+              ),
+              label: 'Map',
             ),
-            label: 'Map',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.forum_outlined),
-            selectedIcon: Icon(
-              Icons.forum_rounded,
-              color: AppColors.primary,
+            NavigationDestination(
+              icon: Icon(Icons.forum_outlined),
+              selectedIcon: Icon(
+                Icons.forum_rounded,
+                color: AppColors.primary,
+              ),
+              label: 'Forum',
             ),
-            label: 'Forum',
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
