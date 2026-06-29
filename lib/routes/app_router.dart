@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../screens/admin/admin_main_screen.dart';
 import '../screens/customer/profile/customer_profile_screen.dart';
 import '../screens/role_select_screen.dart';
 import '../screens/customer/customer_shell_screen.dart';
@@ -121,6 +122,13 @@ final GoRouter appRouter = GoRouter(
           ),
           body: const CustomerDrinkOrderScreen(),
         );
+      },
+    ),
+    GoRoute(
+      path: '/admin',
+      name: 'admin',
+      builder: (context, state) {
+        return const AdminMainScreen();
       },
     ),
   ],
