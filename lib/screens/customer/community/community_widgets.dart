@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../../theme/app_colors.dart';
@@ -162,6 +164,7 @@ class CommunityPostCard extends StatelessWidget {
   final bool isSaved;
   final VoidCallback onLike;
   final VoidCallback onSave;
+  final VoidCallback onShare;
   final VoidCallback onOpenDetail;
 
   const CommunityPostCard({
@@ -171,6 +174,7 @@ class CommunityPostCard extends StatelessWidget {
     required this.isSaved,
     required this.onLike,
     required this.onSave,
+    required this.onShare,
     required this.onOpenDetail,
   });
 
@@ -180,7 +184,6 @@ class CommunityPostCard extends StatelessWidget {
 
     return SoftCard(
       color: Colors.white,
-      onTap: onOpenDetail,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -226,27 +229,19 @@ class CommunityPostCard extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 14),
-
           Text(
             post.content,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               height: 1.45,
             ),
           ),
-
           const SizedBox(height: 14),
-
-          _FakePetImage(
-            color: post.color,
-            icon: post.petIcon,
-            category: post.category,
-          ),
-
+          _PostMedia(post: post),
           const SizedBox(height: 14),
-
-          Row(
+          Wrap(
+            spacing: 10,
+            runSpacing: 8,
             children: [
               _PostAction(
                 icon: isLiked
@@ -256,25 +251,23 @@ class CommunityPostCard extends StatelessWidget {
                 active: isLiked,
                 onTap: onLike,
               ),
-              const SizedBox(width: 16),
               _PostAction(
                 icon: Icons.chat_bubble_outline_rounded,
-                label: '${post.comments}',
+                label: '${post.totalComments}',
                 active: false,
                 onTap: onOpenDetail,
               ),
-              const SizedBox(width: 16),
               _PostAction(
                 icon: Icons.share_rounded,
                 label: 'Chia sẻ',
                 active: false,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã giả lập chia sẻ bài viết.'),
-                    ),
-                  );
-                },
+                onTap: onShare,
+              ),
+              _PostAction(
+                icon: Icons.open_in_full_rounded,
+                label: 'Chi tiết',
+                active: false,
+                onTap: onOpenDetail,
               ),
             ],
           ),
@@ -284,58 +277,44 @@ class CommunityPostCard extends StatelessWidget {
   }
 }
 
-class _FakePetImage extends StatelessWidget {
-  final Color color;
-  final IconData icon;
-  final String category;
+class _PostMedia extends StatelessWidget {
+  final CommunityPost post;
 
-  const _FakePetImage({
-    required this.color,
-    required this.icon,
-    required this.category,
+  const _PostMedia({
+    required this.post,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasImage = post.imagePath != null &&
+        post.imagePath!.isNotEmpty &&
+        File(post.imagePath!).existsSync();
+
+    if (hasImage) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Image.file(
+          File(post.imagePath!),
+          height: 190,
+          width: double.infinity,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+
     return Container(
       height: 160,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.85),
+        color: post.color.withOpacity(0.85),
         borderRadius: BorderRadius.circular(24),
       ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: 18,
-            top: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 7,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.75),
-                borderRadius: BorderRadius.circular(99),
-              ),
-              child: Text(
-                category,
-                style: const TextStyle(
-                  color: AppColors.textDark,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ),
-          Center(
-            child: Icon(
-              icon,
-              size: 74,
-              color: AppColors.textDark.withOpacity(0.72),
-            ),
-          ),
-        ],
+      child: Center(
+        child: Icon(
+          post.petIcon,
+          size: 74,
+          color: AppColors.textDark.withOpacity(0.72),
+        ),
       ),
     );
   }
@@ -356,123 +335,19 @@ class _PostAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(99),
-      onTap: onTap,
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: active ? AppColors.primary : AppColors.textSoft,
-          ),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              color: active ? AppColors.primary : AppColors.textSoft,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-        ],
+    return OutlinedButton.icon(
+      onPressed: onTap,
+      icon: Icon(
+        icon,
+        size: 18,
+        color: active ? AppColors.primary : AppColors.textSoft,
       ),
-    );
-  }
-}
-
-class CommunityPostDetailSheet extends StatelessWidget {
-  final CommunityPost post;
-
-  const CommunityPostDetailSheet({
-    super.key,
-    required this.post,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 26),
-      decoration: const BoxDecoration(
-        color: AppColors.cream,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(32),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 48,
-              height: 5,
-              decoration: BoxDecoration(
-                color: AppColors.textSoft.withOpacity(0.35),
-                borderRadius: BorderRadius.circular(99),
-              ),
-            ),
-            const SizedBox(height: 22),
-            CircleAvatar(
-              radius: 42,
-              backgroundColor: post.color,
-              child: Icon(
-                post.petIcon,
-                color: AppColors.textDark,
-                size: 40,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              post.authorName,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 5),
-            Text(
-              '${post.authorRole} • ${post.timeAgo}',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 18),
-            SoftCard(
-              color: Colors.white,
-              child: Text(
-                post.content,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  height: 1.5,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    icon: const Icon(Icons.chat_bubble_outline_rounded),
-                    label: const Text('Bình luận'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Đã lưu bài viết vào mục yêu thích.'),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.bookmark_rounded),
-                    label: const Text('Lưu bài'),
-                  ),
-                ),
-              ],
-            ),
-          ],
+      label: Text(
+        label,
+        style: TextStyle(
+          color: active ? AppColors.primary : AppColors.textSoft,
+          fontWeight: FontWeight.w800,
+          fontSize: 13,
         ),
       ),
     );

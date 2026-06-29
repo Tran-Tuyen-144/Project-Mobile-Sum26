@@ -7,7 +7,8 @@ import '../screens/customer/booking/customer_drink_order_screen.dart';
 import '../screens/customer/notifications/customer_notification_screen.dart';
 import '../screens/customer/booking_confirm/booking_confirm_data.dart';
 import '../screens/customer/booking_confirm/booking_confirm_screen.dart';
-
+import '../screens/customer/community/community_post_detail_screen.dart';
+import '../screens/customer/community/create_community_post_screen.dart';
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   overridePlatformDefaultLocation: true,
@@ -39,6 +40,19 @@ final GoRouter appRouter = GoRouter(
       name: 'customer',
       builder: (context, state) {
         return const CustomerShellScreen(initialIndex: 0);
+      },
+    ),
+
+    GoRoute(
+      path: '/community/create-post',
+      name: 'community-create-post',
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Tạo bài viết'),
+          ),
+          body: const CreateCommunityPostScreen(),
+        );
       },
     ),
 
@@ -84,6 +98,18 @@ final GoRouter appRouter = GoRouter(
           ),
           body: const CustomerProfileScreen(),
         );
+      },
+    ),
+
+    GoRoute(
+      path: '/community/post-detail',
+      name: 'community-post-detail',
+      builder: (context, state) {
+        final args = state.extra is PostDetailArgs
+            ? state.extra as PostDetailArgs
+            : PostDetailArgs.fallback();
+
+        return CommunityPostDetailScreen(args: args);
       },
     ),
 
