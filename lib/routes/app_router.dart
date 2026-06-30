@@ -9,6 +9,8 @@ import '../screens/customer/booking_confirm/booking_confirm_data.dart';
 import '../screens/customer/booking_confirm/booking_confirm_screen.dart';
 import '../screens/customer/community/community_post_detail_screen.dart';
 import '../screens/customer/community/create_community_post_screen.dart';
+import '../screens/customer/PetProfile/pet_list_screen.dart';
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   overridePlatformDefaultLocation: true,
@@ -85,6 +87,13 @@ final GoRouter appRouter = GoRouter(
       name: 'community',
       builder: (context, state) {
         return const CustomerShellScreen(initialIndex: 4);
+      },
+    ),
+    GoRoute(
+      path: '/pet-profile',
+      name: 'pet-profile',
+      builder: (context, state) {
+        return PetListScreen();
       },
     ),
 

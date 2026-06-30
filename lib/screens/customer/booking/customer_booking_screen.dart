@@ -212,18 +212,19 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
               onPressed: selectedTable == null
                   ? null
                   : () {
-                final tableName = tables
-                    .firstWhere((item) => item.id == selectedTable)
-                    .name;
-
-                context.push(
-                  '/booking-confirm',
-                  extra: BookingConfirmData(
-                    branch: branches[selectedBranch],
-                    day: days[selectedDay],
-                    time: times[selectedTime],
-                    guests: selectedGuest,
-                    tableName: tableName,
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text("Thông báo"),
+                    content: const Text("Đặt bàn thành công!"),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context); // Đóng hộp thoại
+                        },
+                        child: const Text("OK"),
+                      ),
+                    ],
                   ),
                 );
               },
