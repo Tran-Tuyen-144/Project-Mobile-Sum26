@@ -9,6 +9,7 @@ import '../screens/customer/booking_confirm/booking_confirm_data.dart';
 import '../screens/customer/booking_confirm/booking_confirm_screen.dart';
 import '../screens/customer/community/community_post_detail_screen.dart';
 import '../screens/customer/community/create_community_post_screen.dart';
+import '../screens/admin/admin_main_screen.dart';
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   overridePlatformDefaultLocation: true,
@@ -34,6 +35,15 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
+    GoRoute(
+      path: '/admin',
+      name: 'admin',
+      builder: (context, state) {
+        return const AdminMainScreen();
+      },
+    ),
+
 
     GoRoute(
       path: '/customer',

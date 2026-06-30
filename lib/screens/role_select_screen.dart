@@ -70,11 +70,7 @@ class RoleSelectScreen extends StatelessWidget {
                 icon: Icons.admin_panel_settings_rounded,
                 color: AppColors.mint,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Phần Admin mình sẽ làm sau nha.'),
-                    ),
-                  );
+                  context.push('/admin');
                 },
               ),
 
