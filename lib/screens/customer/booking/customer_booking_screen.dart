@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../booking_confirm/booking_confirm_data.dart';
+import '../../../storage/booking_history_storage.dart';
+import '../../../storage/table_booking_service.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
+import '../booking_confirm/booking_confirm_data.dart';
 import 'customer_drink_order_screen.dart';
+
 class CustomerBookingScreen extends StatefulWidget {
   const CustomerBookingScreen({super.key});
 
@@ -19,6 +22,11 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
   int selectedTime = 1;
   int selectedGuest = 2;
   int? selectedTable;
+  final TextEditingController _customerNameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _noteController = TextEditingController();
+  List<BookingHistoryItem> _bookingHistory = [];
+  final Set<String> _locallyBookedTables = {};
 
   final branches = const [
     'PetHub Quận 1',
@@ -26,21 +34,9 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
     'PetHub Thủ Đức',
   ];
 
-  final days = const [
-    'Hôm nay',
-    'Ngày mai',
-    'Thứ 7',
-    'CN',
-  ];
+  final days = const ['Hôm nay', 'Ngày mai', 'Thứ 7', 'CN'];
 
-  final times = const [
-    '09:00',
-    '10:30',
-    '13:00',
-    '15:30',
-    '18:00',
-    '20:00',
-  ];
+  final times = const ['09:00', '10:30', '13:00', '15:30', '18:00', '20:00'];
 
   final tables = const [
     _TableItem(id: 1, name: 'Bàn A1', seats: 2, status: TableStatus.available),
@@ -50,6 +46,57 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
     _TableItem(id: 5, name: 'Bàn C1', seats: 6, status: TableStatus.booked),
     _TableItem(id: 6, name: 'Bàn C2', seats: 6, status: TableStatus.available),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    TableBookingService.initializeTables();
+    _loadBookingHistory();
+  }
+
+  @override
+  void dispose() {
+    _customerNameController.dispose();
+    _phoneController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadBookingHistory() async {
+    final history = await BookingHistoryStorage.loadBookings();
+    if (!mounted) return;
+    setState(() {
+      _bookingHistory = history;
+      _locallyBookedTables
+        ..clear()
+        ..addAll(
+          history
+              .where((booking) => booking.status != BookingStatus.cancelled)
+              .map(
+                (booking) => _localBookingKey(booking.branch, booking.tableId),
+              ),
+        );
+    });
+  }
+
+  String _bookingId() {
+    return DateTime.now().microsecondsSinceEpoch.toString();
+  }
+
+  List<TableBookingItem> _localTableItems(String branch) {
+    return tables
+        .map(
+          (item) => TableBookingItem(
+            id: '${branch}_${item.id}',
+            tableId: item.id,
+            name: item.name,
+            seats: item.seats,
+            branch: branch,
+            status: item.status == TableStatus.booked ? 'booked' : 'available',
+          ),
+        )
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +119,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
             onSelected: (index) {
               setState(() {
                 selectedBranch = index;
+                selectedTable = null;
               });
             },
           ),
@@ -127,9 +175,25 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
               if (selectedGuest < 10) {
                 setState(() {
                   selectedGuest++;
+                  final selectedSeats = _selectedTableSeats();
+                  if (selectedSeats != null && selectedGuest > selectedSeats) {
+                    selectedTable = null;
+                  }
                 });
               }
             },
+          ),
+
+          const SizedBox(height: 24),
+
+          const SectionTitle(title: 'Thông tin liên hệ'),
+
+          const SizedBox(height: 12),
+
+          _ContactForm(
+            nameController: _customerNameController,
+            phoneController: _phoneController,
+            noteController: _noteController,
           ),
 
           const SizedBox(height: 24),
@@ -146,17 +210,67 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
 
           const SizedBox(height: 12),
 
-          _TableGrid(
-            tables: tables,
-            selectedTable: selectedTable,
-            onSelected: (table) {
-              if (table.status == TableStatus.booked) {
-                return;
-              }
+          StreamBuilder<List<TableBookingItem>>(
+            stream: TableBookingService.tableStream(branches[selectedBranch]),
+            builder: (context, snapshot) {
+              final isLoading =
+                  snapshot.connectionState == ConnectionState.waiting;
+              final branch = branches[selectedBranch];
+              final tableItems = snapshot.data?.isNotEmpty == true
+                  ? snapshot.data!
+                  : _localTableItems(branch);
+              final displayTables = tableItems
+                  .map(
+                    (table) =>
+                        _locallyBookedTables.contains(
+                          _localBookingKey(branch, table.tableId),
+                        )
+                        ? table.copyWith(status: 'booked')
+                        : table,
+                  )
+                  .toList();
+              final availableCount = displayTables
+                  .where(
+                    (table) => !table.isBooked && table.seats >= selectedGuest,
+                  )
+                  .length;
+              final allTablesBooked = displayTables.every(
+                (table) => table.isBooked,
+              );
 
-              setState(() {
-                selectedTable = table.id;
-              });
+              return isLoading
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  : Column(
+                      children: [
+                        if (availableCount == 0) ...[
+                          _TableUnavailableNotice(
+                            message: allTablesBooked
+                                ? 'Chi nhánh này đã hết bàn trống.'
+                                : 'Không còn bàn phù hợp cho $selectedGuest khách.',
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        _TableGrid(
+                          tables: displayTables,
+                          guests: selectedGuest,
+                          selectedTable: selectedTable,
+                          onSelected: (table) {
+                            if (table.isBooked || table.seats < selectedGuest) {
+                              return;
+                            }
+
+                            setState(() {
+                              selectedTable = table.tableId;
+                            });
+                          },
+                        ),
+                      ],
+                    );
             },
           ),
 
@@ -174,6 +288,25 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
 
           const SizedBox(height: 18),
 
+          if (_bookingHistory.isNotEmpty) ...[
+            SectionTitle(
+              title: 'Lịch sử đặt bàn',
+              actionText: '${_bookingHistory.length} lịch',
+            ),
+            const SizedBox(height: 12),
+            _BookingHistoryList(
+              bookings: _bookingHistory.take(3).toList(),
+              onCancel: (booking) async {
+                await BookingHistoryStorage.updateStatus(
+                  booking.id,
+                  BookingStatus.cancelled,
+                );
+                await _loadBookingHistory();
+              },
+            ),
+            const SizedBox(height: 18),
+          ],
+
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -187,10 +320,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
               },
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF2D6A8D),
-                side: const BorderSide(
-                  color: Color(0xFF8ECAE6),
-                  width: 1.5,
-                ),
+                side: const BorderSide(color: Color(0xFF8ECAE6), width: 1.5),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
@@ -211,22 +341,77 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
             child: ElevatedButton.icon(
               onPressed: selectedTable == null
                   ? null
-                  : () {
-                final tableName = tables
-                    .firstWhere((item) => item.id == selectedTable)
-                    .name;
+                  : () async {
+                      final localContext = context;
+                      final phone = _phoneController.text.trim();
+                      if (!_isValidPhone(phone)) {
+                        ScaffoldMessenger.of(localContext).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Số điện thoại không hợp lệ. Vui lòng nhập đủ 10 số.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      final tableName = tables
+                          .firstWhere((item) => item.id == selectedTable)
+                          .name;
+                      final branch = branches[selectedBranch];
+                      final tableId = selectedTable!;
+                      final now = DateTime.now();
+                      var bookingStatus = BookingStatus.confirmed;
+                      final bookingData = BookingConfirmData(
+                        branch: branch,
+                        day: days[selectedDay],
+                        time: times[selectedTime],
+                        guests: selectedGuest,
+                        tableName: tableName,
+                      );
 
-                context.push(
-                  '/booking-confirm',
-                  extra: BookingConfirmData(
-                    branch: branches[selectedBranch],
-                    day: days[selectedDay],
-                    time: times[selectedTime],
-                    guests: selectedGuest,
-                    tableName: tableName,
-                  ),
-                );
-              },
+                      try {
+                        await TableBookingService.bookTable(branch, tableId);
+                      } catch (error) {
+                        bookingStatus = BookingStatus.pendingSync;
+                      }
+
+                      await BookingHistoryStorage.saveBooking(
+                        BookingHistoryItem(
+                          id: _bookingId(),
+                          createdAt: now,
+                          branch: branch,
+                          day: days[selectedDay],
+                          time: times[selectedTime],
+                          guests: selectedGuest,
+                          tableId: tableId,
+                          tableName: tableName,
+                          customerName: _customerNameController.text.trim(),
+                          phone: phone,
+                          note: _noteController.text.trim(),
+                          status: bookingStatus,
+                        ),
+                      );
+
+                      await _loadBookingHistory();
+
+                      if (!localContext.mounted) return;
+                      if (bookingStatus == BookingStatus.pendingSync) {
+                        ScaffoldMessenger.of(localContext).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Đã lưu lịch đặt bàn trên máy. Firestore sẽ cần kiểm tra lại kết nối/quyền ghi.',
+                            ),
+                          ),
+                        );
+                      }
+                      setState(() {
+                        _locallyBookedTables.add(
+                          _localBookingKey(branch, tableId),
+                        );
+                        selectedTable = null;
+                      });
+                      localContext.push('/booking-confirm', extra: bookingData);
+                    },
               icon: const Icon(Icons.check_circle_rounded),
               label: const Text('Xác nhận đặt bàn'),
             ),
@@ -234,6 +419,24 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
         ],
       ),
     );
+  }
+
+  int? _selectedTableSeats() {
+    final tableId = selectedTable;
+    if (tableId == null) return null;
+
+    for (final table in tables) {
+      if (table.id == tableId) return table.seats;
+    }
+    return null;
+  }
+
+  String _localBookingKey(String branch, int tableId) {
+    return '$branch-$tableId';
+  }
+
+  bool _isValidPhone(String phone) {
+    return RegExp(r'^\d{10}$').hasMatch(phone);
   }
 }
 
@@ -255,7 +458,7 @@ class _BookingHeader extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.75),
+              color: Colors.white.withValues(alpha: 0.75),
               borderRadius: BorderRadius.circular(22),
             ),
             child: const Icon(
@@ -278,14 +481,181 @@ class _BookingHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'Chọn chi nhánh, giờ ghé và chiếc bàn ấm áp cho bạn cùng bé pet.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ContactForm extends StatelessWidget {
+  final TextEditingController nameController;
+  final TextEditingController phoneController;
+  final TextEditingController noteController;
+
+  const _ContactForm({
+    required this.nameController,
+    required this.phoneController,
+    required this.noteController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SoftCard(
+      color: Colors.white,
+      child: Column(
+        children: [
+          TextField(
+            controller: nameController,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Tên khách',
+              hintText: 'Ví dụ: Nguyễn Hiếu',
+              prefixIcon: Icon(Icons.person_outline_rounded),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: phoneController,
+            keyboardType: TextInputType.phone,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Số điện thoại',
+              hintText: 'Nhân viên dùng để xác nhận lịch',
+              prefixIcon: Icon(Icons.phone_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: noteController,
+            minLines: 2,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'Ghi chú',
+              hintText: 'Ví dụ: có bé mèo, cần bàn yên tĩnh...',
+              prefixIcon: Icon(Icons.note_alt_outlined),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BookingHistoryList extends StatelessWidget {
+  final List<BookingHistoryItem> bookings;
+  final ValueChanged<BookingHistoryItem> onCancel;
+
+  const _BookingHistoryList({required this.bookings, required this.onCancel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: bookings.map((booking) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: SoftCard(
+            color: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const CircleAvatar(
+                      backgroundColor: AppColors.peach,
+                      child: Icon(
+                        Icons.event_available_rounded,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${booking.tableName} • ${booking.branch}',
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleMedium?.copyWith(fontSize: 15),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${booking.day} lúc ${booking.time} • ${booking.guests} khách',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                    _StatusPill(status: booking.status),
+                  ],
+                ),
+                if (booking.customerName.isNotEmpty ||
+                    booking.phone.isNotEmpty ||
+                    booking.note.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    [
+                      if (booking.customerName.isNotEmpty)
+                        'Khách: ${booking.customerName}',
+                      if (booking.phone.isNotEmpty) 'SĐT: ${booking.phone}',
+                      if (booking.note.isNotEmpty) 'Ghi chú: ${booking.note}',
+                    ].join(' • '),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+                if (booking.status != BookingStatus.cancelled) ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => onCancel(booking),
+                      icon: const Icon(Icons.cancel_outlined),
+                      label: const Text('Hủy lịch này'),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  final BookingStatus status;
+
+  const _StatusPill({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = status == BookingStatus.confirmed
+        ? AppColors.mint
+        : status == BookingStatus.cancelled
+        ? const Color(0xFFE5E0DC)
+        : AppColors.sky;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(
+        status.label,
+        style: const TextStyle(
+          color: AppColors.textDark,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -331,9 +701,9 @@ class _BranchSelector extends StatelessWidget {
                     children: [
                       Text(
                         branches[index],
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 16,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(fontSize: 16),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -381,7 +751,7 @@ class _HorizontalSelector extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final isSelected = selectedIndex == index;
 
@@ -478,10 +848,7 @@ class _GuestCounter extends StatelessWidget {
         children: [
           const CircleAvatar(
             backgroundColor: AppColors.peach,
-            child: Icon(
-              Icons.groups_rounded,
-              color: AppColors.primary,
-            ),
+            child: Icon(Icons.groups_rounded, color: AppColors.primary),
           ),
 
           const SizedBox(width: 14),
@@ -520,7 +887,7 @@ class _TableLegend extends StatelessWidget {
         SizedBox(width: 14),
         _LegendDot(color: AppColors.primary, text: 'Đang chọn'),
         SizedBox(width: 14),
-        _LegendDot(color: Color(0xFFE5E0DC), text: 'Đã đặt'),
+        _LegendDot(color: Colors.white, text: 'Đã đặt/full'),
       ],
     );
   }
@@ -530,10 +897,7 @@ class _LegendDot extends StatelessWidget {
   final Color color;
   final String text;
 
-  const _LegendDot({
-    required this.color,
-    required this.text,
-  });
+  const _LegendDot({required this.color, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -542,28 +906,56 @@ class _LegendDot extends StatelessWidget {
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(
-          text,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text(text, style: Theme.of(context).textTheme.bodyMedium),
       ],
     );
   }
 }
 
+class _TableUnavailableNotice extends StatelessWidget {
+  final String message;
+
+  const _TableUnavailableNotice({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return SoftCard(
+      color: Colors.white,
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            backgroundColor: AppColors.peach,
+            child: Icon(Icons.event_busy_rounded, color: AppColors.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TableGrid extends StatelessWidget {
-  final List<_TableItem> tables;
+  final List<TableBookingItem> tables;
+  final int guests;
   final int? selectedTable;
-  final ValueChanged<_TableItem> onSelected;
+  final ValueChanged<TableBookingItem> onSelected;
 
   const _TableGrid({
     required this.tables,
+    required this.guests,
     required this.selectedTable,
     required this.onSelected,
   });
@@ -582,13 +974,15 @@ class _TableGrid extends StatelessWidget {
       ),
       itemBuilder: (context, index) {
         final table = tables[index];
-        final isSelected = selectedTable == table.id;
-        final isBooked = table.status == TableStatus.booked;
+        final isSelected = selectedTable == table.tableId;
+        final isBooked = table.isBooked;
+        final isFull = table.seats < guests;
+        final isDisabled = isBooked || isFull;
 
         Color cardColor;
 
-        if (isBooked) {
-          cardColor = const Color(0xFFE5E0DC);
+        if (isDisabled) {
+          cardColor = Colors.white;
         } else if (isSelected) {
           cardColor = AppColors.primary;
         } else {
@@ -597,13 +991,17 @@ class _TableGrid extends StatelessWidget {
 
         return SoftCard(
           color: cardColor,
-          onTap: () => onSelected(table),
+          onTap: isDisabled ? null : () => onSelected(table),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
                 Icons.table_restaurant_rounded,
-                color: isSelected ? Colors.white : AppColors.textDark,
+                color: isSelected
+                    ? Colors.white
+                    : isDisabled
+                    ? AppColors.textSoft
+                    : AppColors.textDark,
               ),
 
               const Spacer(),
@@ -612,14 +1010,22 @@ class _TableGrid extends StatelessWidget {
                 table.name,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontSize: 16,
-                  color: isSelected ? Colors.white : AppColors.textDark,
+                  color: isSelected
+                      ? Colors.white
+                      : isDisabled
+                      ? AppColors.textSoft
+                      : AppColors.textDark,
                 ),
               ),
 
               const SizedBox(height: 4),
 
               Text(
-                isBooked ? 'Đã có khách đặt' : '${table.seats} ghế • Còn trống',
+                isBooked
+                    ? 'Đã có khách đặt'
+                    : isFull
+                    ? 'Full với $guests khách'
+                    : '${table.seats} ghế • Còn trống',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: isSelected ? Colors.white70 : AppColors.textSoft,
                 ),
@@ -675,10 +1081,7 @@ class _SummaryRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _SummaryRow({
-    required this.label,
-    required this.value,
-  });
+  const _SummaryRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -686,10 +1089,7 @@ class _SummaryRow extends StatelessWidget {
       padding: const EdgeInsets.only(top: 7),
       child: Row(
         children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(label, style: Theme.of(context).textTheme.bodyMedium),
           const Spacer(),
           Flexible(
             child: Text(
@@ -707,10 +1107,7 @@ class _SummaryRow extends StatelessWidget {
   }
 }
 
-enum TableStatus {
-  available,
-  booked,
-}
+enum TableStatus { available, booked }
 
 class _TableItem {
   final int id;
