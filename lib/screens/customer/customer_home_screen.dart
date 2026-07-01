@@ -10,6 +10,8 @@ class CustomerHomeScreen extends StatelessWidget {
   final VoidCallback onOpenServices;
   final VoidCallback onOpenMap;
   final VoidCallback onOpenCommunity;
+  final VoidCallback onOpenPetProfile;
+
 
   const CustomerHomeScreen({
     super.key,
@@ -18,6 +20,7 @@ class CustomerHomeScreen extends StatelessWidget {
     required this.onOpenServices,
     required this.onOpenMap,
     required this.onOpenCommunity,
+    required this.onOpenPetProfile,
   });
 
   @override
@@ -81,6 +84,24 @@ class CustomerHomeScreen extends StatelessWidget {
                   color: AppColors.lavender,
                   onTap: onOpenCommunity,
                 ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          Row(
+            children: [
+              Expanded(
+                child: _QuickActionCard(
+                  icon: Icons.pets_rounded,
+                  title: 'Đào',
+                  color: AppColors.mint,
+                  onTap: onOpenPetProfile,
+                ),
+              ),
+              const Expanded(
+                child: SizedBox(),
               ),
             ],
           ),

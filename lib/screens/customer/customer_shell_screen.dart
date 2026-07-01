@@ -69,6 +69,10 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
         onOpenServices: () => _goToTab(2),
         onOpenMap: () => _goToTab(3),
         onOpenCommunity: () => _goToTab(4),
+
+        onOpenPetProfile: () {
+          context.push('/pet-profile');
+        },
       ),
 
       const CustomerBookingScreen(),
