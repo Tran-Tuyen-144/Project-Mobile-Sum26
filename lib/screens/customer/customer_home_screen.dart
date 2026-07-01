@@ -12,7 +12,6 @@ class CustomerHomeScreen extends StatelessWidget {
   final VoidCallback onOpenCommunity;
   final VoidCallback onOpenPetProfile;
 
-
   const CustomerHomeScreen({
     super.key,
     required this.onOpenBooking,
@@ -100,8 +99,14 @@ class CustomerHomeScreen extends StatelessWidget {
                   onTap: onOpenPetProfile,
                 ),
               ),
-              const Expanded(
-                child: SizedBox(),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _QuickActionCard(
+                  icon: Icons.spa_rounded,
+                  title: 'Dịch vụ',
+                  color: AppColors.peach,
+                  onTap: onOpenServices,
+                ),
               ),
             ],
           ),

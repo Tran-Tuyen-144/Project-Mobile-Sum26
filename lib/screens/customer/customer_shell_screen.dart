@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'map/customer_map_screen.dart';
+
 import '../../theme/app_colors.dart';
 import 'customer_home_screen.dart';
-import 'placeholder_feature_screen.dart';
-
 import 'booking/customer_booking_screen.dart';
 import 'services/customer_services_screen.dart';
+import 'map/customer_map_screen.dart';
 import 'community/customer_community_screen.dart';
+
 class CustomerShellScreen extends StatefulWidget {
   final int initialIndex;
 
@@ -44,7 +44,6 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
   }
 
   void _handleBack() {
-    // Nếu đang ở tab khác Home thì quay về Home trước
     if (_currentIndex != 0) {
       setState(() {
         _currentIndex = 0;
@@ -52,7 +51,6 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
       return;
     }
 
-    // Nếu đang ở Home thì mới quay về màn chọn chức vụ
     if (context.canPop()) {
       context.pop();
     } else {
@@ -69,10 +67,7 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
         onOpenServices: () => _goToTab(2),
         onOpenMap: () => _goToTab(3),
         onOpenCommunity: () => _goToTab(4),
-
-        onOpenPetProfile: () {
-          context.push('/pet-profile');
-        },
+        onOpenPetProfile: () => context.push('/pet-profile'),
       ),
 
       const CustomerBookingScreen(),

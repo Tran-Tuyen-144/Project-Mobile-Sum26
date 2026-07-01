@@ -24,6 +24,13 @@ class _BookingPetScreenState extends State<BookingPetScreen> {
   TextEditingController();
 
   @override
+  void dispose() {
+    tableController.dispose();
+    hourController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
 
     return Scaffold(
