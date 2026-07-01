@@ -8,17 +8,17 @@ class PetListScreen extends StatelessWidget {
     {
       "name": "Mailisa",
       "age": "2 tuổi",
-      "image": "assets/images/cat1.jpg",
+      "image": "assets/image/cat1.jpg",
     },
     {
       "name": "Corgi Lucky",
       "age": "3 tuổi",
-      "image": "assets/images/dog1.jpg",
+      "image": "assets/image/dog1.jpg",
     },
     {
       "name": "Golden Max",
       "age": "4 tuổi",
-      "image": "assets/images/dog2.jpg",
+      "image": "assets/image/dog2.jpg",
     },
   ];
 
