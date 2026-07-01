@@ -1,15 +1,85 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../services/firebase_booking_service.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
 import 'booking_confirm_data.dart';
 
-class BookingConfirmScreen extends StatelessWidget {
+class BookingConfirmScreen extends StatefulWidget {
   final BookingConfirmData data;
 
-  const BookingConfirmScreen({super.key, required this.data});
+  const BookingConfirmScreen({
+    super.key,
+    required this.data,
+  });
+
+  @override
+  State<BookingConfirmScreen> createState() => _BookingConfirmScreenState();
+}
+
+class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
+  bool _isSaving = false;
+
+  BookingConfirmData get data => widget.data;
+
+  Future<void> _confirmBooking() async {
+    if (_isSaving) return;
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      await FirebaseBookingService.createBooking(data);
+
+      if (!mounted) return;
+
+      _showSuccessDialog(context);
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không lưu được đặt bàn: $error'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Text('Đặt bàn thành công'),
+          content: Text(
+            'PetHub đã giữ ${data.tableName} tại ${data.branch} cho bạn vào ${data.day} lúc ${data.time}. Lịch đặt bàn đã được lưu.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                context.go('/customer');
+              },
+              child: const Text('Về trang chính'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,9 +154,9 @@ class BookingConfirmScreen extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Vui lòng đến trước giờ hẹn khoảng 10 phút. Nếu cần đổi giờ, bạn có thể liên hệ nhân viên PetHub.',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(height: 1.4),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ],
@@ -101,8 +171,8 @@ class BookingConfirmScreen extends StatelessWidget {
 
           SoftCard(
             color: AppColors.lavender,
-            child: Column(
-              children: const [
+            child: const Column(
+              children: [
                 _PriceRow(label: 'Phí giữ bàn', value: '20.000đ'),
                 SizedBox(height: 10),
                 _PriceRow(label: 'Nước gọi trước', value: 'Chưa chọn'),
@@ -123,7 +193,9 @@ class BookingConfirmScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {
+                  onPressed: _isSaving
+                      ? null
+                      : () {
                     context.pop();
                   },
                   icon: const Icon(Icons.edit_rounded),
@@ -133,43 +205,25 @@ class BookingConfirmScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    _showSuccessDialog(context);
-                  },
-                  icon: const Icon(Icons.check_circle_rounded),
-                  label: const Text('Xác nhận'),
+                  onPressed: _isSaving ? null : _confirmBooking,
+                  icon: _isSaving
+                      ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  )
+                      : const Icon(Icons.check_circle_rounded),
+                  label: Text(
+                    _isSaving ? 'Đang lưu...' : 'Xác nhận',
+                  ),
                 ),
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  void _showSuccessDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: const Text('Đặt bàn thành công'),
-          content: Text(
-            'PetHub đã giữ ${data.tableName} tại ${data.branch} cho bạn vào ${data.day} lúc ${data.time}. Lịch này đã được lưu vào biểu tượng mèo.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                context.pop();
-                context.go('/customer');
-              },
-              child: const Text('Về trang chính'),
-            ),
-          ],
-        );
-      },
     );
   }
 }
@@ -185,7 +239,11 @@ class _ConfirmHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [AppColors.primarySoft, AppColors.peach, AppColors.cream],
+          colors: [
+            AppColors.primarySoft,
+            AppColors.peach,
+            AppColors.cream,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -217,9 +275,9 @@ class _ConfirmHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'Kiểm tra lại thông tin trước khi hoàn tất lịch ghé PetHub.',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(height: 1.4),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -245,9 +303,16 @@ class _ConfirmRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: AppColors.primary, size: 21),
+        Icon(
+          icon,
+          color: AppColors.primary,
+          size: 21,
+        ),
         const SizedBox(width: 10),
-        Text(label, style: Theme.of(context).textTheme.bodyMedium),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
         const Spacer(),
         Flexible(
           child: Text(
