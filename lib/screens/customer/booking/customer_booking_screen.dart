@@ -7,6 +7,7 @@ import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
 import '../booking_confirm/booking_confirm_data.dart';
+import 'cat_saved_data_button.dart';
 import 'customer_drink_order_screen.dart';
 
 class CustomerBookingScreen extends StatefulWidget {
@@ -105,6 +106,11 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Align(
+            alignment: Alignment.centerRight,
+            child: CatSavedDataButton(),
+          ),
+          const SizedBox(height: 10),
           const _BookingHeader(),
 
           const SizedBox(height: 24),
