@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_colors.dart';
-
+import 'admin_shift_assign_screen.dart';
 class AdminShiftsScreen extends StatelessWidget {
   const AdminShiftsScreen({super.key});
 
@@ -16,7 +16,13 @@ class AdminShiftsScreen extends StatelessWidget {
             children: [
               const Text('Lịch làm việc hôm nay', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               TextButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  // Thêm lệnh này để mở màn hình Xếp ca
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AdminShiftAssignScreen()),
+                  );
+                },
                 icon: const Icon(Icons.add, size: 18),
                 label: const Text('Xếp ca'),
               ),
