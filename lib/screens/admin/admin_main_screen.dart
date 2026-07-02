@@ -6,6 +6,7 @@ import 'dashboard/admin_dashboard_screen.dart';
 import 'reservations/admin_reservations_screen.dart';
 import 'shifts/admin_shifts_screen.dart';
 import 'staff/admin_staff_screen.dart';
+import 'manage/admin_manage_screen.dart';
 
 class AdminMainScreen extends StatefulWidget {
   const AdminMainScreen({super.key});
@@ -23,6 +24,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     const AdminReservationsScreen(),
     const AdminShiftsScreen(),
     const AdminStaffScreen(),
+    const AdminManageScreen(),
   ];
 
   @override
@@ -114,6 +116,11 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
               icon: Icon(Icons.badge_rounded),
               activeIcon: Icon(Icons.badge),
               label: 'Nhân viên',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.category_outlined),
+              activeIcon: Icon(Icons.category_rounded),
+              label: 'Danh mục',
             ),
           ],
         ),
