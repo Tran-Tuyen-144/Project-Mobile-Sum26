@@ -13,6 +13,7 @@ import '../screens/customer/community/create_community_post_screen.dart';
 import '../screens/admin/admin_main_screen.dart';
 import '../screens/customer/petprofile/pet_list_screen.dart';
 import '../screens/customer/community/community_post.dart';
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   overridePlatformDefaultLocation: true,
@@ -36,14 +37,6 @@ final GoRouter appRouter = GoRouter(
           ),
           body: const CustomerNotificationScreen(),
         );
-      },
-    ),
-
-    GoRoute(
-      path: '/admin',
-      name: 'admin',
-      builder: (context, state) {
-        return const AdminMainScreen();
       },
     ),
 
