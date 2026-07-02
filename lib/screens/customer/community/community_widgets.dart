@@ -167,6 +167,10 @@ class CommunityPostCard extends StatelessWidget {
   final VoidCallback onShare;
   final VoidCallback onOpenDetail;
 
+  final bool canManage;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
   const CommunityPostCard({
     super.key,
     required this.post,
@@ -176,6 +180,9 @@ class CommunityPostCard extends StatelessWidget {
     required this.onSave,
     required this.onShare,
     required this.onOpenDetail,
+    required this.canManage,
+    required this.onEdit,
+    required this.onDelete,
   });
 
   @override
@@ -189,15 +196,10 @@ class CommunityPostCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 26,
-                backgroundColor: post.color,
-                child: Icon(
-                  post.petIcon,
-                  color: AppColors.textDark,
-                ),
-              ),
+              _PostAuthorAvatar(post: post),
+
               const SizedBox(width: 12),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,6 +220,7 @@ class CommunityPostCard extends StatelessWidget {
                   ],
                 ),
               ),
+
               IconButton(
                 onPressed: onSave,
                 icon: Icon(
@@ -227,18 +230,74 @@ class CommunityPostCard extends StatelessWidget {
                   color: isSaved ? AppColors.primary : AppColors.textSoft,
                 ),
               ),
+
+              if (canManage)
+                PopupMenuButton<String>(
+                  icon: const Icon(
+                    Icons.more_horiz_rounded,
+                    color: AppColors.textSoft,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      onEdit();
+                    }
+
+                    if (value == 'delete') {
+                      onDelete();
+                    }
+                  },
+                  itemBuilder: (context) {
+                    return const [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.edit_rounded,
+                              color: AppColors.primary,
+                            ),
+                            SizedBox(width: 10),
+                            Text('Chỉnh sửa'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.redAccent,
+                            ),
+                            SizedBox(width: 10),
+                            Text('Xóa bài viết'),
+                          ],
+                        ),
+                      ),
+                    ];
+                  },
+                ),
             ],
           ),
+
           const SizedBox(height: 14),
+
           Text(
             post.content,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               height: 1.45,
             ),
           ),
+
           const SizedBox(height: 14),
+
           _PostMedia(post: post),
+
           const SizedBox(height: 14),
+
           Wrap(
             spacing: 10,
             runSpacing: 8,
@@ -272,6 +331,39 @@ class CommunityPostCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PostAuthorAvatar extends StatelessWidget {
+  final CommunityPost post;
+
+  const _PostAuthorAvatar({
+    required this.post,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarPath = post.authorAvatarPath;
+    final hasAvatar = avatarPath != null &&
+        avatarPath.isNotEmpty &&
+        File(avatarPath).existsSync();
+
+    if (hasAvatar) {
+      return CircleAvatar(
+        radius: 26,
+        backgroundColor: post.color,
+        backgroundImage: FileImage(File(avatarPath)),
+      );
+    }
+
+    return CircleAvatar(
+      radius: 26,
+      backgroundColor: post.color,
+      child: Icon(
+        post.petIcon,
+        color: AppColors.textDark,
       ),
     );
   }

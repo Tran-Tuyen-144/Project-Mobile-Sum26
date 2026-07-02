@@ -27,6 +27,97 @@ class _CustomerCommunityScreenState extends State<CustomerCommunityScreen> {
   final List<CommunityPost> userPosts = [];
   final Map<int, CommunityPost> editedPosts = {};
 
+  bool _isUserPost(CommunityPost post) {
+    return userPosts.any((item) => item.id == post.id);
+  }
+
+  Future<void> _editPost(CommunityPost post) async {
+    if (!_isUserPost(post)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chỉ có thể chỉnh sửa bài viết của bạn.'),
+        ),
+      );
+      return;
+    }
+
+    final result = await context.push<CommunityPost>(
+      '/community/create-post',
+      extra: post,
+    );
+
+    if (result == null) return;
+
+    await _replacePost(result);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Đã cập nhật bài viết.'),
+      ),
+    );
+  }
+
+  Future<void> _deletePost(CommunityPost post) async {
+    if (!_isUserPost(post)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chỉ có thể xóa bài viết của bạn.'),
+        ),
+      );
+      return;
+    }
+
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Text('Xóa bài viết?'),
+          content: const Text(
+            'Bài viết sẽ bị xóa khỏi cộng đồng trên thiết bị này.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
+              child: const Text('Hủy'),
+            ),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(true);
+              },
+              icon: const Icon(Icons.delete_outline_rounded),
+              label: const Text('Xóa'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    setState(() {
+      userPosts.removeWhere((item) => item.id == post.id);
+      likedPostIds.remove(post.id);
+      savedPostIds.remove(post.id);
+    });
+
+    await _saveUserPosts();
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Đã xóa bài viết.'),
+      ),
+    );
+  }
+
   bool isLoadingPosts = true;
 
   @override
@@ -281,6 +372,9 @@ ${post.content}
                 onSave: () => _toggleSave(post.id),
                 onShare: () => _sharePost(post),
                 onOpenDetail: () => _openPostDetail(post),
+                canManage: _isUserPost(post),
+                onEdit: () => _editPost(post),
+                onDelete: () => _deletePost(post),
               );
             },
           ),

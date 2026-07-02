@@ -6,7 +6,14 @@ import '../../../theme/app_colors.dart';
 import '../../../widgets/soft_card.dart';
 
 class CreatePostHeader extends StatelessWidget {
-  const CreatePostHeader({super.key});
+  final String title;
+  final String subtitle;
+
+  const CreatePostHeader({
+    super.key,
+    this.title = 'Tạo bài viết',
+    this.subtitle = 'Có thể đăng bài kèm ảnh hoặc không kèm ảnh đều được.',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -46,12 +53,12 @@ class CreatePostHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tạo bài viết',
+                  title,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Có thể đăng bài kèm ảnh hoặc không kèm ảnh đều được.',
+                  subtitle,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     height: 1.4,
                   ),

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../../theme/app_colors.dart';
@@ -5,10 +7,25 @@ import '../../../widgets/soft_card.dart';
 import 'profile_models.dart';
 
 class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({super.key});
+  final String displayName;
+  final String? avatarPath;
+  final VoidCallback onChangeAvatar;
+  final VoidCallback onEditName;
+
+  const ProfileHeader({
+    super.key,
+    required this.displayName,
+    required this.avatarPath,
+    required this.onChangeAvatar,
+    required this.onEditName,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final hasAvatar = avatarPath != null &&
+        avatarPath!.isNotEmpty &&
+        File(avatarPath!).existsSync();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
@@ -26,17 +43,42 @@ class ProfileHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 78,
-            height: 78,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.person_rounded,
-              color: AppColors.primary,
-              size: 42,
+          InkWell(
+            borderRadius: BorderRadius.circular(99),
+            onTap: onChangeAvatar,
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 42,
+                  backgroundColor: Colors.white.withOpacity(0.85),
+                  backgroundImage:
+                  hasAvatar ? FileImage(File(avatarPath!)) : null,
+                  child: hasAvatar
+                      ? null
+                      : const Icon(
+                    Icons.person_rounded,
+                    color: AppColors.primary,
+                    size: 42,
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt_rounded,
+                      color: Colors.white,
+                      size: 17,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -46,13 +88,30 @@ class ProfileHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Trần Mộng Tuyền',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    height: 1.15,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          height: 1.15,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Chỉnh sửa tên',
+                      onPressed: onEditName,
+                      icon: const Icon(
+                        Icons.edit_rounded,
+                        color: AppColors.primary,
+                        size: 21,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 2),
                 Text(
                   'Khách hàng thân thiết của PetHub',
                   style: Theme.of(context).textTheme.bodyMedium,

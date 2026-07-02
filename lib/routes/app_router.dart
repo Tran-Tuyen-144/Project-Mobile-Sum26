@@ -11,7 +11,7 @@ import '../screens/customer/community/community_post_detail_screen.dart';
 import '../screens/customer/community/create_community_post_screen.dart';
 import '../screens/admin/admin_main_screen.dart';
 import '../screens/customer/petprofile/pet_list_screen.dart';
-
+import '../screens/customer/community/community_post.dart';
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   overridePlatformDefaultLocation: true,
@@ -59,11 +59,18 @@ final GoRouter appRouter = GoRouter(
       path: '/community/create-post',
       name: 'community-create-post',
       builder: (context, state) {
+        final initialPost =
+        state.extra is CommunityPost ? state.extra as CommunityPost : null;
+
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Tạo bài viết'),
+            title: Text(
+              initialPost == null ? 'Tạo bài viết' : 'Chỉnh sửa bài viết',
+            ),
           ),
-          body: const CreateCommunityPostScreen(),
+          body: CreateCommunityPostScreen(
+            initialPost: initialPost,
+          ),
         );
       },
     ),

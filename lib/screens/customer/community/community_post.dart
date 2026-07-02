@@ -38,6 +38,7 @@ class PostComment {
 class CommunityPost {
   final int id;
   final String authorName;
+  final String? authorAvatarPath;
   final String authorRole;
   final String timeAgo;
   final String content;
@@ -58,6 +59,7 @@ class CommunityPost {
     required this.likes,
     required this.petIcon,
     required this.color,
+    this.authorAvatarPath,
     this.imagePath,
     this.commentList = const [],
   });
@@ -75,6 +77,9 @@ class CommunityPost {
     IconData? petIcon,
     Color? color,
     String? imagePath,
+    bool removeImage = false,
+    String? authorAvatarPath,
+    bool removeAvatar = false,
     List<PostComment>? commentList,
   }) {
     return CommunityPost(
@@ -87,7 +92,7 @@ class CommunityPost {
       likes: likes ?? this.likes,
       petIcon: petIcon ?? this.petIcon,
       color: color ?? this.color,
-      imagePath: imagePath ?? this.imagePath,
+      imagePath: removeImage ? null : imagePath ?? this.imagePath,
       commentList: commentList ?? this.commentList,
     );
   }
@@ -104,6 +109,7 @@ class CommunityPost {
       'iconKey': _iconKeyFromIcon(petIcon),
       'colorKey': _colorKeyFromColor(color),
       'imagePath': imagePath,
+      'authorAvatarPath': authorAvatarPath,
       'commentList': commentList.map((comment) => comment.toJson()).toList(),
     };
   }

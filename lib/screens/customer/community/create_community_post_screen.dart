@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../../storage/profile_storage.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
@@ -12,7 +13,14 @@ import 'community_post.dart';
 import 'create_community_post_widgets.dart';
 
 class CreateCommunityPostScreen extends StatefulWidget {
-  const CreateCommunityPostScreen({super.key});
+  final CommunityPost? initialPost;
+
+  const CreateCommunityPostScreen({
+    super.key,
+    this.initialPost,
+  });
+
+  bool get isEditMode => initialPost != null;
 
   @override
   State<CreateCommunityPostScreen> createState() =>
@@ -22,6 +30,9 @@ class CreateCommunityPostScreen extends StatefulWidget {
 class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
   final TextEditingController contentController = TextEditingController();
   final ImagePicker imagePicker = ImagePicker();
+
+  String displayName = 'Bạn';
+  String? authorAvatarPath;
 
   String selectedCategory = 'Mèo';
   int selectedIconIndex = 0;
@@ -56,6 +67,44 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       color: AppColors.sky,
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    final post = widget.initialPost;
+
+    if (post != null) {
+      contentController.text = post.content;
+      selectedCategory = post.category;
+      selectedImagePath = post.imagePath;
+
+      displayName = post.authorName;
+      authorAvatarPath = post.authorAvatarPath;
+
+      final foundIndex = iconOptions.indexWhere(
+            (item) => item.icon == post.petIcon,
+      );
+
+      if (foundIndex != -1) {
+        selectedIconIndex = foundIndex;
+      }
+    } else {
+      _loadAuthorProfile();
+    }
+  }
+
+  Future<void> _loadAuthorProfile() async {
+    final savedName = await ProfileStorage.loadDisplayName();
+    final savedAvatarPath = await ProfileStorage.loadAvatarPath();
+
+    if (!mounted) return;
+
+    setState(() {
+      displayName = savedName;
+      authorAvatarPath = savedAvatarPath;
+    });
+  }
 
   @override
   void dispose() {
@@ -127,22 +176,40 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
     }
 
     final option = iconOptions[selectedIconIndex];
+    final oldPost = widget.initialPost;
 
-    final newPost = CommunityPost(
-      id: DateTime.now().millisecondsSinceEpoch,
-      authorName: 'Bạn',
-      authorRole: 'Thành viên PetHub',
-      timeAgo: 'Vừa xong',
-      content: content,
-      category: selectedCategory,
-      likes: 0,
-      petIcon: option.icon,
-      color: option.color,
-      imagePath: selectedImagePath,
-      commentList: const [],
-    );
+    final CommunityPost resultPost;
 
-    context.pop(newPost);
+    if (oldPost == null) {
+      resultPost = CommunityPost(
+        id: DateTime.now().millisecondsSinceEpoch,
+        authorName: displayName,
+        authorRole: 'Thành viên PetHub',
+        timeAgo: 'Vừa xong',
+        content: content,
+        category: selectedCategory,
+        likes: 0,
+        petIcon: option.icon,
+        color: option.color,
+        imagePath: selectedImagePath,
+        authorAvatarPath: authorAvatarPath,
+        commentList: const [],
+      );
+    } else {
+      resultPost = oldPost.copyWith(
+        authorName: displayName,
+        authorAvatarPath: authorAvatarPath,
+        content: content,
+        category: selectedCategory,
+        petIcon: option.icon,
+        color: option.color,
+        imagePath: selectedImagePath,
+        removeImage: selectedImagePath == null,
+        timeAgo: 'Vừa chỉnh sửa',
+      );
+    }
+
+    context.pop(resultPost);
   }
 
   @override
@@ -154,10 +221,19 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CreatePostHeader(),
+          CreatePostHeader(
+            title: widget.isEditMode ? 'Chỉnh sửa bài viết' : 'Tạo bài viết',
+            subtitle: widget.isEditMode
+                ? 'Cập nhật nội dung, chủ đề hoặc ảnh bài viết của bạn.'
+                : 'Có thể đăng bài kèm ảnh hoặc không kèm ảnh đều được.',
+          ),
+
           const SizedBox(height: 24),
+
           const SectionTitle(title: 'Nội dung bài viết'),
+
           const SizedBox(height: 12),
+
           SoftCard(
             color: Colors.white,
             child: TextField(
@@ -172,17 +248,25 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
               ),
             ),
           ),
+
           const SizedBox(height: 24),
+
           const SectionTitle(title: 'Ảnh bài viết'),
+
           const SizedBox(height: 12),
+
           PickImageCard(
             imagePath: selectedImagePath,
             onPickImage: _pickImage,
             onRemoveImage: _removeImage,
           ),
+
           const SizedBox(height: 24),
+
           const SectionTitle(title: 'Chọn chủ đề'),
+
           const SizedBox(height: 12),
+
           PostCategorySelector(
             categories: postCategories,
             selectedCategory: selectedCategory,
@@ -192,9 +276,13 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
               });
             },
           ),
+
           const SizedBox(height: 24),
+
           const SectionTitle(title: 'Chọn hình minh họa'),
+
           const SizedBox(height: 12),
+
           PetIconSelector(
             options: iconOptions,
             selectedIndex: selectedIconIndex,
@@ -204,9 +292,13 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
               });
             },
           ),
+
           const SizedBox(height: 24),
+
           const SectionTitle(title: 'Xem trước bài viết'),
+
           const SizedBox(height: 12),
+
           PostPreviewCard(
             content: contentController.text,
             category: selectedCategory,
@@ -214,7 +306,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
             color: selectedOption.color,
             imagePath: selectedImagePath,
           ),
+
           const SizedBox(height: 26),
+
           Row(
             children: [
               Expanded(
@@ -228,8 +322,14 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _submitPost,
-                  icon: const Icon(Icons.send_rounded),
-                  label: const Text('Đăng bài'),
+                  icon: Icon(
+                    widget.isEditMode
+                        ? Icons.save_rounded
+                        : Icons.send_rounded,
+                  ),
+                  label: Text(
+                    widget.isEditMode ? 'Lưu' : 'Đăng bài',
+                  ),
                 ),
               ),
             ],
