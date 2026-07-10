@@ -21,28 +21,79 @@ class CatSavedDataButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: 'Dữ liệu đã lưu',
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        elevation: 0,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () => _showSavedData(context),
-          child: Container(
-            width: 42,
-            height: 42,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
+    return FutureBuilder<int>(
+      future: _loadSavedCount(),
+      builder: (context, snapshot) {
+        final savedCount = snapshot.data ?? 0;
+
+        return Tooltip(
+          message: 'Dữ liệu đã lưu',
+          child: Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            elevation: 0,
+            child: InkWell(
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.primarySoft),
+              onTap: () => _showSavedData(context),
+              child: SizedBox(
+                width: 46,
+                height: 46,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned.fill(
+                      child: Container(
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: AppColors.primarySoft),
+                        ),
+                        child: const Text(
+                          '🐱',
+                          style: TextStyle(fontSize: 22),
+                        ),
+                      ),
+                    ),
+                    if (savedCount > 0)
+                      Positioned(
+                        right: -4,
+                        top: -4,
+                        child: Container(
+                          constraints: const BoxConstraints(
+                            minWidth: 20,
+                            minHeight: 20,
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(99),
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: Text(
+                            savedCount > 99 ? '99+' : '$savedCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
-            child: const Text('🐱', style: TextStyle(fontSize: 22)),
           ),
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  Future<int> _loadSavedCount() async {
+    final bookings = await BookingHistoryStorage.loadBookings();
+    final drinkOrders = await OfflineDrinkOrderStorage.loadOrderHistory();
+    return bookings.length + drinkOrders.length;
   }
 
   Future<void> _showSavedData(BuildContext context) async {
