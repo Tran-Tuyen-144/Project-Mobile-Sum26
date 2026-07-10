@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'booking_pet_screen.dart';
+import '../booking/customer_booking_screen.dart';
 
 class PetDetailScreen extends StatelessWidget {
   final Map<String, dynamic> pet;
@@ -20,9 +20,18 @@ class PetDetailScreen extends StatelessWidget {
         child: Column(
           children: [
 
-            Image.asset(
-              pet["image"],
+            Container(
               height: 220,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.orange.shade100,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.pets,
+                size: 80,
+                color: Colors.orange.shade800,
+              ),
             ),
 
             const SizedBox(height: 20),
@@ -80,13 +89,13 @@ class PetDetailScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => BookingPetScreen(
+                          builder: (_) => CustomerBookingScreen(
                             petName: pet["name"],
                           ),
                         ),
                       );
                     },
-                    child: const Text("Xác nhận đặt bàn"),
+                    child: Text("Đặt ${pet["name"]} Online"),
                   ),
                 ),
               ],
