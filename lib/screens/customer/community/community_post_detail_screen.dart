@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
@@ -56,6 +54,7 @@ class CommunityPostDetailScreen extends StatefulWidget {
 class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
   late CommunityPost post;
   late bool isLiked;
+  late bool originalIsLiked;
   late bool isSaved;
 
   final TextEditingController commentController = TextEditingController();
@@ -65,6 +64,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
     super.initState();
     post = widget.args.post;
     isLiked = widget.args.isLiked;
+    originalIsLiked = widget.args.isLiked;
     isSaved = widget.args.isSaved;
   }
 
@@ -72,6 +72,17 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
   void dispose() {
     commentController.dispose();
     super.dispose();
+  }
+
+  int get displayLikes {
+    if (isLiked == originalIsLiked) {
+      return post.likes;
+    }
+
+    if (isLiked) {
+      return post.likes + 1;
+    }
+    return post.likes > 0 ? post.likes - 1 : 0;
   }
 
   void _close() {
@@ -110,7 +121,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
 
     final comment = PostComment(
       id: DateTime.now().millisecondsSinceEpoch,
-      authorName: 'Bạn',
+      authorName: 'Ẩn danh PetHub',
       content: text,
       timeAgo: 'Vừa xong',
     );
@@ -153,8 +164,6 @@ ${post.content}
 
   @override
   Widget build(BuildContext context) {
-    final totalLikes = isLiked ? post.likes + 1 : post.likes;
-
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -187,7 +196,14 @@ ${post.content}
                 padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
                 children: [
                   _AuthorBlock(post: post),
+
+                  if (post.hasTag) ...[
+                    const SizedBox(height: 14),
+                    _TagChip(post: post),
+                  ],
+
                   const SizedBox(height: 16),
+
                   Text(
                     post.content,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -195,16 +211,14 @@ ${post.content}
                       color: AppColors.textDark,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  _PostMedia(post: post),
-                  const SizedBox(height: 16),
+
                   Row(
                     children: [
                       _DetailActionButton(
                         icon: isLiked
                             ? Icons.favorite_rounded
                             : Icons.favorite_border_rounded,
-                        label: '$totalLikes',
+                        label: '$displayLikes',
                         active: isLiked,
                         onTap: _toggleLike,
                       ),
@@ -224,12 +238,16 @@ ${post.content}
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 24),
+
                   Text(
                     'Tất cả bình luận',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
+
                   const SizedBox(height: 12),
+
                   if (post.commentList.isEmpty)
                     const SoftCard(
                       color: Colors.white,
@@ -250,6 +268,7 @@ ${post.content}
                 ],
               ),
             ),
+
             _CommentInputBar(
               controller: commentController,
               onSend: _sendComment,
@@ -307,70 +326,34 @@ class _AuthorBlock extends StatelessWidget {
   }
 }
 
-class _PostMedia extends StatelessWidget {
+class _TagChip extends StatelessWidget {
   final CommunityPost post;
 
-  const _PostMedia({
+  const _TagChip({
     required this.post,
   });
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = post.imagePath != null &&
-        post.imagePath!.isNotEmpty &&
-        File(post.imagePath!).existsSync();
-
-    if (hasImage) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(26),
-        child: Image.file(
-          File(post.imagePath!),
-          height: 260,
-          width: double.infinity,
-          fit: BoxFit.cover,
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 7,
         ),
-      );
-    }
-
-    return Container(
-      height: 210,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: post.color.withOpacity(0.85),
-        borderRadius: BorderRadius.circular(26),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: 18,
-            top: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 7,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.75),
-                borderRadius: BorderRadius.circular(99),
-              ),
-              child: Text(
-                post.category,
-                style: const TextStyle(
-                  color: AppColors.textDark,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12,
-                ),
-              ),
-            ),
+        decoration: BoxDecoration(
+          color: post.color.withOpacity(0.85),
+          borderRadius: BorderRadius.circular(99),
+        ),
+        child: Text(
+          '#${post.category}',
+          style: const TextStyle(
+            color: AppColors.textDark,
+            fontWeight: FontWeight.w900,
+            fontSize: 12,
           ),
-          Center(
-            child: Icon(
-              post.petIcon,
-              size: 88,
-              color: AppColors.textDark.withOpacity(0.72),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -429,7 +412,7 @@ class _CommentTile extends StatelessWidget {
             radius: 18,
             backgroundColor: AppColors.peach,
             child: Icon(
-              Icons.person_rounded,
+              Icons.face_rounded,
               size: 18,
               color: AppColors.primary,
             ),
@@ -498,7 +481,7 @@ class _CommentInputBar extends StatelessWidget {
               child: TextField(
                 controller: controller,
                 decoration: const InputDecoration(
-                  hintText: 'Viết bình luận...',
+                  hintText: 'Viết bình luận ẩn danh...',
                   prefixIcon: Icon(
                     Icons.chat_bubble_outline_rounded,
                     color: AppColors.primary,

@@ -1,84 +1,185 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../storage/community_post_storage.dart';
-import '../../../storage/profile_storage.dart';
+import '../../../models/customer_profile.dart';
+import '../../../services/customer_auth_service.dart';
+import '../../../services/customer_profile_service.dart';
+import '../../../services/firebase_community_service.dart';
+import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
+import '../../../widgets/soft_card.dart';
 import '../community/community_post.dart';
+import '../community/community_post_detail_screen.dart';
 import '../community/community_widgets.dart';
-import 'profile_models.dart';
-import 'profile_widgets.dart';
 
 class CustomerProfileScreen extends StatefulWidget {
   const CustomerProfileScreen({super.key});
 
   @override
-  State<CustomerProfileScreen> createState() => _CustomerProfileScreenState();
+  State<CustomerProfileScreen> createState() =>
+      _CustomerProfileScreenState();
 }
 
 class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
-  final ImagePicker _imagePicker = ImagePicker();
+  late final Future<void> profileInitialization;
 
-  String? avatarPath;
-  String displayName = 'Trần Mộng Tuyền';
-  bool isLoadingProfile = true;
-
-  final List<CommunityPost> myPosts = [];
-  final Set<int> likedPostIds = {};
   final Set<int> savedPostIds = {};
+
+  final List<_ProfileAvatarOption> avatarOptions = const [
+    _ProfileAvatarOption(
+      keyName: 'default_person',
+      label: 'Mặc định',
+      icon: Icons.person_rounded,
+      color: AppColors.peach,
+    ),
+    _ProfileAvatarOption(
+      keyName: 'cat',
+      label: 'Mèo',
+      icon: Icons.pets_rounded,
+      color: AppColors.primarySoft,
+    ),
+    _ProfileAvatarOption(
+      keyName: 'dog',
+      label: 'Cún',
+      icon: Icons.cruelty_free_rounded,
+      color: AppColors.mint,
+    ),
+    _ProfileAvatarOption(
+      keyName: 'rabbit',
+      label: 'Thỏ',
+      icon: Icons.emoji_nature_rounded,
+      color: AppColors.lavender,
+    ),
+    _ProfileAvatarOption(
+      keyName: 'bird',
+      label: 'Chim',
+      icon: Icons.flutter_dash_rounded,
+      color: AppColors.sky,
+    ),
+    _ProfileAvatarOption(
+      keyName: 'favorite',
+      label: 'Yêu thích',
+      icon: Icons.favorite_rounded,
+      color: AppColors.peach,
+    ),
+    _ProfileAvatarOption(
+      keyName: 'health',
+      label: 'Sức khỏe',
+      icon: Icons.health_and_safety_rounded,
+      color: AppColors.sky,
+    ),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _loadProfileData();
+    profileInitialization =
+        CustomerProfileService.ensureCurrentProfile();
   }
 
-  Future<void> _loadProfileData() async {
-    final savedPath = await ProfileStorage.loadAvatarPath();
-    final savedName = await ProfileStorage.loadDisplayName();
-    final savedPosts = await CommunityPostStorage.loadPosts();
-
-    if (!mounted) return;
-
-    setState(() {
-      avatarPath = savedPath;
-      displayName = savedName;
-      myPosts
-        ..clear()
-        ..addAll(savedPosts);
-      isLoadingProfile = false;
-    });
+  _ProfileAvatarOption _avatarFromKey(String key) {
+    return avatarOptions.firstWhere(
+          (option) => option.keyName == key,
+      orElse: () => avatarOptions.first,
+    );
   }
 
-  Future<void> _changeAvatar() async {
-    showModalBottomSheet(
+  Future<void> _showAvatarPicker(CustomerProfile profile) async {
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (sheetContext) {
+      backgroundColor: AppColors.cream,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(28),
+        ),
+      ),
+      builder: (bottomSheetContext) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 22),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ListTile(
-                  leading: const Icon(Icons.photo_library_rounded),
-                  title: const Text('Chọn ảnh từ điện thoại'),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _pickAvatarFromGallery();
-                  },
+                Container(
+                  width: 42,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: AppColors.peach,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.delete_outline_rounded),
-                  title: const Text('Gỡ ảnh đại diện'),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _removeAvatar();
+                const SizedBox(height: 16),
+                Text(
+                  'Chọn ảnh đại diện',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 16),
+                GridView.builder(
+                  itemCount: avatarOptions.length,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate:
+                  const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.88,
+                  ),
+                  itemBuilder: (context, index) {
+                    final option = avatarOptions[index];
+                    final isSelected =
+                        option.keyName == profile.avatarIconKey;
+
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(22),
+                      onTap: () async {
+                        Navigator.of(bottomSheetContext).pop();
+
+                        await CustomerProfileService.updateAvatarIcon(
+                          option.keyName,
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color:
+                          isSelected ? option.color : Colors.white,
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : option.color,
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 22,
+                              backgroundColor:
+                              Colors.white.withOpacity(0.85),
+                              child: Icon(
+                                option.icon,
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                            const SizedBox(height: 7),
+                            Text(
+                              option.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppColors.textDark,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -89,110 +190,53 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     );
   }
 
-  Future<void> _pickAvatarFromGallery() async {
-    try {
-      final pickedImage = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 82,
-      );
+  Future<void> _editProfile(CustomerProfile profile) async {
+    final fullNameController =
+    TextEditingController(text: profile.fullName);
 
-      if (pickedImage == null) return;
+    final displayNameController =
+    TextEditingController(text: profile.displayName);
 
-      final copiedPath = await _copyAvatarToAppFolder(pickedImage);
-
-      await ProfileStorage.saveAvatarPath(copiedPath);
-
-      if (!mounted) return;
-
-      setState(() {
-        avatarPath = copiedPath;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã cập nhật ảnh đại diện.'),
-        ),
-      );
-    } catch (error) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không đổi được ảnh đại diện: $error'),
-        ),
-      );
-    }
-  }
-
-  Future<String> _copyAvatarToAppFolder(XFile pickedImage) async {
-    final appDir = await getApplicationDocumentsDirectory();
-    final avatarDir = Directory('${appDir.path}/profile_avatar');
-
-    if (!await avatarDir.exists()) {
-      await avatarDir.create(recursive: true);
-    }
-
-    final originalPath = pickedImage.path;
-    final fileName = originalPath.split(Platform.pathSeparator).last;
-
-    final newPath =
-        '${avatarDir.path}/${DateTime.now().millisecondsSinceEpoch}_$fileName';
-
-    final copiedFile = await File(originalPath).copy(newPath);
-
-    return copiedFile.path;
-  }
-
-  Future<void> _removeAvatar() async {
-    await ProfileStorage.clearAvatarPath();
-
-    if (!mounted) return;
-
-    setState(() {
-      avatarPath = null;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đã gỡ ảnh đại diện.'),
-      ),
-    );
-  }
-
-  Future<void> _editDisplayName() async {
-    final controller = TextEditingController(text: displayName);
-
-    final result = await showDialog<String>(
+    final shouldSave = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          title: const Text('Chỉnh sửa tên'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(
-              labelText: 'Tên hiển thị',
-              hintText: 'Nhập tên của bạn',
-              prefixIcon: Icon(Icons.person_rounded),
-            ),
-            onSubmitted: (_) {
-              Navigator.of(dialogContext).pop(controller.text.trim());
-            },
+          title: const Text('Chỉnh sửa thông tin'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: fullNameController,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: 'Họ tên',
+                  prefixIcon: Icon(Icons.badge_rounded),
+                ),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: displayNameController,
+                textInputAction: TextInputAction.done,
+                decoration: const InputDecoration(
+                  labelText: 'Tên hiển thị',
+                  prefixIcon: Icon(Icons.person_rounded),
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop();
+                Navigator.of(dialogContext).pop(false);
               },
               child: const Text('Hủy'),
             ),
             FilledButton.icon(
               onPressed: () {
-                Navigator.of(dialogContext).pop(controller.text.trim());
+                Navigator.of(dialogContext).pop(true);
               },
               icon: const Icon(Icons.save_rounded),
               label: const Text('Lưu'),
@@ -202,36 +246,68 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
       },
     );
 
-    controller.dispose();
+    if (shouldSave == true) {
+      try {
+        await CustomerProfileService.updatePersonalInformation(
+          fullName: fullNameController.text,
+          displayName: displayNameController.text,
+        );
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã cập nhật thông tin cá nhân.'),
+          ),
+        );
+      } catch (error) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              error.toString().replaceFirst('Exception: ', ''),
+            ),
+          ),
+        );
+      }
+    }
+
+    fullNameController.dispose();
+    displayNameController.dispose();
+  }
+
+  Future<void> _createPost(CustomerProfile profile) async {
+    final result =
+    await context.push<CommunityPost>('/community/create-post');
 
     if (result == null) return;
 
-    final newName = result.trim();
+    final post = result.copyWith(
+      authorId: profile.uid,
+      likes: 0,
+      likedBy: const [],
+    );
 
-    if (newName.isEmpty) {
+    try {
+      await FirebaseCommunityService.createPost(post);
+
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Tên không được để trống.'),
+          content: Text('Đã đăng bài lên cộng đồng.'),
         ),
       );
-      return;
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không đăng được bài: $error'),
+        ),
+      );
     }
-
-    await ProfileStorage.saveDisplayName(newName);
-
-    if (!mounted) return;
-
-    setState(() {
-      displayName = newName;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đã cập nhật tên hiển thị.'),
-      ),
-    );
   }
 
   Future<void> _editPost(CommunityPost post) async {
@@ -242,23 +318,32 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
     if (result == null) return;
 
-    final index = myPosts.indexWhere((item) => item.id == result.id);
-
-    if (index == -1) return;
-
-    setState(() {
-      myPosts[index] = result;
-    });
-
-    await CommunityPostStorage.savePosts(myPosts);
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đã cập nhật bài viết.'),
-      ),
+    final updatedPost = result.copyWith(
+      authorId: post.authorId,
+      likes: post.likes,
+      likedBy: post.likedBy,
+      commentList: post.commentList,
     );
+
+    try {
+      await FirebaseCommunityService.updatePost(updatedPost);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã cập nhật bài viết.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không sửa được bài viết: $error'),
+        ),
+      );
+    }
   }
 
   Future<void> _deletePost(CommunityPost post) async {
@@ -271,7 +356,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
           ),
           title: const Text('Xóa bài viết?'),
           content: const Text(
-            'Bài viết sẽ bị xóa khỏi danh sách bài đã đăng của bạn.',
+            'Bài viết sẽ bị xóa khỏi trang cá nhân và cộng đồng.',
           ),
           actions: [
             TextButton(
@@ -294,31 +379,42 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
     if (shouldDelete != true) return;
 
-    setState(() {
-      myPosts.removeWhere((item) => item.id == post.id);
-      likedPostIds.remove(post.id);
-      savedPostIds.remove(post.id);
-    });
+    try {
+      await FirebaseCommunityService.deletePost(post);
 
-    await CommunityPostStorage.savePosts(myPosts);
+      if (!mounted) return;
 
-    if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã xóa bài viết.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đã xóa bài viết.'),
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không xóa được bài viết: $error'),
+        ),
+      );
+    }
   }
 
-  void _toggleLike(int postId) {
-    setState(() {
-      if (likedPostIds.contains(postId)) {
-        likedPostIds.remove(postId);
-      } else {
-        likedPostIds.add(postId);
-      }
-    });
+  Future<void> _toggleLike(CommunityPost post, String userId) async {
+    try {
+      await FirebaseCommunityService.toggleLike(
+        post: post,
+        userId: userId,
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không thể thả tim: $error'),
+        ),
+      );
+    }
   }
 
   void _toggleSave(int postId) {
@@ -332,155 +428,575 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   }
 
   Future<void> _sharePost(CommunityPost post) async {
-    await SharePlus.instance.share(
-      ShareParams(
-        title: 'Chia sẻ bài viết PetHub',
-        text: '''
+    try {
+      await SharePlus.instance.share(
+        ShareParams(
+          title: 'Chia sẻ bài viết PetHub',
+          text: '''
 ${post.authorName} chia sẻ trên PetHub:
 
 ${post.content}
 
 #PetHub #Community
 ''',
-      ),
-    );
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không chia sẻ được: $error'),
+        ),
+      );
+    }
   }
 
-  Future<void> _openPostDetail(CommunityPost post) async {
-    await context.push(
+  Future<void> _openPostDetail(
+      CommunityPost post,
+      String userId,
+      ) async {
+    final wasLiked = post.likedBy.contains(userId);
+
+    final result = await context.push<PostDetailResult>(
       '/community/post-detail',
-      extra: post,
-    );
-  }
-
-  void _showComingSoon(BuildContext context, String title) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$title sẽ được làm ở bước sau.'),
+      extra: PostDetailArgs(
+        post: post,
+        isLiked: wasLiked,
+        isSaved: savedPostIds.contains(post.id),
       ),
     );
+
+    if (result == null) return;
+
+    try {
+      if (result.isLiked != wasLiked) {
+        await FirebaseCommunityService.toggleLike(
+          post: post,
+          userId: userId,
+        );
+      }
+
+      final updatedPost = result.post.copyWith(
+        authorId: post.authorId,
+        authorName: post.authorName,
+        authorRole: post.authorRole,
+        likes: post.likes,
+        likedBy: post.likedBy,
+      );
+
+      await FirebaseCommunityService.updatePost(updatedPost);
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không cập nhật bài viết: $error'),
+        ),
+      );
+    }
+
+    setState(() {
+      if (result.isSaved) {
+        savedPostIds.add(post.id);
+      } else {
+        savedPostIds.remove(post.id);
+      }
+    });
   }
 
-  void _logout(BuildContext context) {
-    context.go('/');
+  Future<void> _logout() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Text('Đăng xuất tài khoản?'),
+          content: const Text(
+            'Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng PetHub.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
+              child: const Text('Hủy'),
+            ),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(true);
+              },
+              icon: const Icon(Icons.logout_rounded),
+              label: const Text('Đăng xuất'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout != true) return;
+
+    try {
+      await CustomerAuthService.logout();
+
+      if (!mounted) return;
+
+      context.go('/customer-auth');
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không đăng xuất được: $error'),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoadingProfile) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
+    return FutureBuilder<void>(
+      future: profileInitialization,
+      builder: (context, initializationSnapshot) {
+        if (initializationSnapshot.connectionState !=
+            ConnectionState.done) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 26),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ProfileHeader(
-            displayName: displayName,
-            avatarPath: avatarPath,
-            onChangeAvatar: _changeAvatar,
-            onEditName: _editDisplayName,
-          ),
-
-          const SizedBox(height: 22),
-
-          const ProfileStatsRow(),
-
-          const SizedBox(height: 26),
-
-          const SectionTitle(
-            title: 'Pet của tôi',
-            actionText: 'Thêm pet',
-          ),
-
-          const SizedBox(height: 12),
-
-          SizedBox(
-            height: 106,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: myPets.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                return PetProfileCard(
-                  pet: myPets[index],
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 26),
-
-          SectionTitle(
-            title: 'Bài viết đã đăng',
-            actionText: '${myPosts.length} bài',
-          ),
-
-          const SizedBox(height: 12),
-
-          if (myPosts.isEmpty)
-            const Text(
-              'Bạn chưa đăng bài nào trong cộng đồng.',
-              style: TextStyle(
-                color: Colors.grey,
-                fontWeight: FontWeight.w600,
+        if (initializationSnapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Text(
+                'Không khởi tạo được hồ sơ:\n'
+                    '${initializationSnapshot.error}',
+                textAlign: TextAlign.center,
               ),
-            )
-          else
-            ListView.separated(
-              itemCount: myPosts.length,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final post = myPosts[index];
-
-                return CommunityPostCard(
-                  post: post,
-                  isLiked: likedPostIds.contains(post.id),
-                  isSaved: savedPostIds.contains(post.id),
-                  onLike: () => _toggleLike(post.id),
-                  onSave: () => _toggleSave(post.id),
-                  onShare: () => _sharePost(post),
-                  onOpenDetail: () => _openPostDetail(post),
-                  canManage: true,
-                  onEdit: () => _editPost(post),
-                  onDelete: () => _deletePost(post),
-                );
-              },
             ),
+          );
+        }
 
-          const SizedBox(height: 26),
-
-          const SectionTitle(title: 'Tài khoản của tôi'),
-
-          const SizedBox(height: 12),
-
-          ListView.separated(
-            itemCount: profileMenus.length,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final item = profileMenus[index];
-
-              return ProfileMenuTile(
-                item: item,
-                onTap: () => _showComingSoon(context, item.title),
+        return StreamBuilder<CustomerProfile?>(
+          stream: CustomerProfileService.watchCurrentProfile(),
+          builder: (context, profileSnapshot) {
+            if (profileSnapshot.connectionState ==
+                ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(),
               );
-            },
+            }
+
+            final profile = profileSnapshot.data;
+
+            if (profile == null) {
+              return const Center(
+                child: Text('Không tìm thấy hồ sơ khách hàng.'),
+              );
+            }
+
+            final avatar = _avatarFromKey(profile.avatarIconKey);
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _ProfileHeader(
+                    profile: profile,
+                    avatar: avatar,
+                    onAvatarTap: () => _showAvatarPicker(profile),
+                    onEditTap: () => _editProfile(profile),
+                  ),
+
+                  const SizedBox(height: 22),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _createPost(profile),
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('Đăng bài mới'),
+                    ),
+                  ),
+
+                  const SizedBox(height: 26),
+
+                  const SectionTitle(
+                    title: 'Thông tin cá nhân',
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _PersonalInformationCard(profile: profile),
+
+                  const SizedBox(height: 26),
+
+                  StreamBuilder<List<CommunityPost>>(
+                    stream:
+                    FirebaseCommunityService.watchPostsByAuthor(
+                      profile.uid,
+                    ),
+                    builder: (context, postsSnapshot) {
+                      if (postsSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(20),
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+
+                      if (postsSnapshot.hasError) {
+                        return Text(
+                          'Không tải được bài viết: '
+                              '${postsSnapshot.error}',
+                        );
+                      }
+
+                      final posts = postsSnapshot.data ?? [];
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SectionTitle(
+                            title: 'Bài viết của tôi',
+                            actionText: '${posts.length} bài',
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          if (posts.isEmpty)
+                            const SoftCard(
+                              color: Colors.white,
+                              child: Text(
+                                'Bạn chưa đăng bài viết nào.',
+                                style: TextStyle(
+                                  color: AppColors.textSoft,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            )
+                          else
+                            ListView.separated(
+                              itemCount: posts.length,
+                              shrinkWrap: true,
+                              physics:
+                              const NeverScrollableScrollPhysics(),
+                              separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final post = posts[index];
+                                final isLiked =
+                                post.likedBy.contains(profile.uid);
+
+                                return CommunityPostCard(
+                                  post: post,
+                                  isLiked: isLiked,
+                                  isSaved:
+                                  savedPostIds.contains(post.id),
+                                  onLike: () => _toggleLike(
+                                    post,
+                                    profile.uid,
+                                  ),
+                                  onSave: () =>
+                                      _toggleSave(post.id),
+                                  onShare: () => _sharePost(post),
+                                  onOpenDetail: () =>
+                                      _openPostDetail(
+                                        post,
+                                        profile.uid,
+                                      ),
+                                  canManage: true,
+                                  onEdit: () => _editPost(post),
+                                  onDelete: () => _deletePost(post),
+                                );
+                              },
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  const SectionTitle(
+                    title: 'Tài khoản',
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _LogoutCard(onLogout: _logout),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _ProfileHeader extends StatelessWidget {
+  final CustomerProfile profile;
+  final _ProfileAvatarOption avatar;
+  final VoidCallback onAvatarTap;
+  final VoidCallback onEditTap;
+
+  const _ProfileHeader({
+    required this.profile,
+    required this.avatar,
+    required this.onAvatarTap,
+    required this.onEditTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        gradient: const LinearGradient(
+          colors: [
+            AppColors.primarySoft,
+            AppColors.peach,
+            AppColors.cream,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Row(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(99),
+            onTap: onAvatarTap,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                CircleAvatar(
+                  radius: 42,
+                  backgroundColor: avatar.color,
+                  child: Icon(
+                    avatar.icon,
+                    size: 44,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                Positioned(
+                  right: -2,
+                  bottom: -2,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.edit_rounded,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(width: 16),
 
-          LogoutCard(
-            onLogout: () => _logout(context),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  profile.displayName,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 21,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  profile.fullName,
+                  style: const TextStyle(
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  profile.email,
+                  style: const TextStyle(
+                    color: AppColors.textSoft,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          IconButton(
+            onPressed: onEditTap,
+            icon: const Icon(
+              Icons.edit_note_rounded,
+              color: AppColors.primary,
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+class _PersonalInformationCard extends StatelessWidget {
+  final CustomerProfile profile;
+
+  const _PersonalInformationCard({
+    required this.profile,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SoftCard(
+      color: Colors.white,
+      child: Column(
+        children: [
+          _InformationRow(
+            icon: Icons.badge_rounded,
+            label: 'Họ tên',
+            value: profile.fullName,
+          ),
+          const Divider(height: 24),
+          _InformationRow(
+            icon: Icons.alternate_email_rounded,
+            label: 'Tên hiển thị',
+            value: profile.displayName,
+          ),
+          const Divider(height: 24),
+          _InformationRow(
+            icon: Icons.email_rounded,
+            label: 'Email',
+            value: profile.email,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InformationRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _InformationRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 21,
+          backgroundColor: AppColors.primarySoft,
+          child: Icon(
+            icon,
+            size: 20,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.textSoft,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                value.isEmpty ? 'Chưa cập nhật' : value,
+                style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LogoutCard extends StatelessWidget {
+  final VoidCallback onLogout;
+
+  const _LogoutCard({
+    required this.onLogout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SoftCard(
+      color: Colors.white,
+      onTap: onLogout,
+      child: const Row(
+        children: [
+          CircleAvatar(
+            radius: 23,
+            backgroundColor: Color(0xFFFFE2E2),
+            child: Icon(
+              Icons.logout_rounded,
+              color: Colors.redAccent,
+            ),
+          ),
+          SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              'Đăng xuất tài khoản',
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.w900,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 17,
+            color: Colors.redAccent,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileAvatarOption {
+  final String keyName;
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  const _ProfileAvatarOption({
+    required this.keyName,
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
 }

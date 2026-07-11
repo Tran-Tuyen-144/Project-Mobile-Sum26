@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../theme/app_colors.dart';
 import '../widgets/soft_card.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 class RoleSelectScreen extends StatelessWidget {
   const RoleSelectScreen({super.key});
 
@@ -58,7 +58,13 @@ class RoleSelectScreen extends StatelessWidget {
                 icon: Icons.favorite_rounded,
                 color: AppColors.primarySoft,
                 onTap: () {
-                  context.push('/customer');
+                  final user = FirebaseAuth.instance.currentUser;
+
+                  if (user == null) {
+                    context.push('/customer-auth');
+                  } else {
+                    context.push('/customer');
+                  }
                 },
               ),
 

@@ -13,7 +13,7 @@ import '../screens/customer/community/create_community_post_screen.dart';
 import '../screens/admin/admin_main_screen.dart';
 import '../screens/customer/petprofile/pet_list_screen.dart';
 import '../screens/customer/community/community_post.dart';
-
+import '../screens/auth/customer_auth_screen.dart';
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   overridePlatformDefaultLocation: true,
@@ -24,6 +24,14 @@ final GoRouter appRouter = GoRouter(
       name: 'role',
       builder: (context, state) {
         return const RoleSelectScreen();
+      },
+    ),
+
+    GoRoute(
+      path: '/customer-auth',
+      name: 'customer-auth',
+      builder: (context, state) {
+        return const CustomerAuthScreen();
       },
     ),
 

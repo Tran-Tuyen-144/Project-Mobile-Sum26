@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import '../../../theme/app_colors.dart';
@@ -137,7 +135,7 @@ class CreatePostCard extends StatelessWidget {
             radius: 26,
             backgroundColor: AppColors.peach,
             child: Icon(
-              Icons.person_rounded,
+              Icons.face_rounded,
               color: AppColors.primary,
             ),
           ),
@@ -187,17 +185,17 @@ class CommunityPostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalLikes = isLiked ? post.likes + 1 : post.likes;
+    final totalLikes = post.likes;
 
     return SoftCard(
       color: Colors.white,
+      onTap: onOpenDetail,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              _PostAuthorAvatar(post: post),
-
+              _PostAvatar(post: post),
               const SizedBox(width: 12),
 
               Expanded(
@@ -283,6 +281,11 @@ class CommunityPostCard extends StatelessWidget {
             ],
           ),
 
+          if (post.hasTag) ...[
+            const SizedBox(height: 12),
+            _TagChip(post: post),
+          ],
+
           const SizedBox(height: 14),
 
           Text(
@@ -291,10 +294,6 @@ class CommunityPostCard extends StatelessWidget {
               height: 1.45,
             ),
           ),
-
-          const SizedBox(height: 14),
-
-          _PostMedia(post: post),
 
           const SizedBox(height: 14),
 
@@ -322,12 +321,6 @@ class CommunityPostCard extends StatelessWidget {
                 active: false,
                 onTap: onShare,
               ),
-              _PostAction(
-                icon: Icons.open_in_full_rounded,
-                label: 'Chi tiết',
-                active: false,
-                onTap: onOpenDetail,
-              ),
             ],
           ),
         ],
@@ -336,28 +329,15 @@ class CommunityPostCard extends StatelessWidget {
   }
 }
 
-class _PostAuthorAvatar extends StatelessWidget {
+class _PostAvatar extends StatelessWidget {
   final CommunityPost post;
 
-  const _PostAuthorAvatar({
+  const _PostAvatar({
     required this.post,
   });
 
   @override
   Widget build(BuildContext context) {
-    final avatarPath = post.authorAvatarPath;
-    final hasAvatar = avatarPath != null &&
-        avatarPath.isNotEmpty &&
-        File(avatarPath).existsSync();
-
-    if (hasAvatar) {
-      return CircleAvatar(
-        radius: 26,
-        backgroundColor: post.color,
-        backgroundImage: FileImage(File(avatarPath)),
-      );
-    }
-
     return CircleAvatar(
       radius: 26,
       backgroundColor: post.color,
@@ -369,43 +349,30 @@ class _PostAuthorAvatar extends StatelessWidget {
   }
 }
 
-class _PostMedia extends StatelessWidget {
+class _TagChip extends StatelessWidget {
   final CommunityPost post;
 
-  const _PostMedia({
+  const _TagChip({
     required this.post,
   });
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = post.imagePath != null &&
-        post.imagePath!.isNotEmpty &&
-        File(post.imagePath!).existsSync();
-
-    if (hasImage) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Image.file(
-          File(post.imagePath!),
-          height: 190,
-          width: double.infinity,
-          fit: BoxFit.cover,
-        ),
-      );
-    }
-
     return Container(
-      height: 160,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: post.color.withOpacity(0.85),
-        borderRadius: BorderRadius.circular(24),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 7,
       ),
-      child: Center(
-        child: Icon(
-          post.petIcon,
-          size: 74,
-          color: AppColors.textDark.withOpacity(0.72),
+      decoration: BoxDecoration(
+        color: post.color.withOpacity(0.82),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(
+        '#${post.category}',
+        style: const TextStyle(
+          color: AppColors.textDark,
+          fontWeight: FontWeight.w900,
+          fontSize: 12,
         ),
       ),
     );
