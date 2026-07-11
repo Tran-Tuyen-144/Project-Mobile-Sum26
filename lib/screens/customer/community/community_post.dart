@@ -37,23 +37,31 @@ class PostComment {
 
 class CommunityPost {
   final int id;
+
+  // UID Firebase của người đăng.
+  // Dù bài ẩn danh vẫn phải lưu UID để xác định quyền sửa/xóa.
   final String authorId;
+
+  // Danh tính đang hiển thị trên bài viết.
   final String authorName;
   final String authorRole;
+  final String avatarIconKey;
+  final String colorKey;
+
+  // true: bài ẩn danh
+  // false: bài công khai dùng tên và avatar Profile
+  final bool isAnonymous;
+
   final String timeAgo;
   final String content;
 
-  // Tag/chủ đề, có thể rỗng.
+  // Tag có thể để trống.
   final String category;
 
   final int likes;
   final List<String> likedBy;
 
-  // Avatar ẩn danh dạng icon.
-  final String avatarIconKey;
-  final String colorKey;
-
-  // Giữ lại để không vỡ code cũ, nhưng bản này không dùng ảnh local nữa.
+  // Giữ lại để tương thích với dữ liệu cũ.
   final String? imagePath;
   final String? authorAvatarPath;
 
@@ -64,6 +72,7 @@ class CommunityPost {
     this.authorId = 'sample',
     this.authorName = 'Ẩn danh PetHub',
     this.authorRole = 'Thành viên ẩn danh',
+    bool? isAnonymous,
     required this.timeAgo,
     required this.content,
     this.category = '',
@@ -74,21 +83,23 @@ class CommunityPost {
     this.imagePath,
     this.authorAvatarPath,
     this.commentList = const [],
-  });
+  }) : isAnonymous =
+      isAnonymous ?? authorRole == 'Thành viên ẩn danh';
 
   int get totalComments => commentList.length;
+
+  bool get hasTag => category.trim().isNotEmpty;
 
   IconData get petIcon => iconFromKey(avatarIconKey);
 
   Color get color => colorFromKey(colorKey);
-
-  bool get hasTag => category.trim().isNotEmpty;
 
   CommunityPost copyWith({
     int? id,
     String? authorId,
     String? authorName,
     String? authorRole,
+    bool? isAnonymous,
     String? timeAgo,
     String? content,
     String? category,
@@ -109,18 +120,26 @@ class CommunityPost {
       authorId: authorId ?? this.authorId,
       authorName: authorName ?? this.authorName,
       authorRole: authorRole ?? this.authorRole,
+      isAnonymous: isAnonymous ?? this.isAnonymous,
       timeAgo: timeAgo ?? this.timeAgo,
       content: content ?? this.content,
       category: category ?? this.category,
       likes: likes ?? this.likes,
       likedBy: likedBy ?? this.likedBy,
       avatarIconKey: avatarIconKey ??
-          (petIcon != null ? iconKeyFromIcon(petIcon) : this.avatarIconKey),
+          (petIcon != null
+              ? iconKeyFromIcon(petIcon)
+              : this.avatarIconKey),
       colorKey: colorKey ??
-          (color != null ? colorKeyFromColor(color) : this.colorKey),
-      imagePath: removeImage ? null : imagePath ?? this.imagePath,
-      authorAvatarPath:
-      removeAvatar ? null : authorAvatarPath ?? this.authorAvatarPath,
+          (color != null
+              ? colorKeyFromColor(color)
+              : this.colorKey),
+      imagePath: removeImage
+          ? null
+          : imagePath ?? this.imagePath,
+      authorAvatarPath: removeAvatar
+          ? null
+          : authorAvatarPath ?? this.authorAvatarPath,
       commentList: commentList ?? this.commentList,
     );
   }
@@ -131,6 +150,7 @@ class CommunityPost {
       'authorId': authorId,
       'authorName': authorName,
       'authorRole': authorRole,
+      'isAnonymous': isAnonymous,
       'timeAgo': timeAgo,
       'content': content,
       'category': category,
@@ -138,9 +158,11 @@ class CommunityPost {
       'likedBy': likedBy,
       'avatarIconKey': avatarIconKey,
       'colorKey': colorKey,
-      'commentList': commentList.map((comment) => comment.toJson()).toList(),
+      'commentList': commentList
+          .map((comment) => comment.toJson())
+          .toList(),
 
-      // Giữ tương thích dữ liệu cũ.
+      // Các trường cũ được giữ để không làm vỡ dữ liệu trước đây.
       'iconKey': avatarIconKey,
       'imagePath': imagePath,
       'authorAvatarPath': authorAvatarPath,
@@ -151,30 +173,55 @@ class CommunityPost {
     final rawComments = json['commentList'];
     final rawLikedBy = json['likedBy'];
 
-    final avatarIconKey = json['avatarIconKey'] as String? ??
-        json['iconKey'] as String? ??
-        'anonymous';
+    final authorRole =
+        json['authorRole'] as String? ?? 'Thành viên ẩn danh';
 
-    final colorKey = json['colorKey'] as String? ??
-        colorKeyFromIconKey(avatarIconKey);
+    /*
+     * Dữ liệu cũ chưa có isAnonymous sẽ được suy ra
+     * thông qua authorRole.
+     */
+    final bool isAnonymous =
+        json['isAnonymous'] as bool? ??
+            authorRole.toLowerCase().contains('ẩn danh');
+
+    final avatarIconKey =
+        json['avatarIconKey'] as String? ??
+            json['iconKey'] as String? ??
+            (isAnonymous ? 'anonymous' : 'default_person');
+
+    final colorKey =
+        json['colorKey'] as String? ??
+            colorKeyFromIconKey(avatarIconKey);
 
     return CommunityPost(
       id: (json['id'] as num?)?.toInt() ??
           DateTime.now().millisecondsSinceEpoch,
-      authorId: json['authorId'] as String? ?? 'sample',
-      authorName: json['authorName'] as String? ?? 'Ẩn danh PetHub',
-      authorRole: json['authorRole'] as String? ?? 'Thành viên ẩn danh',
-      timeAgo: json['timeAgo'] as String? ?? 'Vừa xong',
-      content: json['content'] as String? ?? '',
-      category: json['category'] as String? ?? '',
-      likes: (json['likes'] as num?)?.toInt() ?? 0,
+      authorId:
+      json['authorId'] as String? ?? 'sample',
+      authorName: json['authorName'] as String? ??
+          (isAnonymous
+              ? 'Ẩn danh PetHub'
+              : 'Bạn PetHub'),
+      authorRole: authorRole,
+      isAnonymous: isAnonymous,
+      timeAgo:
+      json['timeAgo'] as String? ?? 'Vừa xong',
+      content:
+      json['content'] as String? ?? '',
+      category:
+      json['category'] as String? ?? '',
+      likes:
+      (json['likes'] as num?)?.toInt() ?? 0,
       likedBy: rawLikedBy is List
-          ? rawLikedBy.map((item) => item.toString()).toList()
+          ? rawLikedBy
+          .map((item) => item.toString())
+          .toList()
           : const [],
       avatarIconKey: avatarIconKey,
       colorKey: colorKey,
       imagePath: json['imagePath'] as String?,
-      authorAvatarPath: json['authorAvatarPath'] as String?,
+      authorAvatarPath:
+      json['authorAvatarPath'] as String?,
       commentList: rawComments is List
           ? rawComments
           .whereType<Map>()
@@ -189,44 +236,92 @@ class CommunityPost {
   }
 
   static String iconKeyFromIcon(IconData icon) {
-    if (icon == Icons.cruelty_free_rounded) return 'dog';
-    if (icon == Icons.favorite_rounded) return 'favorite';
-    if (icon == Icons.health_and_safety_rounded) return 'health';
-    if (icon == Icons.emoji_nature_rounded) return 'rabbit';
-    if (icon == Icons.flutter_dash_rounded) return 'bird';
-    if (icon == Icons.water_drop_rounded) return 'fish';
-    if (icon == Icons.face_rounded) return 'anonymous';
+    if (icon == Icons.person_rounded) {
+      return 'default_person';
+    }
+
+    if (icon == Icons.cruelty_free_rounded) {
+      return 'dog';
+    }
+
+    if (icon == Icons.favorite_rounded) {
+      return 'favorite';
+    }
+
+    if (icon == Icons.health_and_safety_rounded) {
+      return 'health';
+    }
+
+    if (icon == Icons.emoji_nature_rounded) {
+      return 'rabbit';
+    }
+
+    if (icon == Icons.flutter_dash_rounded) {
+      return 'bird';
+    }
+
+    if (icon == Icons.water_drop_rounded) {
+      return 'fish';
+    }
+
+    if (icon == Icons.face_rounded) {
+      return 'anonymous';
+    }
+
     return 'cat';
   }
 
   static IconData iconFromKey(String key) {
     switch (key) {
+      case 'default_person':
+        return Icons.person_rounded;
+
       case 'anonymous':
         return Icons.face_rounded;
+
       case 'cat':
         return Icons.pets_rounded;
+
       case 'dog':
         return Icons.cruelty_free_rounded;
+
       case 'rabbit':
         return Icons.emoji_nature_rounded;
+
       case 'bird':
         return Icons.flutter_dash_rounded;
+
       case 'fish':
         return Icons.water_drop_rounded;
+
       case 'favorite':
         return Icons.favorite_rounded;
+
       case 'health':
         return Icons.health_and_safety_rounded;
+
       default:
-        return Icons.face_rounded;
+        return Icons.person_rounded;
     }
   }
 
   static String colorKeyFromColor(Color color) {
-    if (color == AppColors.mint) return 'mint';
-    if (color == AppColors.sky) return 'sky';
-    if (color == AppColors.lavender) return 'lavender';
-    if (color == AppColors.primarySoft) return 'primarySoft';
+    if (color == AppColors.mint) {
+      return 'mint';
+    }
+
+    if (color == AppColors.sky) {
+      return 'sky';
+    }
+
+    if (color == AppColors.lavender) {
+      return 'lavender';
+    }
+
+    if (color == AppColors.primarySoft) {
+      return 'primarySoft';
+    }
+
     return 'peach';
   }
 
@@ -234,12 +329,16 @@ class CommunityPost {
     switch (key) {
       case 'mint':
         return AppColors.mint;
+
       case 'sky':
         return AppColors.sky;
+
       case 'lavender':
         return AppColors.lavender;
+
       case 'primarySoft':
         return AppColors.primarySoft;
+
       case 'peach':
       default:
         return AppColors.peach;
@@ -248,22 +347,33 @@ class CommunityPost {
 
   static String colorKeyFromIconKey(String iconKey) {
     switch (iconKey) {
+      case 'default_person':
+        return 'peach';
+
       case 'anonymous':
         return 'peach';
+
       case 'cat':
         return 'peach';
+
       case 'dog':
         return 'mint';
+
       case 'rabbit':
         return 'primarySoft';
+
       case 'bird':
         return 'sky';
+
       case 'fish':
         return 'mint';
+
       case 'favorite':
         return 'lavender';
+
       case 'health':
         return 'sky';
+
       default:
         return 'peach';
     }
@@ -287,6 +397,7 @@ const List<CommunityPost> communityPosts = [
     authorId: 'sample_1',
     authorName: 'Ẩn danh PetHub',
     authorRole: 'Thành viên ẩn danh',
+    isAnonymous: true,
     timeAgo: '10 phút trước',
     content:
     'Hôm nay bé Miu rất ngoan, nằm cạnh cửa sổ cả buổi chiều. Ai ghé PetHub nhớ chào Miu một tiếng nha.',
@@ -298,13 +409,15 @@ const List<CommunityPost> communityPosts = [
       PostComment(
         id: 101,
         authorName: 'Ẩn danh PetHub',
-        content: 'Miu dễ thương quá, cuối tuần mình ghé chơi.',
+        content:
+        'Miu dễ thương quá, cuối tuần mình ghé chơi.',
         timeAgo: '8 phút trước',
       ),
       PostComment(
         id: 102,
         authorName: 'Ẩn danh PetHub',
-        content: 'Cho em xin lịch Miu hay ở quán với ạ.',
+        content:
+        'Cho em xin lịch Miu hay ở quán với ạ.',
         timeAgo: '5 phút trước',
       ),
     ],
@@ -314,6 +427,7 @@ const List<CommunityPost> communityPosts = [
     authorId: 'sample_2',
     authorName: 'Ẩn danh PetHub',
     authorRole: 'Thành viên ẩn danh',
+    isAnonymous: true,
     timeAgo: '35 phút trước',
     content:
     'Mọi người có mẹo nào giúp cún bớt sợ khi đi spa không? Bé nhà mình cứ thấy máy sấy là nép vào người.',
@@ -325,7 +439,8 @@ const List<CommunityPost> communityPosts = [
       PostComment(
         id: 201,
         authorName: 'Ẩn danh PetHub',
-        content: 'Có thể cho bé làm quen tiếng máy sấy từ xa trước nha.',
+        content:
+        'Có thể cho bé làm quen tiếng máy sấy từ xa trước nha.',
         timeAgo: '30 phút trước',
       ),
     ],

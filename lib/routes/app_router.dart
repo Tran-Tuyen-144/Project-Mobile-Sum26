@@ -14,6 +14,10 @@ import '../screens/admin/admin_main_screen.dart';
 import '../screens/customer/petprofile/pet_list_screen.dart';
 import '../screens/customer/community/community_post.dart';
 import '../screens/auth/customer_auth_screen.dart';
+import '../screens/staff/staff_department.dart';
+import '../screens/staff/staff_main_screen.dart';
+import '../screens/staff/staff_role_select_screen.dart';
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   overridePlatformDefaultLocation: true,
@@ -180,6 +184,31 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
+    GoRoute(
+      path: '/staff-role',
+      name: 'staff-role',
+      builder: (context, state) {
+        return const StaffRoleSelectScreen();
+      },
+    ),
+
+    GoRoute(
+      path: '/staff',
+      name: 'staff',
+      builder: (context, state) {
+        final departmentKey =
+        state.uri.queryParameters['department'];
+
+        final department =
+        staffDepartmentFromKey(departmentKey);
+
+        return StaffMainScreen(
+          department: department,
+        );
+      },
+    ),
+
     GoRoute(
       path: '/admin',
       name: 'admin',

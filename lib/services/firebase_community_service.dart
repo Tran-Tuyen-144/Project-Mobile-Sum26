@@ -24,7 +24,9 @@ class FirebaseCommunityService {
     });
   }
 
-  static Stream<List<CommunityPost>> watchPostsByAuthor(String authorId) {
+  static Stream<List<CommunityPost>> watchPostsByAuthor(
+      String authorId,
+      ) {
     return _posts
         .where('authorId', isEqualTo: authorId)
         .snapshots()
@@ -38,19 +40,23 @@ class FirebaseCommunityService {
         });
       }).toList();
 
-      posts.sort((a, b) => b.id.compareTo(a.id));
+      posts.sort(
+            (first, second) => second.id.compareTo(first.id),
+      );
 
       return posts;
     });
   }
 
-
-  static Future<void> createPost(CommunityPost post) async {
+  static Future<void> createPost(
+      CommunityPost post,
+      ) async {
     await _posts.doc(post.id.toString()).set({
       'id': post.id,
       'authorId': post.authorId,
       'authorName': post.authorName,
       'authorRole': post.authorRole,
+      'isAnonymous': post.isAnonymous,
       'avatarIconKey': post.avatarIconKey,
       'colorKey': post.colorKey,
       'timeAgo': post.timeAgo,
@@ -58,27 +64,37 @@ class FirebaseCommunityService {
       'category': post.category,
       'likes': post.likes,
       'likedBy': post.likedBy,
-      'commentList': post.commentList.map((comment) => comment.toJson()).toList(),
+      'commentList': post.commentList
+          .map((comment) => comment.toJson())
+          .toList(),
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
-  static Future<void> updatePost(CommunityPost post) async {
+  static Future<void> updatePost(
+      CommunityPost post,
+      ) async {
     await _posts.doc(post.id.toString()).update({
+      'authorId': post.authorId,
       'authorName': post.authorName,
       'authorRole': post.authorRole,
+      'isAnonymous': post.isAnonymous,
       'avatarIconKey': post.avatarIconKey,
       'colorKey': post.colorKey,
       'timeAgo': post.timeAgo,
       'content': post.content,
       'category': post.category,
-      'commentList': post.commentList.map((comment) => comment.toJson()).toList(),
+      'commentList': post.commentList
+          .map((comment) => comment.toJson())
+          .toList(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
-  static Future<void> deletePost(CommunityPost post) async {
+  static Future<void> deletePost(
+      CommunityPost post,
+      ) async {
     await _posts.doc(post.id.toString()).delete();
   }
 
@@ -88,39 +104,123 @@ class FirebaseCommunityService {
   }) async {
     final postRef = _posts.doc(post.id.toString());
 
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      final snapshot = await transaction.get(postRef);
+    await FirebaseFirestore.instance.runTransaction(
+          (transaction) async {
+        final snapshot = await transaction.get(postRef);
 
-      if (!snapshot.exists) return;
+        if (!snapshot.exists) return;
 
-      final data = snapshot.data();
-      if (data == null) return;
+        final data = snapshot.data();
 
-      final rawLikedBy = data['likedBy'];
+        if (data == null) return;
 
-      final likedBy = rawLikedBy is List
-          ? rawLikedBy.map((item) => item.toString()).toList()
-          : <String>[];
+        final rawLikedBy = data['likedBy'];
 
-      final currentLikes = (data['likes'] as num?)?.toInt() ?? 0;
+        final likedBy = rawLikedBy is List
+            ? rawLikedBy
+            .map((item) => item.toString())
+            .toList()
+            : <String>[];
 
-      if (likedBy.contains(userId)) {
-        likedBy.remove(userId);
+        final currentLikes =
+            (data['likes'] as num?)?.toInt() ?? 0;
 
-        transaction.update(postRef, {
-          'likedBy': likedBy,
-          'likes': currentLikes > 0 ? currentLikes - 1 : 0,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      } else {
-        likedBy.add(userId);
+        if (likedBy.contains(userId)) {
+          likedBy.remove(userId);
 
-        transaction.update(postRef, {
-          'likedBy': likedBy,
-          'likes': currentLikes + 1,
+          transaction.update(postRef, {
+            'likedBy': likedBy,
+            'likes':
+            currentLikes > 0 ? currentLikes - 1 : 0,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        } else {
+          likedBy.add(userId);
+
+          transaction.update(postRef, {
+            'likedBy': likedBy,
+            'likes': currentLikes + 1,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      },
+    );
+  }
+
+  /*
+   * Đồng bộ tên và avatar Profile sang tất cả bài viết
+   * của một người dùng.
+   *
+   * Dùng khi người dùng thay đổi:
+   * - tên hiển thị
+   * - avatar công khai
+   * - tên ẩn danh
+   * - avatar ẩn danh
+   */
+  static Future<void> syncAuthorIdentity({
+    required String authorId,
+    required bool isAnonymous,
+    required String authorName,
+    required String avatarIconKey,
+  }) async {
+    final snapshot = await _posts
+        .where('authorId', isEqualTo: authorId)
+        .get();
+
+    final matchingDocuments =
+    snapshot.docs.where((document) {
+      final data = document.data();
+
+      final storedRole =
+          data['authorRole'] as String? ?? '';
+
+      final storedAnonymous =
+          data['isAnonymous'] as bool? ??
+              storedRole
+                  .toLowerCase()
+                  .contains('ẩn danh');
+
+      return storedAnonymous == isAnonymous;
+    }).toList();
+
+    if (matchingDocuments.isEmpty) {
+      return;
+    }
+
+    const maximumWritesPerBatch = 450;
+
+    for (
+    var start = 0;
+    start < matchingDocuments.length;
+    start += maximumWritesPerBatch
+    ) {
+      final end =
+      start + maximumWritesPerBatch <
+          matchingDocuments.length
+          ? start + maximumWritesPerBatch
+          : matchingDocuments.length;
+
+      final batch = FirebaseFirestore.instance.batch();
+
+      for (var index = start; index < end; index++) {
+        final document = matchingDocuments[index];
+
+        batch.update(document.reference, {
+          'authorName': authorName,
+          'authorRole': isAnonymous
+              ? 'Thành viên ẩn danh'
+              : 'Thành viên PetHub',
+          'isAnonymous': isAnonymous,
+          'avatarIconKey': avatarIconKey,
+          'colorKey':
+          CommunityPost.colorKeyFromIconKey(
+            avatarIconKey,
+          ),
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }
-    });
+
+      await batch.commit();
+    }
   }
 }

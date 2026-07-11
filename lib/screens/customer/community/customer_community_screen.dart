@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/firebase_community_service.dart';
-import '../../../storage/user_identity_storage.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import 'community_post.dart';
@@ -34,12 +33,21 @@ class _CustomerCommunityScreenState extends State<CustomerCommunityScreen> {
   }
 
   Future<void> _loadCurrentUser() async {
-    final userId = await UserIdentityStorage.getOrCreateUserId();
+    final user = FirebaseAuth.instance.currentUser;
 
     if (!mounted) return;
 
+    if (user == null) {
+      setState(() {
+        currentUserId = '';
+        isLoadingUser = false;
+      });
+
+      return;
+    }
+
     setState(() {
-      currentUserId = userId;
+      currentUserId = user.uid;
       isLoadingUser = false;
     });
   }
@@ -65,7 +73,14 @@ class _CustomerCommunityScreenState extends State<CustomerCommunityScreen> {
   }
 
   Future<void> _openCreatePost() async {
-    final result = await context.push<CommunityPost>('/community/create-post');
+    if (currentUserId.isEmpty) {
+      context.go('/customer-auth');
+      return;
+    }
+
+    final result = await context.push<CommunityPost>(
+      '/community/create-post',
+    );
 
     if (result == null) return;
 
@@ -90,7 +105,9 @@ class _CustomerCommunityScreenState extends State<CustomerCommunityScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không đăng được bài: $error'),
+          content: Text(
+            'Không đăng được bài: $error',
+          ),
         ),
       );
     }

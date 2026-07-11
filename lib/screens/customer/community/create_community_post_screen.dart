@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../models/customer_profile.dart';
+import '../../../services/customer_profile_service.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
@@ -22,14 +24,25 @@ class CreateCommunityPostScreen extends StatefulWidget {
       _CreateCommunityPostScreenState();
 }
 
-class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
-  final TextEditingController contentController = TextEditingController();
+class _CreateCommunityPostScreenState
+    extends State<CreateCommunityPostScreen> {
+  final TextEditingController contentController =
+  TextEditingController();
 
-  bool isAnonymous = true;
-  String authorName = 'Ẩn danh PetHub';
+  CustomerProfile? currentProfile;
+
+  bool isLoadingProfile = true;
+  bool isSavingIdentity = false;
+
+  String? loadingError;
+
+  // Mặc định đăng công khai giống Facebook.
+  bool isAnonymous = false;
+
+  String anonymousName = 'Ẩn danh PetHub';
+  String anonymousAvatarIconKey = 'anonymous';
 
   String selectedCategory = '';
-  int selectedIconIndex = 0;
 
   final List<String> postCategories = const [
     'Mèo',
@@ -43,6 +56,12 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
 
   final List<PetIconOption> iconOptions = const [
     PetIconOption(
+      label: 'Chân dung',
+      iconKey: 'default_person',
+      icon: Icons.person_rounded,
+      color: AppColors.peach,
+    ),
+    PetIconOption(
       label: 'Ẩn danh',
       iconKey: 'anonymous',
       icon: Icons.face_rounded,
@@ -52,7 +71,7 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       label: 'Mèo',
       iconKey: 'cat',
       icon: Icons.pets_rounded,
-      color: AppColors.peach,
+      color: AppColors.primarySoft,
     ),
     PetIconOption(
       label: 'Cún',
@@ -64,7 +83,7 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       label: 'Thỏ',
       iconKey: 'rabbit',
       icon: Icons.emoji_nature_rounded,
-      color: AppColors.primarySoft,
+      color: AppColors.lavender,
     ),
     PetIconOption(
       label: 'Chim',
@@ -96,22 +115,15 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
   void initState() {
     super.initState();
 
-    final post = widget.initialPost;
+    final oldPost = widget.initialPost;
 
-    if (post != null) {
-      contentController.text = post.content;
-      selectedCategory = post.category;
-      authorName = post.authorName;
-      isAnonymous = post.authorRole.contains('ẩn danh');
-
-      final foundIndex = iconOptions.indexWhere(
-            (item) => item.iconKey == post.avatarIconKey,
-      );
-
-      if (foundIndex != -1) {
-        selectedIconIndex = foundIndex;
-      }
+    if (oldPost != null) {
+      contentController.text = oldPost.content;
+      selectedCategory = oldPost.category;
+      isAnonymous = oldPost.isAnonymous;
     }
+
+    _loadCurrentProfile();
   }
 
   @override
@@ -120,22 +132,103 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
     super.dispose();
   }
 
+  Future<void> _loadCurrentProfile() async {
+    try {
+      final profile =
+      await CustomerProfileService.getCurrentProfile();
+
+      if (!mounted) return;
+
+      setState(() {
+        currentProfile = profile;
+
+        anonymousName = profile.anonymousName.trim().isEmpty
+            ? 'Ẩn danh PetHub'
+            : profile.anonymousName.trim();
+
+        anonymousAvatarIconKey =
+        profile.anonymousAvatarIconKey.trim().isEmpty
+            ? 'anonymous'
+            : profile.anonymousAvatarIconKey.trim();
+
+        loadingError = null;
+        isLoadingProfile = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        loadingError = error
+            .toString()
+            .replaceFirst('Exception: ', '');
+
+        isLoadingProfile = false;
+      });
+    }
+  }
+
+  Future<void> _retryLoadProfile() async {
+    setState(() {
+      isLoadingProfile = true;
+      loadingError = null;
+    });
+
+    await _loadCurrentProfile();
+  }
+
+  PetIconOption _findIconOption(String iconKey) {
+    return iconOptions.firstWhere(
+          (option) => option.iconKey == iconKey,
+      orElse: () => iconOptions.first,
+    );
+  }
+
+  String _publicDisplayName(CustomerProfile profile) {
+    final name = profile.displayName.trim();
+
+    return name.isEmpty ? 'Bạn PetHub' : name;
+  }
+
+  String _publicAvatarIconKey(CustomerProfile profile) {
+    final iconKey = profile.avatarIconKey.trim();
+
+    return iconKey.isEmpty ? 'default_person' : iconKey;
+  }
+
+  String _currentAuthorName(CustomerProfile profile) {
+    if (isAnonymous) {
+      return anonymousName.trim().isEmpty
+          ? 'Ẩn danh PetHub'
+          : anonymousName.trim();
+    }
+
+    return _publicDisplayName(profile);
+  }
+
+  String _currentAvatarIconKey(CustomerProfile profile) {
+    if (isAnonymous) {
+      return anonymousAvatarIconKey.trim().isEmpty
+          ? 'anonymous'
+          : anonymousAvatarIconKey.trim();
+    }
+
+    return _publicAvatarIconKey(profile);
+  }
+
   void _toggleAnonymous(bool value) {
+    if (isSavingIdentity) return;
+
     setState(() {
       isAnonymous = value;
-
-      if (isAnonymous && authorName == 'Bạn PetHub') {
-        authorName = 'Ẩn danh PetHub';
-      }
-
-      if (!isAnonymous && authorName == 'Ẩn danh PetHub') {
-        authorName = 'Bạn PetHub';
-      }
     });
   }
 
-  Future<void> _changeAuthorName() async {
-    final controller = TextEditingController(text: authorName);
+  Future<void> _changeAnonymousName() async {
+    if (!isAnonymous || isSavingIdentity) return;
+
+    final controller = TextEditingController(
+      text: anonymousName,
+    );
 
     final result = await showDialog<String>(
       context: context,
@@ -144,15 +237,22 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          title: Text(
-            isAnonymous ? 'Đổi tên ẩn danh' : 'Đổi tên hiển thị',
-          ),
+          title: const Text('Đổi tên ẩn danh'),
           content: TextField(
             controller: controller,
             autofocus: true,
+            maxLength: 30,
+            textInputAction: TextInputAction.done,
             decoration: const InputDecoration(
-              hintText: 'Nhập tên hiển thị...',
+              labelText: 'Tên ẩn danh',
+              hintText: 'Ví dụ: Mèo Cam 152',
+              prefixIcon: Icon(
+                Icons.person_outline_rounded,
+              ),
             ),
+            onSubmitted: (value) {
+              Navigator.of(dialogContext).pop(value.trim());
+            },
           ),
           actions: [
             TextButton(
@@ -161,11 +261,14 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
               },
               child: const Text('Hủy'),
             ),
-            FilledButton(
+            FilledButton.icon(
               onPressed: () {
-                Navigator.of(dialogContext).pop(controller.text.trim());
+                Navigator.of(dialogContext).pop(
+                  controller.text.trim(),
+                );
               },
-              child: const Text('Lưu'),
+              icon: const Icon(Icons.save_rounded),
+              label: const Text('Lưu'),
             ),
           ],
         );
@@ -176,17 +279,58 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
 
     if (result == null) return;
 
+    final cleanName = result.trim();
+
+    if (cleanName.isEmpty) {
+      _showMessage(
+        'Tên ẩn danh không được để trống.',
+      );
+      return;
+    }
+
+    if (cleanName == anonymousName) return;
+
     setState(() {
-      authorName = result.isEmpty
-          ? (isAnonymous ? 'Ẩn danh PetHub' : 'Bạn PetHub')
-          : result;
+      isSavingIdentity = true;
     });
+
+    try {
+      await CustomerProfileService.updateAnonymousName(
+        cleanName,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        anonymousName = cleanName;
+      });
+
+      _showMessage(
+        'Đã cập nhật tên ẩn danh.',
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      _showMessage(
+        error.toString().replaceFirst('Exception: ', ''),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSavingIdentity = false;
+        });
+      }
+    }
   }
 
-  void _showAvatarPicker() {
-    showModalBottomSheet<void>(
+  Future<void> _showAnonymousAvatarPicker() async {
+    if (!isAnonymous || isSavingIdentity) return;
+
+    final selectedOption =
+    await showModalBottomSheet<PetIconOption>(
       context: context,
       backgroundColor: AppColors.cream,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(28),
@@ -195,7 +339,12 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       builder: (bottomSheetContext) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 22),
+            padding: const EdgeInsets.fromLTRB(
+              18,
+              14,
+              18,
+              22,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -204,44 +353,53 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                   height: 5,
                   decoration: BoxDecoration(
                     color: AppColors.peach,
-                    borderRadius: BorderRadius.circular(99),
+                    borderRadius:
+                    BorderRadius.circular(99),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Chọn avatar',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  'Chọn avatar ẩn danh',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium,
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
                 GridView.builder(
                   itemCount: iconOptions.length,
                   shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics:
+                  const NeverScrollableScrollPhysics(),
                   gridDelegate:
                   const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 4,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 0.9,
+                    childAspectRatio: 0.82,
                   ),
                   itemBuilder: (context, index) {
                     final option = iconOptions[index];
-                    final isSelected = selectedIconIndex == index;
+
+                    final isSelected =
+                        option.iconKey ==
+                            anonymousAvatarIconKey;
 
                     return InkWell(
-                      borderRadius: BorderRadius.circular(22),
+                      borderRadius:
+                      BorderRadius.circular(22),
                       onTap: () {
-                        setState(() {
-                          selectedIconIndex = index;
-                        });
-
-                        Navigator.of(bottomSheetContext).pop();
+                        Navigator.of(
+                          bottomSheetContext,
+                        ).pop(option);
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: isSelected ? option.color : Colors.white,
-                          borderRadius: BorderRadius.circular(22),
+                          color: isSelected
+                              ? option.color
+                              : Colors.white,
+                          borderRadius:
+                          BorderRadius.circular(22),
                           border: Border.all(
                             color: isSelected
                                 ? AppColors.primary
@@ -250,25 +408,32 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                           ),
                         ),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment:
+                          MainAxisAlignment.center,
                           children: [
                             CircleAvatar(
                               radius: 22,
-                              backgroundColor: Colors.white.withOpacity(0.85),
+                              backgroundColor:
+                              Colors.white.withOpacity(
+                                0.85,
+                              ),
                               child: Icon(
                                 option.icon,
                                 color: AppColors.textDark,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 7),
                             Text(
                               option.label,
                               maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              overflow:
+                              TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: AppColors.textDark,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 12,
+                                color:
+                                AppColors.textDark,
+                                fontWeight:
+                                FontWeight.w800,
+                                fontSize: 11,
                               ),
                             ),
                           ],
@@ -283,6 +448,47 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
         );
       },
     );
+
+    if (selectedOption == null) return;
+
+    if (selectedOption.iconKey ==
+        anonymousAvatarIconKey) {
+      return;
+    }
+
+    setState(() {
+      isSavingIdentity = true;
+    });
+
+    try {
+      await CustomerProfileService
+          .updateAnonymousAvatarIcon(
+        selectedOption.iconKey,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        anonymousAvatarIconKey =
+            selectedOption.iconKey;
+      });
+
+      _showMessage(
+        'Đã cập nhật avatar ẩn danh.',
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      _showMessage(
+        error.toString().replaceFirst('Exception: ', ''),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSavingIdentity = false;
+        });
+      }
+    }
   }
 
   void _showTagPicker() {
@@ -297,7 +503,12 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       builder: (bottomSheetContext) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 22),
+            padding: const EdgeInsets.fromLTRB(
+              18,
+              14,
+              18,
+              22,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -306,30 +517,37 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                   height: 5,
                   decoration: BoxDecoration(
                     color: AppColors.peach,
-                    borderRadius: BorderRadius.circular(99),
+                    borderRadius:
+                    BorderRadius.circular(99),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Chọn tag bài viết',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium,
                 ),
                 const SizedBox(height: 14),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
-                  children: postCategories.map((category) {
-                    final isSelected = selectedCategory == category;
+                  children:
+                  postCategories.map((category) {
+                    final selected =
+                        selectedCategory == category;
 
                     return ChoiceChip(
                       label: Text('#$category'),
-                      selected: isSelected,
+                      selected: selected,
                       onSelected: (_) {
                         setState(() {
                           selectedCategory = category;
                         });
 
-                        Navigator.of(bottomSheetContext).pop();
+                        Navigator.of(
+                          bottomSheetContext,
+                        ).pop();
                       },
                     );
                   }).toList(),
@@ -343,10 +561,16 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                         selectedCategory = '';
                       });
 
-                      Navigator.of(bottomSheetContext).pop();
+                      Navigator.of(
+                        bottomSheetContext,
+                      ).pop();
                     },
-                    icon: const Icon(Icons.close_rounded),
-                    label: const Text('Không gắn tag'),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                    ),
+                    label: const Text(
+                      'Không gắn tag',
+                    ),
                   ),
                 ),
               ],
@@ -358,18 +582,47 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
   }
 
   void _submitPost() {
-    final content = contentController.text.trim();
+    final profile = currentProfile;
 
-    if (content.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Em nhập nội dung bài viết trước nha.'),
-        ),
+    if (profile == null) {
+      _showMessage(
+        'Không tìm thấy hồ sơ người dùng.',
       );
       return;
     }
 
-    final option = iconOptions[selectedIconIndex];
+    if (isSavingIdentity) {
+      _showMessage(
+        'Đang lưu danh tính, vui lòng đợi.',
+      );
+      return;
+    }
+
+    final content =
+    contentController.text.trim();
+
+    if (content.isEmpty) {
+      _showMessage(
+        'Em nhập nội dung bài viết trước nha.',
+      );
+      return;
+    }
+
+    final authorName =
+    _currentAuthorName(profile);
+
+    final avatarIconKey =
+    _currentAvatarIconKey(profile);
+
+    final authorRole = isAnonymous
+        ? 'Thành viên ẩn danh'
+        : 'Thành viên PetHub';
+
+    final colorKey =
+    CommunityPost.colorKeyFromIconKey(
+      avatarIconKey,
+    );
+
     final oldPost = widget.initialPost;
 
     final CommunityPost resultPost;
@@ -377,26 +630,29 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
     if (oldPost == null) {
       resultPost = CommunityPost(
         id: DateTime.now().millisecondsSinceEpoch,
-        authorId: '',
+        authorId: profile.uid,
         authorName: authorName,
-        authorRole: isAnonymous ? 'Thành viên ẩn danh' : 'Thành viên PetHub',
+        authorRole: authorRole,
+        isAnonymous: isAnonymous,
         timeAgo: 'Vừa xong',
         content: content,
         category: selectedCategory,
         likes: 0,
         likedBy: const [],
-        avatarIconKey: option.iconKey,
-        colorKey: CommunityPost.colorKeyFromColor(option.color),
+        avatarIconKey: avatarIconKey,
+        colorKey: colorKey,
         commentList: const [],
       );
     } else {
       resultPost = oldPost.copyWith(
+        authorId: profile.uid,
         authorName: authorName,
-        authorRole: isAnonymous ? 'Thành viên ẩn danh' : 'Thành viên PetHub',
+        authorRole: authorRole,
+        isAnonymous: isAnonymous,
         content: content,
         category: selectedCategory,
-        avatarIconKey: option.iconKey,
-        colorKey: CommunityPost.colorKeyFromColor(option.color),
+        avatarIconKey: avatarIconKey,
+        colorKey: colorKey,
         timeAgo: 'Vừa chỉnh sửa',
       );
     }
@@ -404,18 +660,88 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
     context.pop(resultPost);
   }
 
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final selectedOption = iconOptions[selectedIconIndex];
+    if (isLoadingProfile) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (loadingError != null ||
+        currentProfile == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 52,
+                color: Colors.redAccent,
+              ),
+              const SizedBox(height: 14),
+              Text(
+                loadingError ??
+                    'Không tìm thấy hồ sơ người dùng.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 18),
+              ElevatedButton.icon(
+                onPressed: _retryLoadProfile,
+                icon: const Icon(
+                  Icons.refresh_rounded,
+                ),
+                label: const Text('Thử lại'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final profile = currentProfile!;
+
+    final authorName =
+    _currentAuthorName(profile);
+
+    final avatarIconKey =
+    _currentAvatarIconKey(profile);
+
+    final selectedOption =
+    _findIconOption(avatarIconKey);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 26),
+      padding: const EdgeInsets.fromLTRB(
+        18,
+        8,
+        18,
+        26,
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+        CrossAxisAlignment.start,
         children: [
           CreatePostHeader(
-            title: widget.isEditMode ? 'Chỉnh sửa bài viết' : 'Tạo bài viết',
-            subtitle: 'Bật/tắt ẩn danh, bấm avatar để đổi icon, bấm tên để đổi tên.',
+            title: widget.isEditMode
+                ? 'Chỉnh sửa bài viết'
+                : 'Tạo bài viết',
+            subtitle: isAnonymous
+                ? 'Bạn đang đăng bằng danh tính ẩn danh.'
+                : 'Bài viết đang sử dụng tên và avatar trong trang cá nhân.',
           ),
 
           const SizedBox(height: 20),
@@ -425,7 +751,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
             child: SwitchListTile(
               contentPadding: EdgeInsets.zero,
               value: isAnonymous,
-              onChanged: _toggleAnonymous,
+              onChanged: isSavingIdentity
+                  ? null
+                  : _toggleAnonymous,
               title: const Text(
                 'Đăng ẩn danh',
                 style: TextStyle(
@@ -435,8 +763,8 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
               ),
               subtitle: Text(
                 isAnonymous
-                    ? 'Người khác sẽ thấy bạn dưới tên ẩn danh.'
-                    : 'Bài viết sẽ dùng tên hiển thị bạn đặt.',
+                    ? 'Người khác sẽ thấy tên và avatar ẩn danh.'
+                    : 'Người khác sẽ thấy tên hiển thị trong trang cá nhân.',
               ),
               activeColor: AppColors.primary,
             ),
@@ -444,16 +772,29 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
 
           const SizedBox(height: 20),
 
-          _AuthorPickerCard(
+          _AuthorIdentityCard(
             authorName: authorName,
             selectedOption: selectedOption,
-            onAvatarTap: _showAvatarPicker,
-            onNameTap: _changeAuthorName,
+            isAnonymous: isAnonymous,
+            isSaving: isSavingIdentity,
+            onAvatarTap: isAnonymous
+                ? _showAnonymousAvatarPicker
+                : null,
+            onNameTap: isAnonymous
+                ? _changeAnonymousName
+                : null,
           ),
+
+          if (isSavingIdentity) ...[
+            const SizedBox(height: 12),
+            const LinearProgressIndicator(),
+          ],
 
           const SizedBox(height: 24),
 
-          const SectionTitle(title: 'Nội dung bài viết'),
+          const SectionTitle(
+            title: 'Nội dung bài viết',
+          ),
 
           const SizedBox(height: 12),
 
@@ -463,7 +804,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
               controller: contentController,
               maxLines: 6,
               minLines: 4,
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) {
+                setState(() {});
+              },
               decoration: const InputDecoration(
                 hintText:
                 'Ví dụ: Hôm nay bé mèo nhà mình hơi lười ăn, mọi người có kinh nghiệm gì không?',
@@ -474,7 +817,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
 
           const SizedBox(height: 24),
 
-          const SectionTitle(title: 'Tag bài viết'),
+          const SectionTitle(
+            title: 'Tag bài viết',
+          ),
 
           const SizedBox(height: 12),
 
@@ -490,7 +835,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
 
           const SizedBox(height: 24),
 
-          const SectionTitle(title: 'Xem trước bài viết'),
+          const SectionTitle(
+            title: 'Xem trước bài viết',
+          ),
 
           const SizedBox(height: 12),
 
@@ -508,22 +855,30 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () => context.pop(),
-                  icon: const Icon(Icons.close_rounded),
+                  onPressed: isSavingIdentity
+                      ? null
+                      : () => context.pop(),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                  ),
                   label: const Text('Hủy'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: _submitPost,
+                  onPressed: isSavingIdentity
+                      ? null
+                      : _submitPost,
                   icon: Icon(
                     widget.isEditMode
                         ? Icons.save_rounded
                         : Icons.send_rounded,
                   ),
                   label: Text(
-                    widget.isEditMode ? 'Lưu' : 'Đăng bài',
+                    widget.isEditMode
+                        ? 'Lưu'
+                        : 'Đăng bài',
                   ),
                 ),
               ),
@@ -535,15 +890,19 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
   }
 }
 
-class _AuthorPickerCard extends StatelessWidget {
+class _AuthorIdentityCard extends StatelessWidget {
   final String authorName;
   final PetIconOption selectedOption;
-  final VoidCallback onAvatarTap;
-  final VoidCallback onNameTap;
+  final bool isAnonymous;
+  final bool isSaving;
+  final VoidCallback? onAvatarTap;
+  final VoidCallback? onNameTap;
 
-  const _AuthorPickerCard({
+  const _AuthorIdentityCard({
     required this.authorName,
     required this.selectedOption,
+    required this.isAnonymous,
+    required this.isSaving,
     required this.onAvatarTap,
     required this.onNameTap,
   });
@@ -556,26 +915,59 @@ class _AuthorPickerCard extends StatelessWidget {
         children: [
           InkWell(
             borderRadius: BorderRadius.circular(99),
-            onTap: onAvatarTap,
-            child: CircleAvatar(
-              radius: 32,
-              backgroundColor: selectedOption.color,
-              child: Icon(
-                selectedOption.icon,
-                color: AppColors.textDark,
-                size: 32,
-              ),
+            onTap: isAnonymous && !isSaving
+                ? onAvatarTap
+                : null,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                CircleAvatar(
+                  radius: 32,
+                  backgroundColor:
+                  selectedOption.color,
+                  child: Icon(
+                    selectedOption.icon,
+                    color: AppColors.textDark,
+                    size: 32,
+                  ),
+                ),
+                if (isAnonymous)
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      width: 23,
+                      height: 23,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.edit_rounded,
+                        size: 13,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
+
           const SizedBox(width: 14),
+
           Expanded(
             child: InkWell(
               borderRadius: BorderRadius.circular(14),
-              onTap: onNameTap,
+              onTap: isAnonymous && !isSaving
+                  ? onNameTap
+                  : null,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 6,
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
                   children: [
                     Text(
                       authorName,
@@ -586,9 +978,11 @@ class _AuthorPickerCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Bấm để đổi tên',
-                      style: TextStyle(
+                    Text(
+                      isAnonymous
+                          ? 'Bấm để đổi tên hoặc avatar ẩn danh'
+                          : 'Tên và avatar lấy từ trang cá nhân',
+                      style: const TextStyle(
                         color: AppColors.textSoft,
                         fontWeight: FontWeight.w600,
                       ),
@@ -598,9 +992,14 @@ class _AuthorPickerCard extends StatelessWidget {
               ),
             ),
           ),
-          const Icon(
-            Icons.edit_rounded,
-            color: AppColors.primary,
+
+          Icon(
+            isAnonymous
+                ? Icons.edit_rounded
+                : Icons.lock_outline_rounded,
+            color: isAnonymous
+                ? AppColors.primary
+                : AppColors.textSoft,
           ),
         ],
       ),
