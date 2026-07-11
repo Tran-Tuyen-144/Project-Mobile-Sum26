@@ -9,10 +9,7 @@ import 'staff_department.dart';
 class StaffMainScreen extends StatefulWidget {
   final StaffDepartment department;
 
-  const StaffMainScreen({
-    super.key,
-    required this.department,
-  });
+  const StaffMainScreen({super.key, required this.department});
 
   @override
   State<StaffMainScreen> createState() => _StaffMainScreenState();
@@ -21,26 +18,597 @@ class StaffMainScreen extends StatefulWidget {
 class _StaffMainScreenState extends State<StaffMainScreen> {
   int selectedIndex = 0;
 
-  late final List<Widget> screens;
+  late final List<_StaffTask> tasks;
 
   @override
   void initState() {
     super.initState();
+    tasks = _tasksFor(widget.department);
+  }
 
-    screens = [
-      StaffWorkboardScreen(
-        department: widget.department,
+  int get completedCount {
+    return tasks.where((task) => task.isCompleted).length;
+  }
+
+  int get remainingCount {
+    return tasks.length - completedCount;
+  }
+
+  double get progress {
+    if (tasks.isEmpty) return 0;
+    return completedCount / tasks.length;
+  }
+
+  _StaffProfile get profile {
+    switch (widget.department) {
+      case StaffDepartment.cafe:
+        return _StaffProfile(
+          name: 'Nguyễn Minh An',
+          id: 'NV-CF-001',
+          phone: '0901 234 567',
+          departmentName: 'Nhân viên Café',
+          branch: 'PetHub Quận 1',
+          shift: 'Ca sáng',
+          shiftTime: '07:30 - 15:30',
+          status: 'Đang làm việc',
+          avatarColor: AppColors.peach,
+          icon: Icons.local_cafe_rounded,
+        );
+
+      case StaffDepartment.spa:
+        return _StaffProfile(
+          name: 'Trần Ngọc Mai',
+          id: 'NV-SP-002',
+          phone: '0912 345 678',
+          departmentName: 'Nhân viên Spa / Khách sạn',
+          branch: 'PetHub Quận 1',
+          shift: 'Ca hành chính',
+          shiftTime: '08:00 - 17:00',
+          status: 'Đang làm việc',
+          avatarColor: AppColors.lavender,
+          icon: Icons.pets_rounded,
+        );
+
+      case StaffDepartment.hospital:
+        return _StaffProfile(
+          name: 'Lê Hoàng Nam',
+          id: 'NV-BV-003',
+          phone: '0987 654 321',
+          departmentName: 'Nhân viên Bệnh viện',
+          branch: 'PetHub Veterinary',
+          shift: 'Ca sáng',
+          shiftTime: '08:00 - 16:00',
+          status: 'Đang làm việc',
+          avatarColor: AppColors.sky,
+          icon: Icons.medical_services_rounded,
+        );
+
+      case StaffDepartment.petCare:
+      case StaffDepartment.reception:
+        return _StaffProfile(
+          name: 'Nhân viên PetHub',
+          id: 'NV-000',
+          phone: '0900 000 000',
+          departmentName: widget.department.title,
+          branch: 'PetHub',
+          shift: 'Ca tạm thời',
+          shiftTime: '08:00 - 17:00',
+          status: 'Đang làm việc',
+          avatarColor: widget.department.color,
+          icon: widget.department.icon,
+        );
+    }
+  }
+
+  List<_StaffPageInfo> get pages {
+    switch (widget.department) {
+      case StaffDepartment.cafe:
+        return const [
+          _StaffPageInfo(title: 'Tổng quan', icon: Icons.home_rounded),
+          _StaffPageInfo(
+            title: 'Đặt bàn',
+            icon: Icons.table_restaurant_rounded,
+          ),
+          _StaffPageInfo(title: 'Menu', icon: Icons.restaurant_menu_rounded),
+          _StaffPageInfo(title: 'Bill', icon: Icons.receipt_long_rounded),
+        ];
+
+      case StaffDepartment.spa:
+        return const [
+          _StaffPageInfo(title: 'Tổng quan', icon: Icons.home_rounded),
+          _StaffPageInfo(
+            title: 'Lịch dịch vụ',
+            icon: Icons.calendar_month_rounded,
+          ),
+          _StaffPageInfo(
+            title: 'Tạo dịch vụ',
+            icon: Icons.add_business_rounded,
+          ),
+          _StaffPageInfo(
+            title: 'Phiếu dịch vụ',
+            icon: Icons.receipt_long_rounded,
+          ),
+        ];
+
+      case StaffDepartment.hospital:
+        return const [
+          _StaffPageInfo(title: 'Tổng quan', icon: Icons.home_rounded),
+          _StaffPageInfo(
+            title: 'Lịch khám',
+            icon: Icons.calendar_month_rounded,
+          ),
+          _StaffPageInfo(title: 'Bệnh án', icon: Icons.assignment_rounded),
+          _StaffPageInfo(title: 'Chi phí', icon: Icons.payments_rounded),
+        ];
+
+      case StaffDepartment.petCare:
+      case StaffDepartment.reception:
+        return const [
+          _StaffPageInfo(title: 'Tổng quan', icon: Icons.home_rounded),
+        ];
+    }
+  }
+
+  static List<_StaffTask> _tasksFor(StaffDepartment department) {
+    switch (department) {
+      case StaffDepartment.cafe:
+        return [
+          _StaffTask(
+            time: '07:30 - 08:00',
+            title: 'Kiểm tra khu vực Café',
+            description: 'Kiểm tra bàn ghế, quầy pha chế và vệ sinh đầu ca.',
+          ),
+          _StaffTask(
+            time: '08:00 - 08:30',
+            title: 'Kiểm tra đơn đặt bàn',
+            description: 'Xem danh sách khách đã đặt bàn trong ngày.',
+          ),
+          _StaffTask(
+            time: '08:30 - 09:00',
+            title: 'Kiểm tra Menu',
+            description: 'Cập nhật món còn phục vụ và món đã hết.',
+          ),
+          _StaffTask(
+            time: 'Trong ca',
+            title: 'Tiếp nhận khách và gọi món',
+            description: 'Tra cứu đặt bàn, chọn món và xuất Bill cho khách.',
+          ),
+          _StaffTask(
+            time: '15:00 - 15:30',
+            title: 'Kiểm kê cuối ca',
+            description: 'Kiểm tra nguyên liệu và bàn giao cho ca sau.',
+          ),
+        ];
+
+      case StaffDepartment.spa:
+        return [
+          _StaffTask(
+            time: '08:00 - 08:30',
+            title: 'Chuẩn bị khu vực Spa',
+            description: 'Kiểm tra khăn, dụng cụ, phòng Spa và khu lưu trú.',
+          ),
+          _StaffTask(
+            time: '08:30 - 09:00',
+            title: 'Kiểm tra lịch dịch vụ',
+            description: 'Xem lịch Spa và lịch gửi Pet khách sạn trong ngày.',
+          ),
+          _StaffTask(
+            time: '09:00 - 10:00',
+            title: 'Tiếp nhận Pet',
+            description: 'Xác nhận thông tin khách, Pet và tình trạng ban đầu.',
+          ),
+          _StaffTask(
+            time: 'Trong ca',
+            title: 'Kiểm tra Pet lưu trú',
+            description: 'Theo dõi ăn uống, sức khỏe và khu vực nghỉ của Pet.',
+          ),
+          _StaffTask(
+            time: '16:00 - 17:00',
+            title: 'Bàn giao Pet cho khách',
+            description: 'Cập nhật chi phí, tình trạng Pet và thời gian nhận.',
+          ),
+        ];
+
+      case StaffDepartment.hospital:
+        return [
+          _StaffTask(
+            time: '08:00 - 08:30',
+            title: 'Kiểm tra lịch khám',
+            description: 'Xem danh sách khách và Pet đã đặt lịch khám.',
+          ),
+          _StaffTask(
+            time: '08:30 - 09:00',
+            title: 'Chuẩn bị phòng khám',
+            description: 'Kiểm tra dụng cụ, thuốc và thiết bị khám.',
+          ),
+          _StaffTask(
+            time: 'Trong ca',
+            title: 'Tiếp nhận Pet',
+            description: 'Xác nhận thông tin khách, Pet và lý do khám.',
+          ),
+          _StaffTask(
+            time: 'Sau mỗi lượt khám',
+            title: 'Cập nhật bệnh án',
+            description: 'Ghi triệu chứng, chẩn đoán, thuốc và hướng dẫn.',
+          ),
+          _StaffTask(
+            time: '15:30 - 16:00',
+            title: 'Kiểm tra lịch tái khám',
+            description: 'Xác nhận lịch tái khám và hồ sơ còn thiếu.',
+          ),
+        ];
+
+      case StaffDepartment.petCare:
+      case StaffDepartment.reception:
+        return [
+          _StaffTask(
+            time: '08:00 - 09:00',
+            title: 'Công việc tạm thời',
+            description: 'Chức vụ này tạm thời không sử dụng.',
+          ),
+        ];
+    }
+  }
+
+  void _openTaskList() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.cream,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-      StaffOrdersScreen(
-        department: widget.department,
+      builder: (bottomSheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.82,
+              minChildSize: 0.55,
+              maxChildSize: 0.95,
+              builder: (context, scrollController) {
+                return Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 44,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: AppColors.primarySoft,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: widget.department.color,
+                            child: Icon(
+                              widget.department.icon,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Công việc hôm nay',
+                                  style: TextStyle(
+                                    color: AppColors.textDark,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 19,
+                                  ),
+                                ),
+                                Text(
+                                  'Đã hoàn thành $completedCount/${tasks.length}',
+                                  style: const TextStyle(
+                                    color: AppColors.textSoft,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              Navigator.pop(bottomSheetContext);
+                            },
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(99),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 9,
+                          backgroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.fromLTRB(18, 8, 18, 28),
+                        itemCount: tasks.length,
+                        itemBuilder: (context, index) {
+                          final task = tasks[index];
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: SoftCard(
+                              color: Colors.white,
+                              padding: const EdgeInsets.all(12),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(20),
+                                onTap: () {
+                                  setState(() {
+                                    task.isCompleted = !task.isCompleted;
+                                  });
+
+                                  setSheetState(() {});
+                                },
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Radio<bool>(
+                                      value: true,
+                                      groupValue: task.isCompleted,
+                                      activeColor: AppColors.primary,
+                                      onChanged: (_) {
+                                        setState(() {
+                                          task.isCompleted = !task.isCompleted;
+                                        });
+
+                                        setSheetState(() {});
+                                      },
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            task.time,
+                                            style: const TextStyle(
+                                              color: AppColors.primary,
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 5),
+                                          Text(
+                                            task.title,
+                                            style: TextStyle(
+                                              color: AppColors.textDark,
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 15,
+                                              decoration: task.isCompleted
+                                                  ? TextDecoration.lineThrough
+                                                  : null,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 5),
+                                          Text(
+                                            task.description,
+                                            style: const TextStyle(
+                                              color: AppColors.textSoft,
+                                              height: 1.4,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _openStaffProfile() {
+    final completedTasks = tasks.where((task) => task.isCompleted).toList();
+    final incompleteTasks = tasks.where((task) => !task.isCompleted).toList();
+    final staff = profile;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.cream,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-      const StaffPetManagementScreen(),
-      const StaffCheckInScreen(),
-    ];
+      builder: (bottomSheetContext) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.88,
+          minChildSize: 0.62,
+          maxChildSize: 0.96,
+          builder: (context, scrollController) {
+            return ListView(
+              controller: scrollController,
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySoft,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                CircleAvatar(
+                  radius: 45,
+                  backgroundColor: staff.avatarColor,
+                  child: Icon(staff.icon, color: AppColors.primary, size: 45),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  staff.name,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 22,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  '${staff.id} • ${staff.departmentName}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textSoft,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                SoftCard(
+                  color: Colors.white,
+                  child: Column(
+                    children: [
+                      _ProfileLine(
+                        icon: Icons.store_rounded,
+                        label: 'Chi nhánh',
+                        value: staff.branch,
+                      ),
+                      const Divider(height: 26),
+                      _ProfileLine(
+                        icon: Icons.work_rounded,
+                        label: 'Khu vực',
+                        value: staff.departmentName,
+                      ),
+                      const Divider(height: 26),
+                      _ProfileLine(
+                        icon: Icons.schedule_rounded,
+                        label: 'Ca làm',
+                        value: '${staff.shift} • ${staff.shiftTime}',
+                      ),
+                      const Divider(height: 26),
+                      _ProfileLine(
+                        icon: Icons.phone_rounded,
+                        label: 'Số điện thoại',
+                        value: staff.phone,
+                      ),
+                      const Divider(height: 26),
+                      _ProfileLine(
+                        icon: Icons.circle,
+                        label: 'Trạng thái',
+                        value: staff.status,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 22),
+                const SectionTitle(title: 'Tiến độ công việc hôm nay'),
+                const SizedBox(height: 10),
+                SoftCard(
+                  color: AppColors.mint,
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _ProfileTaskNumber(
+                              label: 'Tổng việc',
+                              value: '${tasks.length}',
+                            ),
+                          ),
+                          Expanded(
+                            child: _ProfileTaskNumber(
+                              label: 'Hoàn thành',
+                              value: '$completedCount',
+                            ),
+                          ),
+                          Expanded(
+                            child: _ProfileTaskNumber(
+                              label: 'Còn thiếu',
+                              value: '$remainingCount',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(99),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 10,
+                          backgroundColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${(progress * 100).round()}% công việc đã hoàn thành',
+                        style: const TextStyle(
+                          color: AppColors.textDark,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 22),
+                const SectionTitle(title: 'Đã hoàn thành'),
+                const SizedBox(height: 9),
+                if (completedTasks.isEmpty)
+                  const _EmptyMessage(
+                    message: 'Chưa có công việc nào được hoàn thành.',
+                  )
+                else
+                  ...completedTasks.map(
+                    (task) => _ProfileTaskRow(task: task, completed: true),
+                  ),
+                const SizedBox(height: 20),
+                const SectionTitle(title: 'Còn thiếu'),
+                const SizedBox(height: 9),
+                if (incompleteTasks.isEmpty)
+                  const _EmptyMessage(
+                    message: 'Đã hoàn thành đầy đủ công việc.',
+                  )
+                else
+                  ...incompleteTasks.map(
+                    (task) => _ProfileTaskRow(task: task, completed: false),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentPages = pages;
+
+    if (selectedIndex >= currentPages.length) {
+      selectedIndex = 0;
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -63,10 +631,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                 children: [
                   const Text(
                     'PetHub Staff',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                   ),
                   Text(
                     widget.department.title,
@@ -83,13 +648,22 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: 'Profile nhân viên',
+            onPressed: _openStaffProfile,
+            icon: const Icon(
+              Icons.account_circle_rounded,
+              color: AppColors.primary,
+              size: 29,
+            ),
+          ),
+          IconButton(
             tooltip: 'Đổi chức vụ',
             onPressed: () {
               context.go('/staff-role');
             },
             icon: const Icon(
               Icons.swap_horiz_rounded,
-              color: AppColors.primary,
+              color: AppColors.textSoft,
             ),
           ),
           const SizedBox(width: 4),
@@ -97,7 +671,10 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
       ),
       body: IndexedStack(
         index: selectedIndex,
-        children: screens,
+        children: [
+          _buildOverviewPage(),
+          ...currentPages.skip(1).map((page) => _buildPlaceholderPage(page)),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
@@ -106,232 +683,20 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
             selectedIndex = index;
           });
         },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.view_timeline_outlined),
-            selectedIcon: Icon(Icons.view_timeline_rounded),
-            label: 'Công việc',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long_rounded),
-            label: 'Đơn hàng',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.pets_outlined),
-            selectedIcon: Icon(Icons.pets_rounded),
-            label: 'Pet',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.qr_code_scanner_outlined),
-            selectedIcon: Icon(Icons.qr_code_scanner_rounded),
-            label: 'Check-in',
-          ),
-        ],
+        destinations: currentPages.map((page) {
+          return NavigationDestination(
+            icon: Icon(page.icon),
+            selectedIcon: Icon(page.icon),
+            label: page.title,
+          );
+        }).toList(),
       ),
     );
   }
-}
 
-// ==========================================================
-// WORKBOARD
-// ==========================================================
-
-class StaffWorkboardScreen extends StatefulWidget {
-  final StaffDepartment department;
-
-  const StaffWorkboardScreen({
-    super.key,
-    required this.department,
-  });
-
-  @override
-  State<StaffWorkboardScreen> createState() =>
-      _StaffWorkboardScreenState();
-}
-
-class _StaffWorkboardScreenState
-    extends State<StaffWorkboardScreen> {
-  late final List<_WorkTask> tasks;
-
-  @override
-  void initState() {
-    super.initState();
-    tasks = _createTasks(widget.department);
-  }
-
-  List<_WorkTask> _createTasks(
-      StaffDepartment department,
-      ) {
-    switch (department) {
-      case StaffDepartment.cafe:
-        return [
-          _WorkTask(
-            time: '07:30',
-            title: 'Kiểm tra khu vực Café',
-            description:
-            'Kiểm tra bàn, máy pha và nguyên liệu đầu ca.',
-            icon: Icons.storefront_rounded,
-          ),
-          _WorkTask(
-            time: '08:15',
-            title: 'Xử lý đơn gọi nước',
-            description:
-            'Xác nhận các đơn khách đã gọi trước.',
-            icon: Icons.local_cafe_rounded,
-          ),
-          _WorkTask(
-            time: '10:00',
-            title: 'Cập nhật đơn đã hoàn thành',
-            description:
-            'Kiểm tra và chuyển trạng thái đơn sang Đã xong.',
-            icon: Icons.task_alt_rounded,
-          ),
-          _WorkTask(
-            time: '14:00',
-            title: 'Bổ sung nguyên liệu',
-            description:
-            'Kiểm tra tồn kho sữa, cà phê và bánh.',
-            icon: Icons.inventory_2_rounded,
-          ),
-        ];
-
-      case StaffDepartment.spa:
-        return [
-          _WorkTask(
-            time: '08:00',
-            title: 'Chuẩn bị phòng Spa',
-            description:
-            'Kiểm tra dụng cụ, khăn và sản phẩm chăm sóc.',
-            icon: Icons.bathtub_rounded,
-          ),
-          _WorkTask(
-            time: '09:00',
-            title: 'Spa cho bé Mochi',
-            description:
-            'Tắm, sấy và vệ sinh tai theo yêu cầu.',
-            icon: Icons.pets_rounded,
-          ),
-          _WorkTask(
-            time: '10:30',
-            title: 'Cập nhật tình trạng Pet',
-            description:
-            'Ghi chú da, lông và hành vi trong quá trình spa.',
-            icon: Icons.edit_note_rounded,
-          ),
-          _WorkTask(
-            time: '11:00',
-            title: 'Tải ảnh sau Spa',
-            description:
-            'Chụp và cập nhật hình ảnh sau khi hoàn thành.',
-            icon: Icons.add_a_photo_rounded,
-          ),
-        ];
-
-      case StaffDepartment.hospital:
-        return [
-          _WorkTask(
-            time: '08:30',
-            title: 'Kiểm tra lịch khám',
-            description:
-            'Xem danh sách Pet có lịch khám trong ngày.',
-            icon: Icons.calendar_month_rounded,
-          ),
-          _WorkTask(
-            time: '09:15',
-            title: 'Khám sức khỏe bé Lucky',
-            description:
-            'Kiểm tra nhiệt độ và tình trạng ăn uống.',
-            icon: Icons.health_and_safety_rounded,
-          ),
-          _WorkTask(
-            time: '10:00',
-            title: 'Cập nhật bệnh án',
-            description:
-            'Ghi chẩn đoán, thuốc và lịch tái khám.',
-            icon: Icons.medical_information_rounded,
-          ),
-          _WorkTask(
-            time: '15:00',
-            title: 'Theo dõi Pet sau điều trị',
-            description:
-            'Cập nhật tình trạng hồi phục cho khách.',
-            icon: Icons.monitor_heart_rounded,
-          ),
-        ];
-
-      case StaffDepartment.petCare:
-        return [
-          _WorkTask(
-            time: '07:45',
-            title: 'Kiểm tra sức khỏe Pet',
-            description:
-            'Kiểm tra ăn uống và biểu hiện đầu ngày.',
-            icon: Icons.health_and_safety_rounded,
-          ),
-          _WorkTask(
-            time: '09:00',
-            title: 'Sắp lịch Pet khu vực Café',
-            description:
-            'Phân ca phù hợp, tránh Pet làm việc quá tải.',
-            icon: Icons.schedule_rounded,
-          ),
-          _WorkTask(
-            time: '11:30',
-            title: 'Cho Pet nghỉ giữa ca',
-            description:
-            'Đưa Pet về khu vực nghỉ và bổ sung nước.',
-            icon: Icons.hotel_rounded,
-          ),
-          _WorkTask(
-            time: '16:00',
-            title: 'Cập nhật hồ sơ sức khỏe',
-            description:
-            'Ghi chú tình trạng Pet cuối ngày.',
-            icon: Icons.assignment_rounded,
-          ),
-        ];
-
-      case StaffDepartment.reception:
-        return [
-          _WorkTask(
-            time: '07:30',
-            title: 'Kiểm tra danh sách đặt bàn',
-            description:
-            'Đối chiếu đơn đặt bàn trong ngày.',
-            icon: Icons.table_restaurant_rounded,
-          ),
-          _WorkTask(
-            time: '08:00',
-            title: 'Chuẩn bị khu vực Check-in',
-            description:
-            'Kiểm tra thiết bị và mã xác nhận.',
-            icon: Icons.qr_code_scanner_rounded,
-          ),
-          _WorkTask(
-            time: '09:30',
-            title: 'Xác nhận khách đến quán',
-            description:
-            'Quét QR và cập nhật trạng thái đặt bàn.',
-            icon: Icons.how_to_reg_rounded,
-          ),
-          _WorkTask(
-            time: '17:00',
-            title: 'Đối soát Check-in',
-            description:
-            'Kiểm tra đơn đã đến và đơn vắng mặt.',
-            icon: Icons.fact_check_rounded,
-          ),
-        ];
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final completed =
-        tasks.where((task) => task.isCompleted).length;
-
-    final date = DateTime.now();
+  Widget _buildOverviewPage() {
+    final now = DateTime.now();
+    final currentPages = pages;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
@@ -339,18 +704,22 @@ class _StaffWorkboardScreenState
         Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: widget.department.color,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(30),
+            gradient: LinearGradient(
+              colors: [widget.department.color, AppColors.cream],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
           child: Row(
             children: [
               CircleAvatar(
-                radius: 31,
-                backgroundColor: Colors.white.withOpacity(0.8),
-                child: const Icon(
-                  Icons.today_rounded,
+                radius: 33,
+                backgroundColor: Colors.white.withOpacity(0.85),
+                child: Icon(
+                  widget.department.icon,
                   color: AppColors.primary,
-                  size: 30,
+                  size: 31,
                 ),
               ),
               const SizedBox(width: 15),
@@ -358,9 +727,9 @@ class _StaffWorkboardScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Công việc hôm nay',
-                      style: TextStyle(
+                    Text(
+                      'Chào ${profile.name}',
+                      style: const TextStyle(
                         color: AppColors.textDark,
                         fontWeight: FontWeight.w900,
                         fontSize: 20,
@@ -368,1310 +737,309 @@ class _StaffWorkboardScreenState
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '${date.day}/${date.month}/${date.year} • ${widget.department.shortTitle}',
-                      style: const TextStyle(
-                        color: AppColors.textSoft,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        Row(
-          children: [
-            Expanded(
-              child: _StaffStatCard(
-                label: 'Tổng việc',
-                value: '${tasks.length}',
-                icon: Icons.list_alt_rounded,
-                color: AppColors.sky,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _StaffStatCard(
-                label: 'Hoàn thành',
-                value: '$completed',
-                icon: Icons.task_alt_rounded,
-                color: AppColors.mint,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _StaffStatCard(
-                label: 'Còn lại',
-                value: '${tasks.length - completed}',
-                icon: Icons.pending_actions_rounded,
-                color: AppColors.peach,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 26),
-        SectionTitle(
-          title: 'Lịch theo khung giờ',
-          actionText: '$completed/${tasks.length}',
-        ),
-        const SizedBox(height: 10),
-        ...List.generate(
-          tasks.length,
-              (index) {
-            final task = tasks[index];
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: SoftCard(
-                color: Colors.white,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      children: [
-                        Text(
-                          task.time,
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: task.isCompleted
-                              ? AppColors.mint
-                              : AppColors.primarySoft,
-                          child: Icon(
-                            task.isCompleted
-                                ? Icons.check_rounded
-                                : task.icon,
-                            color: AppColors.textDark,
-                            size: 21,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            task.title,
-                            style: TextStyle(
-                              color: AppColors.textDark,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 15,
-                              decoration: task.isCompleted
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            task.description,
-                            style: const TextStyle(
-                              color: AppColors.textSoft,
-                              height: 1.4,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton.icon(
-                              onPressed: () {
-                                setState(() {
-                                  task.isCompleted =
-                                  !task.isCompleted;
-                                });
-                              },
-                              icon: Icon(
-                                task.isCompleted
-                                    ? Icons.undo_rounded
-                                    : Icons.check_circle_outline_rounded,
-                              ),
-                              label: Text(
-                                task.isCompleted
-                                    ? 'Hoàn tác'
-                                    : 'Hoàn thành',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-}
-
-// ==========================================================
-// ORDERS
-// ==========================================================
-
-class StaffOrdersScreen extends StatefulWidget {
-  final StaffDepartment department;
-
-  const StaffOrdersScreen({
-    super.key,
-    required this.department,
-  });
-
-  @override
-  State<StaffOrdersScreen> createState() =>
-      _StaffOrdersScreenState();
-}
-
-class _StaffOrdersScreenState
-    extends State<StaffOrdersScreen> {
-  final List<String> areas = const [
-    'Café',
-    'Spa',
-    'Bệnh viện',
-  ];
-
-  late String selectedArea;
-
-  final List<_StaffOrder> orders = [
-    _StaffOrder(
-      id: 'CF-1024',
-      area: 'Café',
-      customerName: 'Nguyễn Hải Yến',
-      title: '2 Cà phê sữa • 1 Bánh tiramisu',
-      time: '08:30',
-      status: 'Chờ xác nhận',
-    ),
-    _StaffOrder(
-      id: 'CF-1025',
-      area: 'Café',
-      customerName: 'Trần Ngọc Hương Quế',
-      title: '1 Matcha latte • 1 Bánh quy',
-      time: '09:00',
-      status: 'Đang xử lý',
-    ),
-    _StaffOrder(
-      id: 'SP-2081',
-      area: 'Spa',
-      customerName: 'Phạm Minh Anh',
-      title: 'Spa toàn thân cho Mochi',
-      petName: 'Mochi',
-      time: '09:15',
-      status: 'Chờ xác nhận',
-    ),
-    _StaffOrder(
-      id: 'SP-2082',
-      area: 'Spa',
-      customerName: 'Lê Hoàng Nam',
-      title: 'Tắm và vệ sinh tai cho Lucky',
-      petName: 'Lucky',
-      time: '10:30',
-      status: 'Đang xử lý',
-    ),
-    _StaffOrder(
-      id: 'BV-3012',
-      area: 'Bệnh viện',
-      customerName: 'Võ Thảo Nhi',
-      title: 'Khám tình trạng bỏ ăn',
-      petName: 'Milo',
-      time: '11:00',
-      status: 'Chờ xác nhận',
-    ),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-
-    switch (widget.department) {
-      case StaffDepartment.spa:
-        selectedArea = 'Spa';
-        break;
-      case StaffDepartment.hospital:
-        selectedArea = 'Bệnh viện';
-        break;
-      default:
-        selectedArea = 'Café';
-    }
-  }
-
-  void _advanceStatus(_StaffOrder order) {
-    setState(() {
-      if (order.status == 'Chờ xác nhận') {
-        order.status = 'Đang xử lý';
-      } else if (order.status == 'Đang xử lý') {
-        order.status = 'Đã xong';
-      }
-    });
-  }
-
-  Future<void> _editNote(
-      _StaffOrder order,
-      ) async {
-    final controller =
-    TextEditingController(text: order.note);
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(
-            order.area == 'Bệnh viện'
-                ? 'Ghi chú bệnh án'
-                : 'Ghi chú dịch vụ',
-          ),
-          content: TextField(
-            controller: controller,
-            maxLines: 5,
-            decoration: InputDecoration(
-              hintText: order.area == 'Bệnh viện'
-                  ? 'Nhập tình trạng, chẩn đoán, thuốc...'
-                  : 'Nhập tình trạng da, lông, hành vi...',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child: const Text('Hủy'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(
-                  controller.text.trim(),
-                );
-              },
-              child: const Text('Lưu'),
-            ),
-          ],
-        );
-      },
-    );
-
-    controller.dispose();
-
-    if (result == null) return;
-
-    setState(() {
-      order.note = result;
-    });
-  }
-
-  void _addAfterSpaPhoto(_StaffOrder order) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.cream,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
-      ),
-      builder: (bottomSheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Thêm hình ảnh sau Spa',
-                  style: TextStyle(
-                    color: AppColors.textDark,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 18,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: AppColors.primarySoft,
-                    child: Icon(
-                      Icons.camera_alt_rounded,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  title: const Text('Chụp ảnh'),
-                  onTap: () {
-                    Navigator.pop(bottomSheetContext);
-
-                    setState(() {
-                      order.imageCount++;
-                    });
-                  },
-                ),
-                ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: AppColors.sky,
-                    child: Icon(
-                      Icons.photo_library_rounded,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  title: const Text('Chọn từ thư viện'),
-                  onTap: () {
-                    Navigator.pop(bottomSheetContext);
-
-                    setState(() {
-                      order.imageCount++;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final filteredOrders = orders
-        .where((order) => order.area == selectedArea)
-        .toList();
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
-      children: [
-        const SectionTitle(
-          title: 'Xử lý đơn hàng',
-        ),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: areas.map((area) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: ChoiceChip(
-                  selected: selectedArea == area,
-                  label: Text(area),
-                  onSelected: (_) {
-                    setState(() {
-                      selectedArea = area;
-                    });
-                  },
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        const SizedBox(height: 20),
-        if (filteredOrders.isEmpty)
-          const SoftCard(
-            color: Colors.white,
-            child: Text(
-              'Không có đơn hàng trong khu vực này.',
-            ),
-          )
-        else
-          ...filteredOrders.map(
-                (order) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 13),
-                child: SoftCard(
-                  color: Colors.white,
-                  child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 25,
-                            backgroundColor:
-                            _areaColor(order.area),
-                            child: Icon(
-                              _areaIcon(order.area),
-                              color: AppColors.textDark,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  order.id,
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  order.customerName,
-                                  style: const TextStyle(
-                                    color: AppColors.textDark,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          _StatusPill(
-                            status: order.status,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        order.title,
-                        style: const TextStyle(
-                          color: AppColors.textDark,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(height: 7),
-                      Text(
-                        '${order.time}${order.petName == null ? '' : ' • Pet: ${order.petName}'}',
-                        style: const TextStyle(
-                          color: AppColors.textSoft,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (order.note.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.cream,
-                            borderRadius:
-                            BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            order.note,
-                            style: const TextStyle(
-                              color: AppColors.textSoft,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                      if (order.imageCount > 0) ...[
-                        const SizedBox(height: 10),
-                        Text(
-                          '${order.imageCount} hình ảnh sau Spa',
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 14),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          if (order.status != 'Đã xong')
-                            FilledButton.icon(
-                              onPressed: () {
-                                _advanceStatus(order);
-                              },
-                              icon: Icon(
-                                order.status ==
-                                    'Chờ xác nhận'
-                                    ? Icons.check_rounded
-                                    : Icons.task_alt_rounded,
-                              ),
-                              label: Text(
-                                order.status ==
-                                    'Chờ xác nhận'
-                                    ? 'Xác nhận'
-                                    : 'Đã xong',
-                              ),
-                            ),
-                          if (order.area != 'Café')
-                            OutlinedButton.icon(
-                              onPressed: () {
-                                _editNote(order);
-                              },
-                              icon: const Icon(
-                                Icons.edit_note_rounded,
-                              ),
-                              label: Text(
-                                order.area == 'Bệnh viện'
-                                    ? 'Bệnh án'
-                                    : 'Ghi chú',
-                              ),
-                            ),
-                          if (order.area == 'Spa')
-                            OutlinedButton.icon(
-                              onPressed: () {
-                                _addAfterSpaPhoto(order);
-                              },
-                              icon: const Icon(
-                                Icons.add_a_photo_rounded,
-                              ),
-                              label: const Text('Thêm ảnh'),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-      ],
-    );
-  }
-
-  Color _areaColor(String area) {
-    switch (area) {
-      case 'Spa':
-        return AppColors.lavender;
-      case 'Bệnh viện':
-        return AppColors.sky;
-      default:
-        return AppColors.peach;
-    }
-  }
-
-  IconData _areaIcon(String area) {
-    switch (area) {
-      case 'Spa':
-        return Icons.bathtub_rounded;
-      case 'Bệnh viện':
-        return Icons.medical_services_rounded;
-      default:
-        return Icons.local_cafe_rounded;
-    }
-  }
-}
-
-// ==========================================================
-// PET MANAGEMENT
-// ==========================================================
-
-class StaffPetManagementScreen extends StatefulWidget {
-  const StaffPetManagementScreen({super.key});
-
-  @override
-  State<StaffPetManagementScreen> createState() =>
-      _StaffPetManagementScreenState();
-}
-
-class _StaffPetManagementScreenState
-    extends State<StaffPetManagementScreen> {
-  final List<_ManagedPet> pets = [
-    _ManagedPet(
-      name: 'Miu',
-      breed: 'Mèo Anh lông ngắn',
-      shift: '08:00 - 11:00',
-      workMinutes: 120,
-      maxMinutes: 180,
-      healthStatus: 'Tốt',
-      note: 'Ăn uống bình thường.',
-    ),
-    _ManagedPet(
-      name: 'Lucky',
-      breed: 'Corgi',
-      shift: '09:00 - 12:00',
-      workMinutes: 165,
-      maxMinutes: 180,
-      healthStatus: 'Cần nghỉ',
-      note: 'Hơi mệt sau khi chơi lâu.',
-    ),
-    _ManagedPet(
-      name: 'Max',
-      breed: 'Golden Retriever',
-      shift: '14:00 - 17:00',
-      workMinutes: 90,
-      maxMinutes: 180,
-      healthStatus: 'Tốt',
-      note: 'Tâm trạng vui vẻ.',
-    ),
-  ];
-
-  Future<void> _updatePet(
-      _ManagedPet pet,
-      ) async {
-    String selectedStatus = pet.healthStatus;
-
-    final controller =
-    TextEditingController(text: pet.note);
-
-    final shouldSave = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(
-                'Cập nhật ${pet.name}',
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: selectedStatus,
-                    decoration: const InputDecoration(
-                      labelText: 'Tình trạng sức khỏe',
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'Tốt',
-                        child: Text('Tốt'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Theo dõi',
-                        child: Text('Theo dõi'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Cần nghỉ',
-                        child: Text('Cần nghỉ'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Cần khám',
-                        child: Text('Cần khám'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value == null) return;
-
-                      setDialogState(() {
-                        selectedStatus = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: controller,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Ghi chú sức khỏe',
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(
-                      dialogContext,
-                      false,
-                    );
-                  },
-                  child: const Text('Hủy'),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    Navigator.pop(
-                      dialogContext,
-                      true,
-                    );
-                  },
-                  child: const Text('Lưu'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    if (shouldSave == true) {
-      setState(() {
-        pet.healthStatus = selectedStatus;
-        pet.note = controller.text.trim();
-      });
-    }
-
-    controller.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
-      children: [
-        const SectionTitle(
-          title: 'Quản lý Pet',
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Theo dõi thời gian làm việc để tránh Pet bị quá tải.',
-          style: TextStyle(
-            color: AppColors.textSoft,
-            height: 1.4,
-          ),
-        ),
-        const SizedBox(height: 18),
-        ...pets.map(
-              (pet) {
-            final progress =
-            (pet.workMinutes / pet.maxMinutes)
-                .clamp(0.0, 1.0)
-                .toDouble();
-
-            final nearOverload = progress >= 0.85;
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 13),
-              child: SoftCard(
-                color: Colors.white,
-                child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const CircleAvatar(
-                          radius: 29,
-                          backgroundColor:
-                          AppColors.primarySoft,
-                          child: Icon(
-                            Icons.pets_rounded,
-                            color: AppColors.textDark,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 13),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                pet.name,
-                                style: const TextStyle(
-                                  color: AppColors.textDark,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 17,
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                pet.breed,
-                                style: const TextStyle(
-                                  color: AppColors.textSoft,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        _HealthPill(
-                          status: pet.healthStatus,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.schedule_rounded,
-                          size: 19,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(width: 7),
-                        Text(
-                          'Ca làm: ${pet.shift}',
-                          style: const TextStyle(
-                            color: AppColors.textDark,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 13),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Đã làm ${pet.workMinutes}/${pet.maxMinutes} phút',
-                            style: TextStyle(
-                              color: nearOverload
-                                  ? Colors.redAccent
-                                  : AppColors.textSoft,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '${(progress * 100).round()}%',
-                          style: TextStyle(
-                            color: nearOverload
-                                ? Colors.redAccent
-                                : AppColors.primary,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 7),
-                    LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 9,
-                      borderRadius:
-                      BorderRadius.circular(99),
-                      backgroundColor:
-                      AppColors.cream,
-                      color: nearOverload
-                          ? Colors.redAccent
-                          : AppColors.primary,
-                    ),
-                    if (nearOverload) ...[
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Pet sắp đạt giới hạn làm việc, cần sắp xếp thời gian nghỉ.',
-                        style: TextStyle(
-                          color: Colors.redAccent,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    Text(
-                      pet.note,
+                      '${profile.shift} • ${profile.shiftTime}\n${profile.branch}',
                       style: const TextStyle(
                         color: AppColors.textSoft,
                         height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          _updatePet(pet);
-                        },
-                        icon: const Icon(
-                          Icons.health_and_safety_rounded,
-                        ),
-                        label: const Text(
-                          'Cập nhật sức khỏe',
-                        ),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-}
-
-// ==========================================================
-// CHECK-IN
-// ==========================================================
-
-class StaffCheckInScreen extends StatefulWidget {
-  const StaffCheckInScreen({super.key});
-
-  @override
-  State<StaffCheckInScreen> createState() =>
-      _StaffCheckInScreenState();
-}
-
-class _StaffCheckInScreenState
-    extends State<StaffCheckInScreen> {
-  final TextEditingController codeController =
-  TextEditingController();
-
-  final List<_CheckInRecord> records = [];
-
-  @override
-  void dispose() {
-    codeController.dispose();
-    super.dispose();
-  }
-
-  void _simulateScan() {
-    final timestamp =
-    DateTime.now().millisecondsSinceEpoch.toString();
-
-    final code =
-        'PH-${timestamp.substring(timestamp.length - 6)}';
-
-    codeController.text = code;
-
-    _confirmCheckIn();
-  }
-
-  void _confirmCheckIn() {
-    final code = codeController.text.trim();
-
-    if (code.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Vui lòng quét hoặc nhập mã đặt bàn.',
-          ),
-        ),
-      );
-      return;
-    }
-
-    final record = _CheckInRecord(
-      code: code,
-      customerName: 'Khách hàng PetHub',
-      tableName: 'Bàn A3',
-      time: TimeOfDay.now().format(context),
-    );
-
-    setState(() {
-      records.insert(0, record);
-      codeController.clear();
-    });
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          icon: const CircleAvatar(
-            radius: 30,
-            backgroundColor: AppColors.mint,
-            child: Icon(
-              Icons.check_rounded,
-              color: AppColors.textDark,
-              size: 32,
-            ),
-          ),
-          title: const Text(
-            'Check-in thành công',
-          ),
-          content: Text(
-            'Mã ${record.code}\n'
-                '${record.customerName} • ${record.tableName}',
-            textAlign: TextAlign.center,
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-              child: const Text('Hoàn tất'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
-      children: [
-        const SectionTitle(
-          title: 'Quản lý Check-in',
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Quét mã QR của khách để xác nhận đơn đặt bàn.',
-          style: TextStyle(
-            color: AppColors.textSoft,
-          ),
-        ),
-        const SizedBox(height: 20),
-        SoftCard(
-          color: Colors.white,
-          child: Column(
-            children: [
-              Container(
-                height: 230,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.cream,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: AppColors.primary,
-                    width: 2,
-                  ),
-                ),
-                child: const Column(
-                  mainAxisAlignment:
-                  MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.qr_code_scanner_rounded,
-                      size: 100,
-                      color: AppColors.primary,
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'Đặt mã QR vào giữa khung',
-                      style: TextStyle(
-                        color: AppColors.textDark,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Giao diện mô phỏng camera quét QR',
-                      style: TextStyle(
-                        color: AppColors.textSoft,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _simulateScan,
-                  icon: const Icon(
-                    Icons.camera_alt_rounded,
-                  ),
-                  label: const Text(
-                    'Mở camera quét QR',
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 22),
-        const SectionTitle(
-          title: 'Nhập mã thủ công',
-        ),
-        const SizedBox(height: 10),
-        SoftCard(
-          color: Colors.white,
-          child: Column(
-            children: [
-              TextField(
-                controller: codeController,
-                textCapitalization:
-                TextCapitalization.characters,
-                decoration: const InputDecoration(
-                  labelText: 'Mã đặt bàn',
-                  hintText: 'Ví dụ: PH-123456',
-                  prefixIcon: Icon(
-                    Icons.confirmation_number_rounded,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 13),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _confirmCheckIn,
-                  icon: const Icon(
-                    Icons.how_to_reg_rounded,
-                  ),
-                  label: const Text(
-                    'Xác nhận Check-in',
-                  ),
                 ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 24),
-        SectionTitle(
-          title: 'Check-in gần đây',
-          actionText: '${records.length}',
-        ),
-        const SizedBox(height: 10),
-        if (records.isEmpty)
-          const SoftCard(
-            color: Colors.white,
-            child: Text(
-              'Chưa có lượt Check-in nào.',
-              style: TextStyle(
-                color: AppColors.textSoft,
-              ),
-            ),
-          )
-        else
-          ...records.map(
-                (record) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: SoftCard(
-                  color: Colors.white,
-                  child: Row(
-                    children: [
-                      const CircleAvatar(
-                        backgroundColor: AppColors.mint,
-                        child: Icon(
-                          Icons.check_rounded,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              record.code,
-                              style: const TextStyle(
-                                color: AppColors.textDark,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              '${record.customerName} • ${record.tableName}',
-                              style: const TextStyle(
-                                color: AppColors.textSoft,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        record.time,
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
+        const SectionTitle(title: 'Công việc hôm nay'),
+        const SizedBox(height: 11),
+        SoftCard(
+          color: AppColors.mint,
+          onTap: _openTaskList,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 28,
+                    backgroundColor: Colors.white,
+                    child: Icon(
+                      Icons.task_alt_rounded,
+                      color: AppColors.primary,
+                      size: 28,
+                    ),
                   ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Danh sách công việc',
+                          style: TextStyle(
+                            color: AppColors.textDark,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 17,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${now.day}/${now.month}/${now.year} • '
+                          '$completedCount/${tasks.length} hoàn thành',
+                          style: const TextStyle(
+                            color: AppColors.textSoft,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 10,
+                  backgroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Text(
+                    '${(progress * 100).round()}% hoàn thành',
+                    style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'Còn $remainingCount việc',
+                    style: const TextStyle(
+                      color: AppColors.textSoft,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 26),
+        SectionTitle(title: 'Chức năng ${widget.department.shortTitle}'),
+        const SizedBox(height: 11),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            ...List.generate(currentPages.length - 1, (index) {
+              final realIndex = index + 1;
+              final page = currentPages[realIndex];
+
+              return SizedBox(
+                width: (MediaQuery.of(context).size.width - 48) / 2,
+                child: _FeatureCard(
+                  title: page.title,
+                  icon: page.icon,
+                  color: widget.department.color,
+                  onTap: () {
+                    setState(() {
+                      selectedIndex = realIndex;
+                    });
+                  },
                 ),
               );
-            },
-          ),
+            }),
+            SizedBox(
+              width: (MediaQuery.of(context).size.width - 48) / 2,
+              child: _FeatureCard(
+                title: 'Profile',
+                icon: Icons.badge_rounded,
+                color: AppColors.mint,
+                onTap: _openStaffProfile,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
+
+  Widget _buildPlaceholderPage(_StaffPageInfo page) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
+      children: [
+        SectionTitle(title: page.title),
+        const SizedBox(height: 14),
+        SoftCard(
+          color: Colors.white,
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 42,
+                backgroundColor: widget.department.color,
+                child: Icon(page.icon, size: 42, color: AppColors.textDark),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                page.title,
+                style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 20,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _placeholderText(page.title),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textSoft, height: 1.45),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _placeholderText(String title) {
+    if (widget.department == StaffDepartment.cafe) {
+      if (title == 'Đặt bàn') {
+        return 'Bước tiếp theo sẽ làm form nhập tên khách, số điện thoại và hiện tóm tắt đặt bàn.';
+      }
+
+      if (title == 'Menu') {
+        return 'Bước tiếp theo sẽ làm giao diện chọn món, tính tổng tiền và xuất Bill.';
+      }
+
+      if (title == 'Bill') {
+        return 'Bước tiếp theo sẽ làm danh sách Bill và chi tiết hóa đơn.';
+      }
+    }
+
+    if (widget.department == StaffDepartment.spa) {
+      if (title == 'Lịch dịch vụ') {
+        return 'Bước sau sẽ làm danh sách lịch Spa và khách sạn Pet.';
+      }
+
+      if (title == 'Tạo dịch vụ') {
+        return 'Bước sau sẽ làm form thông tin khách, Pet, ngày giờ Spa, ngày gửi nhận và chi phí.';
+      }
+
+      if (title == 'Phiếu dịch vụ') {
+        return 'Bước sau sẽ làm phiếu dịch vụ Spa / Khách sạn.';
+      }
+    }
+
+    if (widget.department == StaffDepartment.hospital) {
+      if (title == 'Lịch khám') {
+        return 'Bước sau sẽ làm danh sách lịch khám có ngày giờ, tên khách, SĐT và lý do khám.';
+      }
+
+      if (title == 'Bệnh án') {
+        return 'Bước sau sẽ làm form hồ sơ bệnh án khi khám thú cưng.';
+      }
+
+      if (title == 'Chi phí') {
+        return 'Bước sau sẽ làm chi phí khám và giao diện xuất bệnh án PDF.';
+      }
+    }
+
+    return 'Chức năng này sẽ được làm ở bước tiếp theo.';
+  }
 }
 
-// ==========================================================
-// SHARED MODELS + WIDGETS
-// ==========================================================
+class _StaffPageInfo {
+  final String title;
+  final IconData icon;
 
-class _WorkTask {
+  const _StaffPageInfo({required this.title, required this.icon});
+}
+
+class _StaffProfile {
+  final String name;
+  final String id;
+  final String phone;
+  final String departmentName;
+  final String branch;
+  final String shift;
+  final String shiftTime;
+  final String status;
+  final Color avatarColor;
+  final IconData icon;
+
+  const _StaffProfile({
+    required this.name,
+    required this.id,
+    required this.phone,
+    required this.departmentName,
+    required this.branch,
+    required this.shift,
+    required this.shiftTime,
+    required this.status,
+    required this.avatarColor,
+    required this.icon,
+  });
+}
+
+class _StaffTask {
   final String time;
   final String title;
   final String description;
-  final IconData icon;
 
   bool isCompleted;
 
-  _WorkTask({
+  _StaffTask({
     required this.time,
     required this.title,
     required this.description,
-    required this.icon,
     this.isCompleted = false,
   });
 }
 
-class _StaffOrder {
-  final String id;
-  final String area;
-  final String customerName;
+class _FeatureCard extends StatelessWidget {
   final String title;
-  final String time;
-  final String? petName;
-
-  String status;
-  String note;
-  int imageCount;
-
-  _StaffOrder({
-    required this.id,
-    required this.area,
-    required this.customerName,
-    required this.title,
-    required this.time,
-    required this.status,
-    this.petName,
-    this.note = '',
-    this.imageCount = 0,
-  });
-}
-
-class _ManagedPet {
-  final String name;
-  final String breed;
-  final String shift;
-  final int workMinutes;
-  final int maxMinutes;
-
-  String healthStatus;
-  String note;
-
-  _ManagedPet({
-    required this.name,
-    required this.breed,
-    required this.shift,
-    required this.workMinutes,
-    required this.maxMinutes,
-    required this.healthStatus,
-    required this.note,
-  });
-}
-
-class _CheckInRecord {
-  final String code;
-  final String customerName;
-  final String tableName;
-  final String time;
-
-  const _CheckInRecord({
-    required this.code,
-    required this.customerName,
-    required this.tableName,
-    required this.time,
-  });
-}
-
-class _StaffStatCard extends StatelessWidget {
-  final String label;
-  final String value;
   final IconData icon;
   final Color color;
+  final VoidCallback onTap;
 
-  const _StaffStatCard({
-    required this.label,
-    required this.value,
+  const _FeatureCard({
+    required this.title,
     required this.icon,
     required this.color,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return SoftCard(
       color: color,
-      padding: const EdgeInsets.all(13),
+      onTap: onTap,
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          Icon(
-            icon,
-            color: AppColors.textDark,
+          CircleAvatar(
+            radius: 27,
+            backgroundColor: Colors.white.withOpacity(0.8),
+            child: Icon(icon, color: AppColors.textDark, size: 27),
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: 10),
           Text(
-            value,
+            title,
+            textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.textDark,
               fontWeight: FontWeight.w900,
-              fontSize: 19,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textSoft,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+              height: 1.3,
             ),
           ),
         ],
@@ -1680,91 +1048,144 @@ class _StaffStatCard extends StatelessWidget {
   }
 }
 
-class _StatusPill extends StatelessWidget {
-  final String status;
+class _ProfileLine extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
 
-  const _StatusPill({
-    required this.status,
+  const _ProfileLine({
+    required this.icon,
+    required this.label,
+    required this.value,
   });
 
   @override
   Widget build(BuildContext context) {
-    Color color;
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.primary, size: 21),
+        const SizedBox(width: 11),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSoft,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              color: AppColors.textDark,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
-    switch (status) {
-      case 'Đã xong':
-        color = AppColors.mint;
-        break;
-      case 'Đang xử lý':
-        color = AppColors.sky;
-        break;
-      default:
-        color = AppColors.peach;
-    }
+class _ProfileTaskNumber extends StatelessWidget {
+  final String label;
+  final String value;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 6,
-      ),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(99),
-      ),
-      child: Text(
-        status,
-        style: const TextStyle(
-          color: AppColors.textDark,
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
+  const _ProfileTaskNumber({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: AppColors.textDark,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.textSoft,
+            fontWeight: FontWeight.w600,
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileTaskRow extends StatelessWidget {
+  final _StaffTask task;
+  final bool completed;
+
+  const _ProfileTaskRow({required this.task, required this.completed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: SoftCard(
+        color: Colors.white,
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: completed ? AppColors.mint : AppColors.peach,
+              child: Icon(
+                completed ? Icons.check_rounded : Icons.pending_actions_rounded,
+                size: 19,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    task.time,
+                    style: const TextStyle(
+                      color: AppColors.textSoft,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _HealthPill extends StatelessWidget {
-  final String status;
+class _EmptyMessage extends StatelessWidget {
+  final String message;
 
-  const _HealthPill({
-    required this.status,
-  });
+  const _EmptyMessage({required this.message});
 
   @override
   Widget build(BuildContext context) {
-    Color color;
-
-    switch (status) {
-      case 'Tốt':
-        color = AppColors.mint;
-        break;
-      case 'Theo dõi':
-        color = AppColors.sky;
-        break;
-      case 'Cần khám':
-        color = AppColors.pink;
-        break;
-      default:
-        color = AppColors.peach;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 6,
-      ),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(99),
-      ),
-      child: Text(
-        status,
-        style: const TextStyle(
-          color: AppColors.textDark,
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
+    return SoftCard(
+      color: Colors.white,
+      child: Text(message, style: const TextStyle(color: AppColors.textSoft)),
     );
   }
 }

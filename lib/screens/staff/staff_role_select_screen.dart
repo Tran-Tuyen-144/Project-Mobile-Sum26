@@ -11,9 +11,7 @@ class StaffRoleSelectScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chọn chức vụ nhân viên'),
-      ),
+      appBar: AppBar(title: const Text('Chọn chức vụ nhân viên')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(18, 8, 18, 28),
@@ -23,11 +21,7 @@ class StaffRoleSelectScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
                 gradient: const LinearGradient(
-                  colors: [
-                    AppColors.mint,
-                    AppColors.sky,
-                    AppColors.cream,
-                  ],
+                  colors: [AppColors.mint, AppColors.sky, AppColors.cream],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -58,7 +52,7 @@ class StaffRoleSelectScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         const Text(
-                          'Chọn khu vực làm việc để mở bảng điều khiển phù hợp.',
+                          'Chọn khu vực được phân công để mở giao diện làm việc.',
                           style: TextStyle(
                             color: AppColors.textSoft,
                             height: 1.4,
@@ -72,66 +66,58 @@ class StaffRoleSelectScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            ...StaffDepartment.values.map(
-                  (department) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: SoftCard(
-                    color: department.color,
-                    onTap: () {
-                      context.push(
-                        '/staff?department=${department.key}',
-                      );
-                    },
-                    padding: const EdgeInsets.all(18),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 29,
-                          backgroundColor:
-                          Colors.white.withOpacity(0.8),
-                          child: Icon(
-                            department.icon,
-                            color: AppColors.textDark,
-                            size: 29,
-                          ),
+            ...selectableStaffDepartments.map((department) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: SoftCard(
+                  color: department.color,
+                  padding: const EdgeInsets.all(18),
+                  onTap: () {
+                    context.push('/staff?department=${department.key}');
+                  },
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 29,
+                        backgroundColor: Colors.white.withOpacity(0.8),
+                        child: Icon(
+                          department.icon,
+                          color: AppColors.textDark,
+                          size: 29,
                         ),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                department.title,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium,
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              department.title,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              department.description,
+                              style: const TextStyle(
+                                color: AppColors.textSoft,
+                                height: 1.35,
+                                fontWeight: FontWeight.w600,
                               ),
-                              const SizedBox(height: 5),
-                              Text(
-                                department.description,
-                                style: const TextStyle(
-                                  color: AppColors.textSoft,
-                                  height: 1.35,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 17,
-                          color: AppColors.textSoft,
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 17,
+                        color: AppColors.textSoft,
+                      ),
+                    ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            }),
           ],
         ),
       ),
