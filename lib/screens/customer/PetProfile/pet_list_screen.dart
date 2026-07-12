@@ -1,85 +1,143 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../booking_confirm/booking_confirm_data.dart';
 import 'pet_detail_screen.dart';
 
 class PetListScreen extends StatelessWidget {
-  PetListScreen({super.key});
+  final String? tableBookingId;
+  final BookingConfirmData? bookingData;
+
+  PetListScreen({super.key, this.tableBookingId, this.bookingData});
 
   final List<Map<String, dynamic>> pets = [
     {
-      "name": "Mailisa",
-      "age": "2 tuổi",
-      "image": "assets/images/cat1.jpg",
+      'name': 'Mailisa',
+      'age': '2 tuổi',
+      'status': 'Khỏe mạnh',
+      'isAvailable': true,
     },
     {
-      "name": "Corgi Lucky",
-      "age": "3 tuổi",
-      "image": "assets/images/dog1.jpg",
+      'name': 'Corgi Lucky',
+      'age': '3 tuổi',
+      'status': 'Đã tiêm phòng',
+      'isAvailable': true,
     },
     {
-      "name": "Golden Max",
-      "age": "4 tuổi",
-      "image": "assets/images/dog2.jpg",
+      'name': 'Golden Max',
+      'age': '4 tuổi',
+      'status': 'Đang được theo dõi',
+      'isAvailable': false,
     },
     {
-      "name": "Mèo Mochi",
-      "age": "1 tuổi",
-      "image": "assets/images/cat2.jpg",
+      'name': 'Mèo Mochi',
+      'age': '1 tuổi',
+      'status': 'Khỏe mạnh',
+      'isAvailable': true,
     },
     {
-      "name": "Shiba Ken",
-      "age": "2 tuổi",
-      "image": "assets/images/dog3.jpg",
+      'name': 'Shiba Ken',
+      'age': '2 tuổi',
+      'status': 'Khỏe mạnh',
+      'isAvailable': true,
     },
     {
-      "name": "Poodle Coco",
-      "age": "3 tuổi",
-      "image": "assets/images/dog4.jpg",
+      'name': 'Poodle Coco',
+      'age': '3 tuổi',
+      'status': 'Đã tiêm phòng',
+      'isAvailable': false,
     },
     {
-      "name": "Mèo Luna",
-      "age": "2 tuổi",
-      "image": "assets/images/cat3.jpg",
+      'name': 'Mèo Luna',
+      'age': '2 tuổi',
+      'status': 'Khỏe mạnh',
+      'isAvailable': true,
     },
     {
-      "name": "Husky Snow",
-      "age": "5 tuổi",
-      "image": "assets/images/dog5.jpg",
+      'name': 'Husky Snow',
+      'age': '5 tuổi',
+      'status': 'Cần chăm sóc đặc biệt',
+      'isAvailable': false,
     },
   ];
 
   @override
   Widget build(BuildContext context) {
+    final isSelectingPet = bookingData != null;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Hồ sơ thú cưng"),
+        title: Text(isSelectingPet ? 'Chọn thú cưng' : 'Hồ sơ thú cưng'),
       ),
       body: ListView.builder(
         itemCount: pets.length,
         itemBuilder: (context, index) {
           final pet = pets[index];
-
+          final isAvailable = pet['isAvailable'] as bool;
+          final isLocked = isSelectingPet && !isAvailable;
           return Card(
-            margin: const EdgeInsets.all(10),
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            color: isLocked ? Colors.grey.shade200 : null,
             child: ListTile(
+              enabled: !isLocked,
               leading: CircleAvatar(
                 radius: 28,
-                backgroundColor: Colors.orange.shade100,
+                backgroundColor: isLocked
+                    ? Colors.grey.shade300
+                    : Colors.orange.shade100,
                 child: Icon(
-                  Icons.pets,
-                  color: Colors.orange.shade800,
+                  isLocked ? Icons.lock_rounded : Icons.pets,
+                  color: isLocked
+                      ? Colors.grey.shade600
+                      : Colors.orange.shade800,
                 ),
               ),
-              title: Text(pet["name"]),
-              subtitle: Text(pet["age"]),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PetDetailScreen(
-                      pet: pet,
+              title: Text(pet['name'] as String),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 4),
+                  Text('${pet['age']} • Tình trạng: ${pet['status']}'),
+                  const SizedBox(height: 4),
+                  Text(
+                    isAvailable
+                        ? 'Còn trống — có thể chọn'
+                        : 'Đã được người khác chọn',
+                    style: TextStyle(
+                      color: isAvailable
+                          ? Colors.green.shade700
+                          : Colors.red.shade700,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
+                ],
+              ),
+              isThreeLine: true,
+              trailing: Icon(
+                isLocked ? Icons.lock_rounded : Icons.arrow_forward_ios,
+                color: isLocked ? Colors.red.shade700 : null,
+              ),
+              onTap: () {
+                if (isSelectingPet) {
+                  if (!isAvailable) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Thú cưng này đã được người khác chọn.'),
+                      ),
+                    );
+                    return;
+                  }
+                  context.push(
+                    '/booking-confirm',
+                    extra: bookingData!.copyWith(
+                      petName: pet['name'] as String,
+                      petStatus: pet['status'] as String,
+                    ),
+                  );
+                  return;
+                }
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => PetDetailScreen(pet: pet)),
                 );
               },
             ),

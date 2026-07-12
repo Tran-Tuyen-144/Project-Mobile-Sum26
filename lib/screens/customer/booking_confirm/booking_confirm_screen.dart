@@ -9,10 +9,7 @@ import 'booking_confirm_data.dart';
 class BookingConfirmScreen extends StatelessWidget {
   final BookingConfirmData data;
 
-  const BookingConfirmScreen({
-    super.key,
-    required this.data,
-  });
+  const BookingConfirmScreen({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +30,18 @@ class BookingConfirmScreen extends StatelessWidget {
             color: Colors.white,
             child: Column(
               children: [
+                _ConfirmRow(
+                  icon: Icons.pets_rounded,
+                  label: 'Thú cưng',
+                  value: data.petName,
+                ),
+                const SizedBox(height: 14),
+                _ConfirmRow(
+                  icon: Icons.health_and_safety_rounded,
+                  label: 'Tình trạng',
+                  value: data.petStatus,
+                ),
+                const SizedBox(height: 14),
                 _ConfirmRow(
                   icon: Icons.storefront_rounded,
                   label: 'Chi nhánh',
@@ -87,9 +96,9 @@ class BookingConfirmScreen extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Vui lòng đến trước giờ hẹn khoảng 10 phút. Nếu cần đổi giờ, bạn có thể liên hệ nhân viên PetHub.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      height: 1.4,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(height: 1.4),
                   ),
                 ),
               ],
@@ -160,7 +169,7 @@ class BookingConfirmScreen extends StatelessWidget {
           ),
           title: const Text('Đặt bàn thành công'),
           content: Text(
-            'PetHub đã giữ ${data.tableName} tại ${data.branch} cho bạn vào ${data.day} lúc ${data.time}.',
+            'PetHub đã giữ ${data.tableName} tại ${data.branch} cho ${data.petName} vào ${data.day} lúc ${data.time}.',
           ),
           actions: [
             TextButton(
@@ -188,11 +197,7 @@ class _ConfirmHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            AppColors.primarySoft,
-            AppColors.peach,
-            AppColors.cream,
-          ],
+          colors: [AppColors.primarySoft, AppColors.peach, AppColors.cream],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -224,9 +229,9 @@ class _ConfirmHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'Kiểm tra lại thông tin trước khi hoàn tất lịch ghé PetHub.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
               ],
             ),
@@ -252,16 +257,9 @@ class _ConfirmRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          color: AppColors.primary,
-          size: 21,
-        ),
+        Icon(icon, color: AppColors.primary, size: 21),
         const SizedBox(width: 10),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
         const Spacer(),
         Flexible(
           child: Text(

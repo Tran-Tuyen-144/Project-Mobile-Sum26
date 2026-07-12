@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../booking_confirm/booking_confirm_data.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
 import 'customer_drink_order_screen.dart';
+import '../petprofile/pet_list_screen.dart';
+
 class CustomerBookingScreen extends StatefulWidget {
   final String petName;
 
-  const CustomerBookingScreen({
-    super.key,
-    this.petName = 'Thú cưng của bạn',
-  });
+  const CustomerBookingScreen({super.key, this.petName = 'Thú cưng của bạn'});
 
   @override
-  State<CustomerBookingScreen> createState() =>
-      _CustomerBookingScreenState();
+  State<CustomerBookingScreen> createState() => _CustomerBookingScreenState();
 }
 
 class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
@@ -25,6 +22,8 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
   int selectedTime = 1;
   int selectedGuest = 2;
   int? selectedTable;
+  bool _tableBooked = false;
+  String? _tableBookingId;
 
   final branches = const [
     'PetHub Quận 1',
@@ -32,21 +31,9 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
     'PetHub Thủ Đức',
   ];
 
-  final days = const [
-    'Hôm nay',
-    'Ngày mai',
-    'Thứ 7',
-    'CN',
-  ];
+  final days = const ['Hôm nay', 'Ngày mai', 'Thứ 7', 'CN'];
 
-  final times = const [
-    '09:00',
-    '10:30',
-    '13:00',
-    '15:30',
-    '18:00',
-    '20:00',
-  ];
+  final times = const ['09:00', '10:30', '13:00', '15:30', '18:00', '20:00'];
 
   final tables = const [
     _TableItem(id: 1, name: 'Bàn A1', seats: 2, status: TableStatus.available),
@@ -64,9 +51,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _BookingHeader(
-            petName: widget.petName,
-          ),
+          _BookingHeader(petName: widget.petName),
 
           const SizedBox(height: 24),
 
@@ -171,6 +156,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
           const SizedBox(height: 26),
 
           _BookingSummary(
+            petName: widget.petName,
             branch: branches[selectedBranch],
             day: days[selectedDay],
             time: times[selectedTime],
@@ -186,27 +172,47 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () {
+                if (selectedTable == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Vui lòng chọn bàn trước khi đặt pet online.',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const CustomerDrinkOrderScreen(),
+                    builder: (_) => PetListScreen(
+                      bookingData: BookingConfirmData(
+                        petName: '',
+                        petStatus: '',
+                        branch: branches[selectedBranch],
+                        day: days[selectedDay],
+                        time: times[selectedTime],
+                        guests: selectedGuest,
+                        tableName: tables
+                            .firstWhere((item) => item.id == selectedTable)
+                            .name,
+                      ),
+                    ),
                   ),
                 );
               },
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF2D6A8D),
-                side: const BorderSide(
-                  color: Color(0xFF8ECAE6),
-                  width: 1.5,
-                ),
+                side: const BorderSide(color: Color(0xFF8ECAE6), width: 1.5),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
               ),
-              icon: const Icon(Icons.local_cafe_rounded),
+              icon: const Icon(Icons.pets_rounded),
               label: const Text(
-                'Gọi nước trước',
+                '\u0110\u1eb7t Pet Online',
                 style: TextStyle(fontWeight: FontWeight.w800),
               ),
             ),
@@ -220,22 +226,22 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
               onPressed: selectedTable == null
                   ? null
                   : () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text("Thông báo"),
-                    content: const Text("Đặt bàn thành công!"),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context); // Đóng hộp thoại
-                        },
-                        child: const Text("OK"),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Thông báo"),
+                          content: const Text("Đặt bàn thành công!"),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context); // Đóng hộp thoại
+                              },
+                              child: const Text("OK"),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
               icon: const Icon(Icons.check_circle_rounded),
               label: const Text('Xác nhận đặt bàn'),
             ),
@@ -249,9 +255,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
 class _BookingHeader extends StatelessWidget {
   final String petName;
 
-  const _BookingHeader({
-    required this.petName,
-  });
+  const _BookingHeader({required this.petName});
 
   @override
   Widget build(BuildContext context) {
@@ -299,9 +303,9 @@ class _BookingHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'Chọn chi nhánh, giờ ghé và chiếc bàn ấm áp cho bạn cùng bé pet.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
               ],
             ),
@@ -352,9 +356,9 @@ class _BranchSelector extends StatelessWidget {
                     children: [
                       Text(
                         branches[index],
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 16,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(fontSize: 16),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -406,21 +410,21 @@ class _HorizontalSelector extends StatelessWidget {
         itemBuilder: (context, index) {
           final isSelected = selectedIndex == index;
 
-          return InkWell(
+          return Material(
+            color: isSelected ? AppColors.primary : Colors.white,
             borderRadius: BorderRadius.circular(18),
-            onTap: () => onSelected(index),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : Colors.white,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                items[index],
-                style: TextStyle(
-                  color: isSelected ? Colors.white : AppColors.textDark,
-                  fontWeight: FontWeight.w700,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () => onSelected(index),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                alignment: Alignment.center,
+                child: Text(
+                  items[index],
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : AppColors.textDark,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -457,20 +461,20 @@ class _TimeGrid extends StatelessWidget {
       itemBuilder: (context, index) {
         final isSelected = selectedIndex == index;
 
-        return InkWell(
+        return Material(
+          color: isSelected ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(18),
-          onTap: () => onSelected(index),
-          child: Container(
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: isSelected ? AppColors.primary : Colors.white,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Text(
-              times[index],
-              style: TextStyle(
-                color: isSelected ? Colors.white : AppColors.textDark,
-                fontWeight: FontWeight.w700,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => onSelected(index),
+            child: Container(
+              alignment: Alignment.center,
+              child: Text(
+                times[index],
+                style: TextStyle(
+                  color: isSelected ? Colors.white : AppColors.textDark,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -499,10 +503,7 @@ class _GuestCounter extends StatelessWidget {
         children: [
           const CircleAvatar(
             backgroundColor: AppColors.peach,
-            child: Icon(
-              Icons.groups_rounded,
-              color: AppColors.primary,
-            ),
+            child: Icon(Icons.groups_rounded, color: AppColors.primary),
           ),
 
           const SizedBox(width: 14),
@@ -551,10 +552,7 @@ class _LegendDot extends StatelessWidget {
   final Color color;
   final String text;
 
-  const _LegendDot({
-    required this.color,
-    required this.text,
-  });
+  const _LegendDot({required this.color, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -563,16 +561,10 @@ class _LegendDot extends StatelessWidget {
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(
-          text,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text(text, style: Theme.of(context).textTheme.bodyMedium),
       ],
     );
   }
@@ -654,6 +646,7 @@ class _TableGrid extends StatelessWidget {
 }
 
 class _BookingSummary extends StatelessWidget {
+  final String petName;
   final String branch;
   final String day;
   final String time;
@@ -661,6 +654,7 @@ class _BookingSummary extends StatelessWidget {
   final String tableName;
 
   const _BookingSummary({
+    required this.petName,
     required this.branch,
     required this.day,
     required this.time,
@@ -682,6 +676,7 @@ class _BookingSummary extends StatelessWidget {
 
           const SizedBox(height: 12),
 
+          _SummaryRow(label: 'Thú cưng', value: petName),
           _SummaryRow(label: 'Chi nhánh', value: branch),
           _SummaryRow(label: 'Thời gian', value: '$day • $time'),
           _SummaryRow(label: 'Số khách', value: '$guests khách'),
@@ -696,10 +691,7 @@ class _SummaryRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _SummaryRow({
-    required this.label,
-    required this.value,
-  });
+  const _SummaryRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -707,10 +699,7 @@ class _SummaryRow extends StatelessWidget {
       padding: const EdgeInsets.only(top: 7),
       child: Row(
         children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(label, style: Theme.of(context).textTheme.bodyMedium),
           const Spacer(),
           Flexible(
             child: Text(
@@ -728,10 +717,7 @@ class _SummaryRow extends StatelessWidget {
   }
 }
 
-enum TableStatus {
-  available,
-  booked,
-}
+enum TableStatus { available, booked }
 
 class _TableItem {
   final int id;

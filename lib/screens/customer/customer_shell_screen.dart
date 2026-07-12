@@ -128,42 +128,27 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(
-                Icons.home_rounded,
-                color: AppColors.primary,
-              ),
+              selectedIcon: Icon(Icons.home_rounded),
               label: 'Home',
             ),
             NavigationDestination(
               icon: Icon(Icons.event_seat_outlined),
-              selectedIcon: Icon(
-                Icons.event_seat_rounded,
-                color: AppColors.primary,
-              ),
+              selectedIcon: Icon(Icons.event_seat_rounded),
               label: 'Đặt bàn',
             ),
             NavigationDestination(
               icon: Icon(Icons.spa_outlined),
-              selectedIcon: Icon(
-                Icons.spa_rounded,
-                color: AppColors.primary,
-              ),
+              selectedIcon: Icon(Icons.spa_rounded),
               label: 'Dịch vụ',
             ),
             NavigationDestination(
               icon: Icon(Icons.map_outlined),
-              selectedIcon: Icon(
-                Icons.map_rounded,
-                color: AppColors.primary,
-              ),
+              selectedIcon: Icon(Icons.map_rounded),
               label: 'Map',
             ),
             NavigationDestination(
               icon: Icon(Icons.forum_outlined),
-              selectedIcon: Icon(
-                Icons.forum_rounded,
-                color: AppColors.primary,
-              ),
+              selectedIcon: Icon(Icons.forum_rounded),
               label: 'Forum',
             ),
           ],

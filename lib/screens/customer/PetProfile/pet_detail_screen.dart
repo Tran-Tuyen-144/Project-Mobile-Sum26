@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../booking/customer_booking_screen.dart';
+import 'booking_pet_screen.dart';
 
 class PetDetailScreen extends StatelessWidget {
   final Map<String, dynamic> pet;
@@ -96,6 +97,27 @@ class PetDetailScreen extends StatelessWidget {
                       );
                     },
                     child: Text("Đặt ${pet["name"]} Online"),
+                  ),
+                ),
+
+                const SizedBox(width: 15),
+
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2D6A8D),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BookingPetScreen(
+                            petName: pet["name"],
+                          ),
+                        ),
+                      );
+                    },
+                    child: Text("Đặt ${pet["name"]} Tại chỗ"),
                   ),
                 ),
               ],

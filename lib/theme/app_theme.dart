@@ -80,10 +80,27 @@ class AppTheme {
       ),
     ),
 
-    navigationBarTheme: const NavigationBarThemeData(
+    navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.white,
-      indicatorColor: AppColors.peach,
+      indicatorColor: AppColors.cream,
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      iconTheme: MaterialStateProperty.resolveWith((states) {
+        return IconThemeData(
+          color: states.contains(MaterialState.selected)
+              ? AppColors.textDark
+              : AppColors.textSoft,
+        );
+      }),
+      labelTextStyle: MaterialStateProperty.resolveWith((states) {
+        return TextStyle(
+          color: states.contains(MaterialState.selected)
+              ? AppColors.textDark
+              : AppColors.textSoft,
+        );
+      }),
+      indicatorShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+      ),
     ),
   );
 }

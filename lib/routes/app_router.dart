@@ -29,9 +29,7 @@ final GoRouter appRouter = GoRouter(
       name: 'notifications',
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Thông báo'),
-          ),
+          appBar: AppBar(title: const Text('Thông báo')),
           body: const CustomerNotificationScreen(),
         );
       },
@@ -50,9 +48,7 @@ final GoRouter appRouter = GoRouter(
       name: 'community-create-post',
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Tạo bài viết'),
-          ),
+          appBar: AppBar(title: const Text('Tạo bài viết')),
           body: const CreateCommunityPostScreen(),
         );
       },
@@ -102,9 +98,7 @@ final GoRouter appRouter = GoRouter(
       name: 'profile',
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Hồ sơ cá nhân'),
-          ),
+          appBar: AppBar(title: const Text('Hồ sơ cá nhân')),
           body: const CustomerProfileScreen(),
         );
       },
@@ -129,12 +123,13 @@ final GoRouter appRouter = GoRouter(
         final data = state.extra as BookingConfirmData?;
 
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Xác nhận đặt bàn'),
-          ),
+          appBar: AppBar(title: const Text('Xác nhận đặt bàn')),
           body: BookingConfirmScreen(
-            data: data ??
+            data:
+                data ??
                 const BookingConfirmData(
+                  petStatus: 'Kh?e m?nh',
+                  petName: 'Thú cưng của bạn',
                   branch: 'PetHub Quận 1',
                   day: 'Hôm nay',
                   time: '18:00',
@@ -151,14 +146,10 @@ final GoRouter appRouter = GoRouter(
       name: 'order',
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Gọi nước trước'),
-          ),
+          appBar: AppBar(title: const Text('Gọi nước trước')),
           body: const CustomerDrinkOrderScreen(),
         );
       },
     ),
   ],
-
-
 );
