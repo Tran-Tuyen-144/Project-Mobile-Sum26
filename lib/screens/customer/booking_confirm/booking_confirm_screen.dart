@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../services/pet_booking_store.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
@@ -146,6 +147,9 @@ class BookingConfirmScreen extends StatelessWidget {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
+                    if (data.petName.isNotEmpty) {
+                      PetBookingStore.instance.markPetBooked(data.petName);
+                    }
                     _showSuccessDialog(context);
                   },
                   icon: const Icon(Icons.check_circle_rounded),
@@ -175,9 +179,9 @@ class BookingConfirmScreen extends StatelessWidget {
             TextButton(
               onPressed: () {
                 context.pop();
-                context.go('/customer');
+                context.go('/pet-profile');
               },
-              child: const Text('Về trang chính'),
+              child: const Text('Đóng'),
             ),
           ],
         );

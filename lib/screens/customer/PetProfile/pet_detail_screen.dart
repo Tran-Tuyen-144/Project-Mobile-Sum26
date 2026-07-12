@@ -45,7 +45,42 @@ class PetDetailScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
+
+            if (pet["bookingStatus"] != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                decoration: BoxDecoration(
+                  color: pet["bookingStatus"] == 'Đã được đặt'
+                      ? Colors.red.shade50
+                      : Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      pet["bookingStatus"] == 'Đã được đặt'
+                          ? Icons.lock_rounded
+                          : Icons.check_circle_rounded,
+                      color: pet["bookingStatus"] == 'Đã được đặt'
+                          ? Colors.red.shade700
+                          : Colors.green.shade700,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      pet["bookingStatus"],
+                      style: TextStyle(
+                        color: pet["bookingStatus"] == 'Đã được đặt'
+                            ? Colors.red.shade700
+                            : Colors.green.shade700,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             ListTile(
               leading: const Icon(Icons.cake),
@@ -86,37 +121,23 @@ class PetDetailScreen extends StatelessWidget {
 
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CustomerBookingScreen(
-                            petName: pet["name"],
-                          ),
-                        ),
-                      );
-                    },
-                    child: Text("Đặt ${pet["name"]} Online"),
-                  ),
-                ),
-
-                const SizedBox(width: 15),
-
-                Expanded(
-                  child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2D6A8D),
+                      backgroundColor: pet["bookingStatus"] == 'Đã được đặt'
+                          ? Colors.grey
+                          : const Color(0xFF2D6A8D),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BookingPetScreen(
-                            petName: pet["name"],
-                          ),
-                        ),
-                      );
-                    },
+                    onPressed: pet["bookingStatus"] == 'Đã được đặt'
+                        ? null
+                        : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => BookingPetScreen(
+                                  petName: pet["name"],
+                                ),
+                              ),
+                            );
+                          },
                     child: Text("Đặt ${pet["name"]} Tại chỗ"),
                   ),
                 ),

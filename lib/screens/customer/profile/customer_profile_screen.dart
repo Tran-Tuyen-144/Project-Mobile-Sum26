@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../services/pet_booking_store.dart' as booking_store;
 import '../../../widgets/section_title.dart';
-import 'profile_models.dart';
+import 'profile_models.dart' as profile_models;
 import 'profile_widgets.dart';
 
 class CustomerProfileScreen extends StatelessWidget {
@@ -44,13 +45,19 @@ class CustomerProfileScreen extends StatelessWidget {
 
           SizedBox(
             height: 106,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: myPets.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                return PetProfileCard(
-                  pet: myPets[index],
+            child: ValueListenableBuilder<List<booking_store.PetProfile>>(
+              valueListenable: booking_store.PetBookingStore.instance.petsNotifier,
+              builder: (context, pets, _) {
+                return ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: pets.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final pet = pets[index];
+                    return ProfilePetProfileCard(
+                      pet: pet,
+                    );
+                  },
                 );
               },
             ),
@@ -63,12 +70,12 @@ class CustomerProfileScreen extends StatelessWidget {
           const SizedBox(height: 12),
 
           ListView.separated(
-            itemCount: profileMenus.length,
+            itemCount: profile_models.profileMenus.length,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final item = profileMenus[index];
+              final item = profile_models.profileMenus[index];
 
               return ProfileMenuTile(
                 item: item,
