@@ -10,7 +10,6 @@ import '../screens/customer/booking_confirm/booking_confirm_data.dart';
 import '../screens/customer/booking_confirm/booking_confirm_screen.dart';
 import '../screens/customer/community/community_post_detail_screen.dart';
 import '../screens/customer/community/create_community_post_screen.dart';
-import '../screens/admin/admin_main_screen.dart';
 import '../screens/customer/petprofile/pet_list_screen.dart';
 import '../screens/customer/community/community_post.dart';
 import '../screens/auth/customer_auth_screen.dart';
@@ -44,14 +43,11 @@ final GoRouter appRouter = GoRouter(
       name: 'notifications',
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Thông báo'),
-          ),
+          appBar: AppBar(title: const Text('Thông báo')),
           body: const CustomerNotificationScreen(),
         );
       },
     ),
-
 
     GoRoute(
       path: '/customer',
@@ -65,8 +61,9 @@ final GoRouter appRouter = GoRouter(
       path: '/community/create-post',
       name: 'community-create-post',
       builder: (context, state) {
-        final initialPost =
-        state.extra is CommunityPost ? state.extra as CommunityPost : null;
+        final initialPost = state.extra is CommunityPost
+            ? state.extra as CommunityPost
+            : null;
 
         return Scaffold(
           appBar: AppBar(
@@ -74,9 +71,7 @@ final GoRouter appRouter = GoRouter(
               initialPost == null ? 'Tạo bài viết' : 'Chỉnh sửa bài viết',
             ),
           ),
-          body: CreateCommunityPostScreen(
-            initialPost: initialPost,
-          ),
+          body: CreateCommunityPostScreen(initialPost: initialPost),
         );
       },
     ),
@@ -118,9 +113,7 @@ final GoRouter appRouter = GoRouter(
       name: 'profile',
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Hồ sơ cá nhân'),
-          ),
+          appBar: AppBar(title: const Text('Hồ sơ cá nhân')),
           body: const CustomerProfileScreen(),
         );
       },
@@ -133,7 +126,6 @@ final GoRouter appRouter = GoRouter(
         return PetListScreen();
       },
     ),
-
 
     GoRoute(
       path: '/community/post-detail',
@@ -154,11 +146,10 @@ final GoRouter appRouter = GoRouter(
         final data = state.extra as BookingConfirmData?;
 
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Xác nhận đặt bàn'),
-          ),
+          appBar: AppBar(title: const Text('Xác nhận đặt bàn')),
           body: BookingConfirmScreen(
-            data: data ??
+            data:
+                data ??
                 const BookingConfirmData(
                   branch: 'PetHub Quận 1',
                   day: 'Hôm nay',
@@ -171,15 +162,12 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
-
     GoRoute(
       path: '/order',
       name: 'order',
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Gọi nước trước'),
-          ),
+          appBar: AppBar(title: const Text('Gọi nước trước')),
           body: const CustomerDrinkOrderScreen(),
         );
       },
@@ -197,15 +185,11 @@ final GoRouter appRouter = GoRouter(
       path: '/staff',
       name: 'staff',
       builder: (context, state) {
-        final departmentKey =
-        state.uri.queryParameters['department'];
+        final departmentKey = state.uri.queryParameters['department'];
 
-        final department =
-        staffDepartmentFromKey(departmentKey);
+        final department = staffDepartmentFromKey(departmentKey);
 
-        return StaffMainScreen(
-          department: department,
-        );
+        return StaffMainScreen(department: department);
       },
     ),
 
@@ -217,6 +201,4 @@ final GoRouter appRouter = GoRouter(
       },
     ),
   ],
-
-
 );

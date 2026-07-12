@@ -84,9 +84,7 @@ class CustomerAuthService {
       throw Exception('Không lấy được Google ID Token.');
     }
 
-    final credential = GoogleAuthProvider.credential(
-      idToken: idToken,
-    );
+    final credential = GoogleAuthProvider.credential(idToken: idToken);
 
     final userCredential = await _auth.signInWithCredential(credential);
 
@@ -120,7 +118,6 @@ class CustomerAuthService {
     } catch (_) {}
 
     await FirebaseAuth.instance.signOut();
-
   }
 
   static Future<void> _ensureGoogleInitialized() async {

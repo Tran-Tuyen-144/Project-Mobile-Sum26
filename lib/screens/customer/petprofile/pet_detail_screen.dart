@@ -4,22 +4,16 @@ import '../booking/customer_booking_screen.dart';
 class PetDetailScreen extends StatelessWidget {
   final Map<String, dynamic> pet;
 
-  const PetDetailScreen({
-    super.key,
-    required this.pet,
-  });
+  const PetDetailScreen({super.key, required this.pet});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(pet["name"]),
-      ),
+      appBar: AppBar(title: Text(pet["name"])),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-
             Container(
               height: 220,
               width: double.infinity,
@@ -27,21 +21,14 @@ class PetDetailScreen extends StatelessWidget {
                 color: Colors.orange.shade100,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Icon(
-                Icons.pets,
-                size: 80,
-                color: Colors.orange.shade800,
-              ),
+              child: Icon(Icons.pets, size: 80, color: Colors.orange.shade800),
             ),
 
             const SizedBox(height: 20),
 
             Text(
               pet["name"],
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 20),
@@ -68,7 +55,6 @@ class PetDetailScreen extends StatelessWidget {
 
             Row(
               children: [
-
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -89,9 +75,8 @@ class PetDetailScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => CustomerBookingScreen(
-                            petName: pet["name"],
-                          ),
+                          builder: (_) =>
+                              CustomerBookingScreen(petName: pet["name"]),
                         ),
                       );
                     },
@@ -99,7 +84,7 @@ class PetDetailScreen extends StatelessWidget {
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),

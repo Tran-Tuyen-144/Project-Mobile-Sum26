@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../theme/app_colors.dart';
 
 class AdminShiftAssignScreen extends StatefulWidget {
   const AdminShiftAssignScreen({super.key});
@@ -9,11 +8,15 @@ class AdminShiftAssignScreen extends StatefulWidget {
 }
 
 class _AdminShiftAssignScreenState extends State<AdminShiftAssignScreen> {
-  final List<String> _allStaff = ["Nguyễn Hải Yến", "Trần Mộng Tuyền", "Nguyễn Hoàng Ngọc Trân", "Nguyễn Xuân Hiếu"];
+  final List<String> _allStaff = [
+    "Nguyễn Hải Yến",
+    "Trần Mộng Tuyền",
+    "Nguyễn Hoàng Ngọc Trân",
+    "Nguyễn Xuân Hiếu",
+  ];
 
   // Dữ liệu mẫu: Map<Tên nhân viên, Tên ca>
-  Map<String, String> _shiftAssignment = {};
-
+  final Map<String, String> _shiftAssignment = {};
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,10 +28,10 @@ class _AdminShiftAssignScreenState extends State<AdminShiftAssignScreen> {
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: () {
-              print("Kết quả xếp ca: $_shiftAssignment");
+              debugPrint("Kết quả xếp ca: $_shiftAssignment");
               Navigator.pop(context, _shiftAssignment);
             },
-          )
+          ),
         ],
       ),
       body: ListView(
@@ -51,7 +54,10 @@ class _AdminShiftAssignScreenState extends State<AdminShiftAssignScreen> {
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ExpansionTile(
-        title: Text(shiftName, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          shiftName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Text("$count nhân viên đã chọn"),
         children: _allStaff.map((staff) {
           return CheckboxListTile(

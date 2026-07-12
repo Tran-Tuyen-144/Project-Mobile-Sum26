@@ -4,31 +4,68 @@ import '../../../theme/app_colors.dart';
 
 class PostComment {
   final int id;
+  final String authorId;
   final String authorName;
+  final bool isAnonymous;
+  final String avatarIconKey;
+  final String colorKey;
   final String content;
   final String timeAgo;
 
   const PostComment({
     required this.id,
+    this.authorId = 'sample',
     required this.authorName,
+    this.isAnonymous = true,
+    this.avatarIconKey = 'anonymous',
+    this.colorKey = 'peach',
     required this.content,
     required this.timeAgo,
   });
 
+  IconData get petIcon {
+    return CommunityPost.iconFromKey(avatarIconKey);
+  }
+
+  Color get color {
+    return CommunityPost.colorFromKey(colorKey);
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'authorId': authorId,
       'authorName': authorName,
+      'isAnonymous': isAnonymous,
+      'avatarIconKey': avatarIconKey,
+      'colorKey': colorKey,
       'content': content,
       'timeAgo': timeAgo,
     };
   }
 
   factory PostComment.fromJson(Map<String, dynamic> json) {
+    final isAnonymous = json['isAnonymous'] as bool? ?? true;
+
+    final avatarIconKey =
+        json['avatarIconKey'] as String? ??
+        (isAnonymous ? 'anonymous' : 'default_person');
+
+    final colorKey =
+        json['colorKey'] as String? ??
+        CommunityPost.colorKeyFromIconKey(avatarIconKey);
+
     return PostComment(
-      id: (json['id'] as num?)?.toInt() ??
+      id:
+          (json['id'] as num?)?.toInt() ??
           DateTime.now().millisecondsSinceEpoch,
-      authorName: json['authorName'] as String? ?? 'Ẩn danh PetHub',
+      authorId: json['authorId'] as String? ?? 'sample',
+      authorName:
+          json['authorName'] as String? ??
+          (isAnonymous ? 'Ẩn danh PetHub' : 'Bạn PetHub'),
+      isAnonymous: isAnonymous,
+      avatarIconKey: avatarIconKey,
+      colorKey: colorKey,
       content: json['content'] as String? ?? '',
       timeAgo: json['timeAgo'] as String? ?? 'Vừa xong',
     );
@@ -37,31 +74,23 @@ class PostComment {
 
 class CommunityPost {
   final int id;
-
-  // UID Firebase của người đăng.
-  // Dù bài ẩn danh vẫn phải lưu UID để xác định quyền sửa/xóa.
   final String authorId;
-
-  // Danh tính đang hiển thị trên bài viết.
   final String authorName;
   final String authorRole;
   final String avatarIconKey;
   final String colorKey;
-
-  // true: bài ẩn danh
-  // false: bài công khai dùng tên và avatar Profile
   final bool isAnonymous;
-
   final String timeAgo;
   final String content;
-
-  // Tag có thể để trống.
   final String category;
-
   final int likes;
   final List<String> likedBy;
 
-  // Giữ lại để tương thích với dữ liệu cũ.
+  // Ảnh Cloudinary.
+  final String? imageUrl;
+  final String? imagePublicId;
+
+  // Trường cũ, giữ lại để không vỡ dữ liệu trước đây.
   final String? imagePath;
   final String? authorAvatarPath;
 
@@ -80,15 +109,20 @@ class CommunityPost {
     this.likedBy = const [],
     this.avatarIconKey = 'anonymous',
     this.colorKey = 'peach',
+    this.imageUrl,
+    this.imagePublicId,
     this.imagePath,
     this.authorAvatarPath,
     this.commentList = const [],
-  }) : isAnonymous =
-      isAnonymous ?? authorRole == 'Thành viên ẩn danh';
+  }) : isAnonymous = isAnonymous ?? authorRole == 'Thành viên ẩn danh';
 
   int get totalComments => commentList.length;
 
   bool get hasTag => category.trim().isNotEmpty;
+
+  bool get hasImage {
+    return imageUrl != null && imageUrl!.trim().isNotEmpty;
+  }
 
   IconData get petIcon => iconFromKey(avatarIconKey);
 
@@ -109,6 +143,9 @@ class CommunityPost {
     String? colorKey,
     IconData? petIcon,
     Color? color,
+    String? imageUrl,
+    String? imagePublicId,
+    bool removeCloudinaryImage = false,
     String? imagePath,
     bool removeImage = false,
     String? authorAvatarPath,
@@ -126,17 +163,17 @@ class CommunityPost {
       category: category ?? this.category,
       likes: likes ?? this.likes,
       likedBy: likedBy ?? this.likedBy,
-      avatarIconKey: avatarIconKey ??
-          (petIcon != null
-              ? iconKeyFromIcon(petIcon)
-              : this.avatarIconKey),
-      colorKey: colorKey ??
-          (color != null
-              ? colorKeyFromColor(color)
-              : this.colorKey),
-      imagePath: removeImage
+      avatarIconKey:
+          avatarIconKey ??
+          (petIcon != null ? iconKeyFromIcon(petIcon) : this.avatarIconKey),
+      colorKey:
+          colorKey ??
+          (color != null ? colorKeyFromColor(color) : this.colorKey),
+      imageUrl: removeCloudinaryImage ? null : imageUrl ?? this.imageUrl,
+      imagePublicId: removeCloudinaryImage
           ? null
-          : imagePath ?? this.imagePath,
+          : imagePublicId ?? this.imagePublicId,
+      imagePath: removeImage ? null : imagePath ?? this.imagePath,
       authorAvatarPath: removeAvatar
           ? null
           : authorAvatarPath ?? this.authorAvatarPath,
@@ -158,11 +195,11 @@ class CommunityPost {
       'likedBy': likedBy,
       'avatarIconKey': avatarIconKey,
       'colorKey': colorKey,
-      'commentList': commentList
-          .map((comment) => comment.toJson())
-          .toList(),
+      'imageUrl': imageUrl,
+      'imagePublicId': imagePublicId,
+      'commentList': commentList.map((comment) => comment.toJson()).toList(),
 
-      // Các trường cũ được giữ để không làm vỡ dữ liệu trước đây.
+      // Trường cũ.
       'iconKey': avatarIconKey,
       'imagePath': imagePath,
       'authorAvatarPath': authorAvatarPath,
@@ -173,100 +210,65 @@ class CommunityPost {
     final rawComments = json['commentList'];
     final rawLikedBy = json['likedBy'];
 
-    final authorRole =
-        json['authorRole'] as String? ?? 'Thành viên ẩn danh';
+    final authorRole = json['authorRole'] as String? ?? 'Thành viên ẩn danh';
 
-    /*
-     * Dữ liệu cũ chưa có isAnonymous sẽ được suy ra
-     * thông qua authorRole.
-     */
-    final bool isAnonymous =
+    final isAnonymous =
         json['isAnonymous'] as bool? ??
-            authorRole.toLowerCase().contains('ẩn danh');
+        authorRole.toLowerCase().contains('ẩn danh');
 
     final avatarIconKey =
         json['avatarIconKey'] as String? ??
-            json['iconKey'] as String? ??
-            (isAnonymous ? 'anonymous' : 'default_person');
+        json['iconKey'] as String? ??
+        (isAnonymous ? 'anonymous' : 'default_person');
 
     final colorKey =
-        json['colorKey'] as String? ??
-            colorKeyFromIconKey(avatarIconKey);
+        json['colorKey'] as String? ?? colorKeyFromIconKey(avatarIconKey);
 
     return CommunityPost(
-      id: (json['id'] as num?)?.toInt() ??
+      id:
+          (json['id'] as num?)?.toInt() ??
           DateTime.now().millisecondsSinceEpoch,
-      authorId:
-      json['authorId'] as String? ?? 'sample',
-      authorName: json['authorName'] as String? ??
-          (isAnonymous
-              ? 'Ẩn danh PetHub'
-              : 'Bạn PetHub'),
+      authorId: json['authorId'] as String? ?? 'sample',
+      authorName:
+          json['authorName'] as String? ??
+          (isAnonymous ? 'Ẩn danh PetHub' : 'Bạn PetHub'),
       authorRole: authorRole,
       isAnonymous: isAnonymous,
-      timeAgo:
-      json['timeAgo'] as String? ?? 'Vừa xong',
-      content:
-      json['content'] as String? ?? '',
-      category:
-      json['category'] as String? ?? '',
-      likes:
-      (json['likes'] as num?)?.toInt() ?? 0,
+      timeAgo: json['timeAgo'] as String? ?? 'Vừa xong',
+      content: json['content'] as String? ?? '',
+      category: json['category'] as String? ?? '',
+      likes: (json['likes'] as num?)?.toInt() ?? 0,
       likedBy: rawLikedBy is List
-          ? rawLikedBy
-          .map((item) => item.toString())
-          .toList()
+          ? rawLikedBy.map((item) => item.toString()).toList()
           : const [],
       avatarIconKey: avatarIconKey,
       colorKey: colorKey,
+      imageUrl: json['imageUrl'] as String?,
+      imagePublicId: json['imagePublicId'] as String?,
       imagePath: json['imagePath'] as String?,
-      authorAvatarPath:
-      json['authorAvatarPath'] as String?,
+      authorAvatarPath: json['authorAvatarPath'] as String?,
       commentList: rawComments is List
           ? rawComments
-          .whereType<Map>()
-          .map(
-            (item) => PostComment.fromJson(
-          Map<String, dynamic>.from(item),
-        ),
-      )
-          .toList()
+                .whereType<Map>()
+                .map(
+                  (item) =>
+                      PostComment.fromJson(Map<String, dynamic>.from(item)),
+                )
+                .toList()
           : const [],
     );
   }
 
   static String iconKeyFromIcon(IconData icon) {
-    if (icon == Icons.person_rounded) {
-      return 'default_person';
-    }
-
-    if (icon == Icons.cruelty_free_rounded) {
-      return 'dog';
-    }
-
-    if (icon == Icons.favorite_rounded) {
-      return 'favorite';
-    }
-
-    if (icon == Icons.health_and_safety_rounded) {
-      return 'health';
-    }
-
-    if (icon == Icons.emoji_nature_rounded) {
-      return 'rabbit';
-    }
-
-    if (icon == Icons.flutter_dash_rounded) {
-      return 'bird';
-    }
-
-    if (icon == Icons.water_drop_rounded) {
-      return 'fish';
-    }
-
-    if (icon == Icons.face_rounded) {
-      return 'anonymous';
-    }
+    if (icon == Icons.person_rounded) return 'default_person';
+    if (icon == Icons.face_rounded) return 'anonymous';
+    if (icon == Icons.pets_rounded) return 'cat';
+    if (icon == Icons.cruelty_free_rounded) return 'dog';
+    if (icon == Icons.emoji_nature_rounded) return 'rabbit';
+    if (icon == Icons.flutter_dash_rounded) return 'bird';
+    if (icon == Icons.water_drop_rounded) return 'fish';
+    if (icon == Icons.favorite_rounded) return 'favorite';
+    if (icon == Icons.health_and_safety_rounded) return 'health';
 
     return 'cat';
   }
@@ -275,52 +277,32 @@ class CommunityPost {
     switch (key) {
       case 'default_person':
         return Icons.person_rounded;
-
       case 'anonymous':
         return Icons.face_rounded;
-
       case 'cat':
         return Icons.pets_rounded;
-
       case 'dog':
         return Icons.cruelty_free_rounded;
-
       case 'rabbit':
         return Icons.emoji_nature_rounded;
-
       case 'bird':
         return Icons.flutter_dash_rounded;
-
       case 'fish':
         return Icons.water_drop_rounded;
-
       case 'favorite':
         return Icons.favorite_rounded;
-
       case 'health':
         return Icons.health_and_safety_rounded;
-
       default:
         return Icons.person_rounded;
     }
   }
 
   static String colorKeyFromColor(Color color) {
-    if (color == AppColors.mint) {
-      return 'mint';
-    }
-
-    if (color == AppColors.sky) {
-      return 'sky';
-    }
-
-    if (color == AppColors.lavender) {
-      return 'lavender';
-    }
-
-    if (color == AppColors.primarySoft) {
-      return 'primarySoft';
-    }
+    if (color == AppColors.mint) return 'mint';
+    if (color == AppColors.sky) return 'sky';
+    if (color == AppColors.lavender) return 'lavender';
+    if (color == AppColors.primarySoft) return 'primarySoft';
 
     return 'peach';
   }
@@ -329,16 +311,12 @@ class CommunityPost {
     switch (key) {
       case 'mint':
         return AppColors.mint;
-
       case 'sky':
         return AppColors.sky;
-
       case 'lavender':
         return AppColors.lavender;
-
       case 'primarySoft':
         return AppColors.primarySoft;
-
       case 'peach':
       default:
         return AppColors.peach;
@@ -348,32 +326,19 @@ class CommunityPost {
   static String colorKeyFromIconKey(String iconKey) {
     switch (iconKey) {
       case 'default_person':
-        return 'peach';
-
       case 'anonymous':
-        return 'peach';
-
       case 'cat':
         return 'peach';
-
       case 'dog':
-        return 'mint';
-
-      case 'rabbit':
-        return 'primarySoft';
-
-      case 'bird':
-        return 'sky';
-
       case 'fish':
         return 'mint';
-
-      case 'favorite':
-        return 'lavender';
-
+      case 'rabbit':
+        return 'primarySoft';
+      case 'bird':
       case 'health':
         return 'sky';
-
+      case 'favorite':
+        return 'lavender';
       default:
         return 'peach';
     }
@@ -400,49 +365,40 @@ const List<CommunityPost> communityPosts = [
     isAnonymous: true,
     timeAgo: '10 phút trước',
     content:
-    'Hôm nay bé Miu rất ngoan, nằm cạnh cửa sổ cả buổi chiều. Ai ghé PetHub nhớ chào Miu một tiếng nha.',
+        'Hôm nay bé Miu rất ngoan, nằm cạnh cửa sổ cả buổi chiều. Ai ghé PetHub nhớ chào Miu một tiếng nha.',
     category: 'Mèo',
     likes: 128,
     avatarIconKey: 'cat',
     colorKey: 'peach',
+    imageUrl:
+        'https://res.cloudinary.com/kxkbvskv/image/upload/f_auto,q_auto/v1783879392/pethub_test/hant6rgjhl64yylsapnf.jpg',
+    imagePublicId: 'pethub_test/hant6rgjhl64yylsapnf',
     commentList: [
       PostComment(
         id: 101,
+        authorId: 'sample_comment_1',
         authorName: 'Ẩn danh PetHub',
-        content:
-        'Miu dễ thương quá, cuối tuần mình ghé chơi.',
+        isAnonymous: true,
+        avatarIconKey: 'anonymous',
+        colorKey: 'peach',
+        content: 'Miu dễ thương quá, cuối tuần mình ghé chơi.',
         timeAgo: '8 phút trước',
-      ),
-      PostComment(
-        id: 102,
-        authorName: 'Ẩn danh PetHub',
-        content:
-        'Cho em xin lịch Miu hay ở quán với ạ.',
-        timeAgo: '5 phút trước',
       ),
     ],
   ),
   CommunityPost(
     id: 2,
     authorId: 'sample_2',
-    authorName: 'Ẩn danh PetHub',
-    authorRole: 'Thành viên ẩn danh',
-    isAnonymous: true,
-    timeAgo: '35 phút trước',
+    authorName: 'PetHub#A102BC',
+    authorRole: 'Thành viên PetHub',
+    isAnonymous: false,
+    timeAgo: '25 phút trước',
     content:
-    'Mọi người có mẹo nào giúp cún bớt sợ khi đi spa không? Bé nhà mình cứ thấy máy sấy là nép vào người.',
-    category: 'Hỏi đáp',
-    likes: 76,
-    avatarIconKey: 'dog',
-    colorKey: 'mint',
-    commentList: [
-      PostComment(
-        id: 201,
-        authorName: 'Ẩn danh PetHub',
-        content:
-        'Có thể cho bé làm quen tiếng máy sấy từ xa trước nha.',
-        timeAgo: '30 phút trước',
-      ),
-    ],
+        'Mọi người có kinh nghiệm chăm bé cún biếng ăn không ạ? Mình muốn xin thêm vài mẹo.',
+    category: 'Cún',
+    likes: 64,
+    avatarIconKey: 'default_person',
+    colorKey: 'peach',
+    commentList: [],
   ),
 ];

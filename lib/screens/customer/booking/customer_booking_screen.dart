@@ -14,14 +14,10 @@ import 'customer_drink_order_screen.dart';
 class CustomerBookingScreen extends StatefulWidget {
   final String petName;
 
-  const CustomerBookingScreen({
-    super.key,
-    this.petName = 'Thú cưng của bạn',
-  });
+  const CustomerBookingScreen({super.key, this.petName = 'Thú cưng của bạn'});
 
   @override
-  State<CustomerBookingScreen> createState() =>
-      _CustomerBookingScreenState();
+  State<CustomerBookingScreen> createState() => _CustomerBookingScreenState();
 }
 
 class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
@@ -121,9 +117,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _BookingHeader(
-            petName: widget.petName,
-          ),
+          _BookingHeader(petName: widget.petName),
 
           const SizedBox(height: 12),
 
@@ -524,9 +518,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
 class _BookingHeader extends StatelessWidget {
   final String petName;
 
-  const _BookingHeader({
-    required this.petName,
-  });
+  const _BookingHeader({required this.petName});
 
   @override
   Widget build(BuildContext context) {

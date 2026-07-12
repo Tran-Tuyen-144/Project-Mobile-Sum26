@@ -23,7 +23,13 @@ class _AdminMenuListScreenState extends State<AdminMenuListScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text("Quản lý thực đơn", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+          title: const Text(
+            "Quản lý thực đơn",
+            style: TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           backgroundColor: Colors.white,
           elevation: 0,
           iconTheme: const IconThemeData(color: Colors.black87),
@@ -39,8 +45,8 @@ class _AdminMenuListScreenState extends State<AdminMenuListScreen> {
           backgroundColor: AppColors.primary,
           onPressed: () async {
             final newItem = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AdminMenuFormScreen())
+              context,
+              MaterialPageRoute(builder: (_) => const AdminMenuFormScreen()),
             );
             if (newItem != null) setState(() => _menuItems.add(newItem));
           },
@@ -61,8 +67,10 @@ class _AdminMenuListScreenState extends State<AdminMenuListScreen> {
 
     if (filtered.isEmpty) {
       return Center(
-        child: Text("Chưa có món nào trong mục $category",
-            style: const TextStyle(color: AppColors.textSoft)),
+        child: Text(
+          "Chưa có món nào trong mục $category",
+          style: const TextStyle(color: AppColors.textSoft),
+        ),
       );
     }
 
@@ -77,14 +85,18 @@ class _AdminMenuListScreenState extends State<AdminMenuListScreen> {
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           elevation: 0,
-          color: AppColors.primarySoft.withOpacity(0.1),
+          color: AppColors.primarySoft.withValues(alpha: 0.1),
           child: ListTile(
             leading: CircleAvatar(backgroundImage: AssetImage(item['image'])),
-            title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(
+              item['name'],
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             subtitle: Text("${item['price']} VNĐ"),
             trailing: IconButton(
-                icon: const Icon(Icons.delete, color: Colors.redAccent),
-                onPressed: () => setState(() => _menuItems.removeAt(originalIndex))
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              onPressed: () =>
+                  setState(() => _menuItems.removeAt(originalIndex)),
             ),
           ),
         );

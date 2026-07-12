@@ -16,12 +16,14 @@ dependencies:
   app_links: ^6.4.0
   firebase_core: ^4.11.0
   shared_preferences: ^2.2.2
-  image_picker: ^1.2.2
+  image_picker: ^1.2.3
   share_plus: ^13.2.0
   path_provider: ^2.1.6
   cloud_firestore: ^6.6.0
   firebase_auth: ^6.5.4
   google_sign_in: ^7.2.0
+  cloudinary_sdk: ^5.0.0+1
+  http: ^1.6.0
 
 
 

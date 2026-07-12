@@ -32,7 +32,7 @@ class StaffRoleSelectScreen extends StatelessWidget {
                     width: 68,
                     height: 68,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.82),
+                      color: Colors.white.withValues(alpha: 0.82),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: const Icon(
@@ -79,7 +79,7 @@ class StaffRoleSelectScreen extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 29,
-                        backgroundColor: Colors.white.withOpacity(0.8),
+                        backgroundColor: Colors.white.withValues(alpha: 0.8),
                         child: Icon(
                           department.icon,
                           color: AppColors.textDark,

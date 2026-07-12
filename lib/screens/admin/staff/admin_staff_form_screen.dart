@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 
 class AdminStaffFormScreen extends StatefulWidget {
-  final Map<String, dynamic>? staff; // Nếu truyền vào null -> Thêm mới, có data -> Sửa
+  final Map<String, dynamic>?
+  staff; // Nếu truyền vào null -> Thêm mới, có data -> Sửa
 
   const AdminStaffFormScreen({super.key, this.staff});
 
@@ -60,7 +61,10 @@ class _AdminStaffFormScreenState extends State<AdminStaffFormScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.primary, width: 2),
                 ),
-                child: const Icon(Icons.camera_alt_rounded, color: AppColors.textSoft),
+                child: const Icon(
+                  Icons.camera_alt_rounded,
+                  color: AppColors.textSoft,
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -70,7 +74,11 @@ class _AdminStaffFormScreenState extends State<AdminStaffFormScreen> {
             _buildTextField(label: 'Chức vụ', controller: _roleController),
             _buildTextField(label: 'Ngày sinh', controller: _dobController),
             _buildTextField(label: 'Liên lạc', controller: _contactController),
-            _buildTextField(label: 'Ghi chú', controller: _notesController, maxLines: 3),
+            _buildTextField(
+              label: 'Ghi chú',
+              controller: _notesController,
+              maxLines: 3,
+            ),
 
             const SizedBox(height: 32),
             Row(
@@ -80,9 +88,14 @@ class _AdminStaffFormScreenState extends State<AdminStaffFormScreen> {
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: const Text('Hủy bỏ', style: TextStyle(color: AppColors.textDark)),
+                    child: const Text(
+                      'Hủy bỏ',
+                      style: TextStyle(color: AppColors.textDark),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -102,20 +115,32 @@ class _AdminStaffFormScreenState extends State<AdminStaffFormScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: const Text('Xác nhận', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Xác nhận',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField({required String label, required TextEditingController controller, int maxLines = 1}) {
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    int maxLines = 1,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: TextField(
@@ -125,7 +150,10 @@ class _AdminStaffFormScreenState extends State<AdminStaffFormScreen> {
           labelText: label,
           filled: true,
           fillColor: Colors.grey.shade50,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
     );

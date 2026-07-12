@@ -40,7 +40,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.peach.withOpacity(0.3),
+                color: AppColors.peach.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -62,22 +62,22 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: AppColors.textDark),
+            icon: const Icon(
+              Icons.notifications_none_rounded,
+              color: AppColors.textDark,
+            ),
             onPressed: () {},
           ),
           const SizedBox(width: 8),
         ],
       ),
       // Sử dụng IndexedStack để giữ nguyên trạng thái cuộn của từng tab
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -94,7 +94,10 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
           },
           selectedItemColor: AppColors.primary,
           unselectedItemColor: AppColors.textSoft,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          selectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
           unselectedLabelStyle: const TextStyle(fontSize: 11),
           items: const [
             BottomNavigationBarItem(

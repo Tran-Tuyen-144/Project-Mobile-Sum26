@@ -48,10 +48,7 @@ class CatSavedDataButton extends StatelessWidget {
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(color: AppColors.primarySoft),
                         ),
-                        child: const Text(
-                          '🐱',
-                          style: TextStyle(fontSize: 22),
-                        ),
+                        child: const Text('🐱', style: TextStyle(fontSize: 22)),
                       ),
                     ),
                     if (savedCount > 0)

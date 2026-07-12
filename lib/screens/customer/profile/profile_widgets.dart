@@ -22,7 +22,8 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasAvatar = avatarPath != null &&
+    final hasAvatar =
+        avatarPath != null &&
         avatarPath!.isNotEmpty &&
         File(avatarPath!).existsSync();
 
@@ -32,11 +33,7 @@ class ProfileHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            AppColors.primarySoft,
-            AppColors.peach,
-            AppColors.cream,
-          ],
+          colors: [AppColors.primarySoft, AppColors.peach, AppColors.cream],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -50,16 +47,17 @@ class ProfileHeader extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 42,
-                  backgroundColor: Colors.white.withOpacity(0.85),
-                  backgroundImage:
-                  hasAvatar ? FileImage(File(avatarPath!)) : null,
+                  backgroundColor: Colors.white.withValues(alpha: 0.85),
+                  backgroundImage: hasAvatar
+                      ? FileImage(File(avatarPath!))
+                      : null,
                   child: hasAvatar
                       ? null
                       : const Icon(
-                    Icons.person_rounded,
-                    color: AppColors.primary,
-                    size: 42,
-                  ),
+                          Icons.person_rounded,
+                          color: AppColors.primary,
+                          size: 42,
+                        ),
                 ),
                 Positioned(
                   right: 0,
@@ -95,9 +93,9 @@ class ProfileHeader extends StatelessWidget {
                         displayName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          height: 1.15,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleLarge?.copyWith(height: 1.15),
                       ),
                     ),
                     IconButton(
@@ -123,7 +121,7 @@ class ProfileHeader extends StatelessWidget {
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.78),
+                    color: Colors.white.withValues(alpha: 0.78),
                     borderRadius: BorderRadius.circular(99),
                   ),
                   child: const Text(
@@ -202,11 +200,7 @@ class _ProfileStatCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       child: Column(
         children: [
-          Icon(
-            icon,
-            color: AppColors.textDark,
-            size: 24,
-          ),
+          Icon(icon, color: AppColors.textDark, size: 24),
           const SizedBox(height: 8),
           Text(
             value,
@@ -235,10 +229,7 @@ class _ProfileStatCard extends StatelessWidget {
 class PetProfileCard extends StatelessWidget {
   final PetProfile pet;
 
-  const PetProfileCard({
-    super.key,
-    required this.pet,
-  });
+  const PetProfileCard({super.key, required this.pet});
 
   @override
   Widget build(BuildContext context) {
@@ -250,11 +241,8 @@ class PetProfileCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 26,
-              backgroundColor: Colors.white.withOpacity(0.8),
-              child: Icon(
-                pet.icon,
-                color: AppColors.textDark,
-              ),
+              backgroundColor: Colors.white.withValues(alpha: 0.8),
+              child: Icon(pet.icon, color: AppColors.textDark),
             ),
 
             const SizedBox(width: 12),
@@ -267,18 +255,18 @@ class PetProfileCard extends StatelessWidget {
                     pet.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: 16,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(fontSize: 16),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     pet.type,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 12,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(fontSize: 12),
                   ),
                   const SizedBox(height: 3),
                   Text(
@@ -303,11 +291,7 @@ class ProfileMenuTile extends StatelessWidget {
   final ProfileMenuItem item;
   final VoidCallback onTap;
 
-  const ProfileMenuTile({
-    super.key,
-    required this.item,
-    required this.onTap,
-  });
+  const ProfileMenuTile({super.key, required this.item, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -319,10 +303,7 @@ class ProfileMenuTile extends StatelessWidget {
           CircleAvatar(
             radius: 28,
             backgroundColor: item.color,
-            child: Icon(
-              item.icon,
-              color: AppColors.textDark,
-            ),
+            child: Icon(item.icon, color: AppColors.textDark),
           ),
 
           const SizedBox(width: 14),
@@ -333,9 +314,9 @@ class ProfileMenuTile extends StatelessWidget {
               children: [
                 Text(
                   item.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 16,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontSize: 16),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -360,10 +341,7 @@ class ProfileMenuTile extends StatelessWidget {
 class LogoutCard extends StatelessWidget {
   final VoidCallback onLogout;
 
-  const LogoutCard({
-    super.key,
-    required this.onLogout,
-  });
+  const LogoutCard({super.key, required this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -375,10 +353,7 @@ class LogoutCard extends StatelessWidget {
           CircleAvatar(
             radius: 26,
             backgroundColor: Colors.white,
-            child: Icon(
-              Icons.logout_rounded,
-              color: Color(0xFFD45A5A),
-            ),
+            child: Icon(Icons.logout_rounded, color: Color(0xFFD45A5A)),
           ),
           SizedBox(width: 14),
           Expanded(

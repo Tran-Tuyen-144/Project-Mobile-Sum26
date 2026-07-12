@@ -15,11 +15,7 @@ class CommunityHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            AppColors.lavender,
-            AppColors.peach,
-            AppColors.cream,
-          ],
+          colors: [AppColors.lavender, AppColors.peach, AppColors.cream],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -30,7 +26,7 @@ class CommunityHeader extends StatelessWidget {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.82),
+              color: Colors.white.withValues(alpha: 0.82),
               borderRadius: BorderRadius.circular(24),
             ),
             child: const Icon(
@@ -51,9 +47,9 @@ class CommunityHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'Chia sẻ khoảnh khắc, hỏi đáp chăm sóc và kết nối với những người yêu pet.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
               ],
             ),
@@ -83,7 +79,7 @@ class CommunityCategorySelector extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final category = categories[index];
           final isSelected = selectedCategory == category;
@@ -119,10 +115,7 @@ class CommunityCategorySelector extends StatelessWidget {
 class CreatePostCard extends StatelessWidget {
   final VoidCallback onTap;
 
-  const CreatePostCard({
-    super.key,
-    required this.onTap,
-  });
+  const CreatePostCard({super.key, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -134,10 +127,7 @@ class CreatePostCard extends StatelessWidget {
           const CircleAvatar(
             radius: 26,
             backgroundColor: AppColors.peach,
-            child: Icon(
-              Icons.face_rounded,
-              color: AppColors.primary,
-            ),
+            child: Icon(Icons.face_rounded, color: AppColors.primary),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -146,10 +136,7 @@ class CreatePostCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
-          const Icon(
-            Icons.edit_rounded,
-            color: AppColors.primary,
-          ),
+          const Icon(Icons.edit_rounded, color: AppColors.primary),
         ],
       ),
     );
@@ -204,16 +191,16 @@ class CommunityPostCard extends StatelessWidget {
                   children: [
                     Text(
                       post.authorName,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 16,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(fontSize: 16),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       '${post.authorRole} • ${post.timeAgo}',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: 12,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontSize: 12),
                     ),
                   ],
                 ),
@@ -253,10 +240,7 @@ class CommunityPostCard extends StatelessWidget {
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.edit_rounded,
-                              color: AppColors.primary,
-                            ),
+                            Icon(Icons.edit_rounded, color: AppColors.primary),
                             SizedBox(width: 10),
                             Text('Chỉnh sửa'),
                           ],
@@ -290,10 +274,15 @@ class CommunityPostCard extends StatelessWidget {
 
           Text(
             post.content,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              height: 1.45,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(height: 1.45),
           ),
+
+          if (post.hasImage) ...[
+            const SizedBox(height: 14),
+            _PostImage(post: post),
+          ],
 
           const SizedBox(height: 14),
 
@@ -332,19 +321,14 @@ class CommunityPostCard extends StatelessWidget {
 class _PostAvatar extends StatelessWidget {
   final CommunityPost post;
 
-  const _PostAvatar({
-    required this.post,
-  });
+  const _PostAvatar({required this.post});
 
   @override
   Widget build(BuildContext context) {
     return CircleAvatar(
       radius: 26,
       backgroundColor: post.color,
-      child: Icon(
-        post.petIcon,
-        color: AppColors.textDark,
-      ),
+      child: Icon(post.petIcon, color: AppColors.textDark),
     );
   }
 }
@@ -352,19 +336,14 @@ class _PostAvatar extends StatelessWidget {
 class _TagChip extends StatelessWidget {
   final CommunityPost post;
 
-  const _TagChip({
-    required this.post,
-  });
+  const _TagChip({required this.post});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: post.color.withOpacity(0.82),
+        color: post.color.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(99),
       ),
       child: Text(
@@ -373,6 +352,52 @@ class _TagChip extends StatelessWidget {
           color: AppColors.textDark,
           fontWeight: FontWeight.w900,
           fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+class _PostImage extends StatelessWidget {
+  final CommunityPost post;
+
+  const _PostImage({required this.post});
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = post.imageUrl ?? '';
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: AspectRatio(
+        aspectRatio: 16 / 10,
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+
+            return Container(
+              color: AppColors.cream,
+              alignment: Alignment.center,
+              child: const CircularProgressIndicator(),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: AppColors.cream,
+              alignment: Alignment.center,
+              child: const Text(
+                'Không tải được ảnh.',
+                style: TextStyle(
+                  color: AppColors.textSoft,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

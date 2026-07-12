@@ -21,11 +21,7 @@ class CreatePostHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            AppColors.primarySoft,
-            AppColors.peach,
-            AppColors.cream,
-          ],
+          colors: [AppColors.primarySoft, AppColors.peach, AppColors.cream],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -36,7 +32,7 @@ class CreatePostHeader extends StatelessWidget {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.82),
+              color: Colors.white.withValues(alpha: 0.82),
               borderRadius: BorderRadius.circular(24),
             ),
             child: const Icon(
@@ -50,16 +46,13 @@ class CreatePostHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 6),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
               ],
             ),
@@ -200,10 +193,7 @@ class TagPickerCard extends StatelessWidget {
           if (hasTag)
             IconButton(
               onPressed: onClear,
-              icon: const Icon(
-                Icons.close_rounded,
-                color: AppColors.textSoft,
-              ),
+              icon: const Icon(Icons.close_rounded, color: AppColors.textSoft),
             )
           else
             const Icon(
@@ -248,18 +238,15 @@ class PostPreviewCard extends StatelessWidget {
               CircleAvatar(
                 radius: 26,
                 backgroundColor: color,
-                child: Icon(
-                  icon,
-                  color: AppColors.textDark,
-                ),
+                child: Icon(icon, color: AppColors.textDark),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   authorName,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 16,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontSize: 16),
                 ),
               ),
               if (category.trim().isNotEmpty)
@@ -269,7 +256,7 @@ class PostPreviewCard extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.85),
+                    color: color.withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(99),
                   ),
                   child: Text(
@@ -286,9 +273,9 @@ class PostPreviewCard extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             previewContent,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              height: 1.45,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(height: 1.45),
           ),
         ],
       ),
