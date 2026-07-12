@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../screens/admin/service_request_admin_screen.dart';
 import '../screens/customer/profile/customer_profile_screen.dart';
 import '../screens/role_select_screen.dart';
 import '../screens/customer/customer_shell_screen.dart';
@@ -9,6 +10,7 @@ import '../screens/customer/booking_confirm/booking_confirm_data.dart';
 import '../screens/customer/booking_confirm/booking_confirm_screen.dart';
 import '../screens/customer/community/community_post_detail_screen.dart';
 import '../screens/customer/community/create_community_post_screen.dart';
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   overridePlatformDefaultLocation: true,
@@ -27,9 +29,7 @@ final GoRouter appRouter = GoRouter(
       name: 'notifications',
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Thông báo'),
-          ),
+          appBar: AppBar(title: const Text('Thông báo')),
           body: const CustomerNotificationScreen(),
         );
       },
@@ -44,13 +44,19 @@ final GoRouter appRouter = GoRouter(
     ),
 
     GoRoute(
+      path: '/admin-service-requests',
+      name: 'admin-service-requests',
+      builder: (context, state) {
+        return const ServiceRequestAdminScreen();
+      },
+    ),
+
+    GoRoute(
       path: '/community/create-post',
       name: 'community-create-post',
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Tạo bài viết'),
-          ),
+          appBar: AppBar(title: const Text('Tạo bài viết')),
           body: const CreateCommunityPostScreen(),
         );
       },
@@ -93,9 +99,7 @@ final GoRouter appRouter = GoRouter(
       name: 'profile',
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Hồ sơ cá nhân'),
-          ),
+          appBar: AppBar(title: const Text('Hồ sơ cá nhân')),
           body: const CustomerProfileScreen(),
         );
       },
@@ -120,11 +124,10 @@ final GoRouter appRouter = GoRouter(
         final data = state.extra as BookingConfirmData?;
 
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Xác nhận đặt bàn'),
-          ),
+          appBar: AppBar(title: const Text('Xác nhận đặt bàn')),
           body: BookingConfirmScreen(
-            data: data ??
+            data:
+                data ??
                 const BookingConfirmData(
                   branch: 'PetHub Quận 1',
                   day: 'Hôm nay',
@@ -142,14 +145,10 @@ final GoRouter appRouter = GoRouter(
       name: 'order',
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Gọi nước trước'),
-          ),
+          appBar: AppBar(title: const Text('Gọi nước trước')),
           body: const CustomerDrinkOrderScreen(),
         );
       },
     ),
   ],
-
-
 );

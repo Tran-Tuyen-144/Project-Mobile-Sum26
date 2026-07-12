@@ -36,18 +36,18 @@ class RoleSelectScreen extends StatelessWidget {
 
               Text(
                 'PetHub',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontSize: 34,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontSize: 34),
               ),
 
               const SizedBox(height: 8),
 
               Text(
                 'Một chiếc app nhỏ xinh cho cafe thú cưng, đặt bàn, tìm dịch vụ và kết nối cộng đồng yêu pet.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  height: 1.5,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(height: 1.5),
               ),
 
               const SizedBox(height: 36),
@@ -66,15 +66,11 @@ class RoleSelectScreen extends StatelessWidget {
 
               _RoleCard(
                 title: 'Quản lý / Nhân viên',
-                subtitle: 'Quản lý đơn đặt bàn, thú cưng, ca làm và doanh thu.',
+                subtitle: 'Nhận lịch dịch vụ và xác nhận cho khách hàng.',
                 icon: Icons.admin_panel_settings_rounded,
                 color: AppColors.mint,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Phần Admin mình sẽ làm sau nha.'),
-                    ),
-                  );
+                  context.push('/admin-service-requests');
                 },
               ),
 
@@ -119,12 +115,8 @@ class _RoleCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 28,
-            backgroundColor: Colors.white.withOpacity(0.75),
-            child: Icon(
-              icon,
-              color: AppColors.textDark,
-              size: 28,
-            ),
+            backgroundColor: Colors.white.withValues(alpha: 0.75),
+            child: Icon(icon, color: AppColors.textDark, size: 28),
           ),
 
           const SizedBox(width: 16),
@@ -133,15 +125,9 @@ class _RoleCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+                Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),
           ),

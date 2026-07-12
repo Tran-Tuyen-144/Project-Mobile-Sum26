@@ -54,7 +54,7 @@ const List<PetService> petServices = [
     color: AppColors.mint,
   ),
   PetService(
-    name: 'Bệnh viện thú y',
+    name: 'Bệnh viện thú cưng',
     category: 'Thú y',
     description: 'Khám sức khỏe, tiêm phòng và tư vấn chăm sóc thú cưng.',
     price: 'Từ 90.000đ',
