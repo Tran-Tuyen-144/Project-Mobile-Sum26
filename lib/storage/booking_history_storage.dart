@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum BookingStatus {
@@ -104,6 +105,8 @@ class BookingHistoryItem {
 
 class BookingHistoryStorage {
   static const String _key = 'booking_history_items';
+  static final CollectionReference<Map<String, dynamic>> _bookings =
+      FirebaseFirestore.instance.collection('bookings');
 
   static Future<List<BookingHistoryItem>> loadBookings() async {
     final prefs = await SharedPreferences.getInstance();
@@ -121,14 +124,33 @@ class BookingHistoryStorage {
     return bookings;
   }
 
-  static Future<void> saveBooking(BookingHistoryItem booking) async {
+  /// Stores the booking locally first so it remains available if offline.
+  /// The return value reports whether the Firestore upload succeeded.
+  static Future<bool> saveBooking(BookingHistoryItem booking) async {
     final bookings = await loadBookings();
     bookings.removeWhere((item) => item.id == booking.id);
     bookings.insert(0, booking);
     await _saveBookings(bookings);
+
+    return _uploadBooking(booking);
   }
 
-  static Future<void> updateStatus(String id, BookingStatus status) async {
+  /// Uploads bookings that were created before Firestore sync was enabled.
+  static Future<bool> syncLocalBookings() async {
+    final bookings = await loadBookings();
+    var allUploaded = true;
+
+    for (final booking in bookings) {
+      if (!await _uploadBooking(booking)) allUploaded = false;
+    }
+    return allUploaded;
+  }
+
+  static Future<void> updateStatus(
+    String id,
+    BookingStatus status, {
+    bool syncRemote = true,
+  }) async {
     final bookings = await loadBookings();
     final updated = bookings
         .map(
@@ -137,6 +159,13 @@ class BookingHistoryStorage {
         )
         .toList();
     await _saveBookings(updated);
+
+    if (!syncRemote) return;
+    try {
+      await _bookings.doc(id).update({'status': status.name});
+    } on FirebaseException {
+      // The local history remains available while offline or without access.
+    }
   }
 
   static Future<void> _saveBookings(List<BookingHistoryItem> bookings) async {
@@ -145,5 +174,31 @@ class BookingHistoryStorage {
       _key,
       bookings.map((booking) => jsonEncode(booking.toJson())).toList(),
     );
+  }
+
+  static Map<String, dynamic> _firestoreData(BookingHistoryItem booking) {
+    return {
+      'id': booking.id,
+      'createdAt': Timestamp.fromDate(booking.createdAt),
+      'branch': booking.branch,
+      'day': booking.day,
+      'time': booking.time,
+      'guests': booking.guests,
+      'tableId': booking.tableId,
+      'tableName': booking.tableName,
+      'customerName': booking.customerName,
+      'phone': booking.phone,
+      'note': booking.note,
+      'status': booking.status.name,
+    };
+  }
+
+  static Future<bool> _uploadBooking(BookingHistoryItem booking) async {
+    try {
+      await _bookings.doc(booking.id).set(_firestoreData(booking));
+      return true;
+    } on FirebaseException {
+      return false;
+    }
   }
 }

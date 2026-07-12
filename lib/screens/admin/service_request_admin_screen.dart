@@ -216,6 +216,18 @@ class _AdminRequestCard extends StatelessWidget {
               const SizedBox(height: 8),
               _AdminInfoLine(icon: Icons.note_alt_outlined, text: request.note),
             ],
+            if (request.details.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              ...request.details.entries.map(
+                (entry) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _AdminInfoLine(
+                    icon: Icons.fact_check_outlined,
+                    text: '${entry.key}: ${entry.value}',
+                  ),
+                ),
+              ),
+            ],
             if (request.status == ServiceBookingStatus.sent) ...[
               const SizedBox(height: 14),
               SizedBox(

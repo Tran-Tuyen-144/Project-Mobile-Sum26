@@ -231,10 +231,17 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
   late DateTime _selectedDate;
   late DateTime _endDate;
   late TimeOfDay _selectedTime;
+  late TimeOfDay _hotelCheckInTime;
+  late TimeOfDay _hotelCheckOutTime;
   int _selectedPetIndex = 0;
+  int _roomCount = 1;
   late String _selectedPackage;
+  String _selectedUrgency = 'Khám theo lịch hẹn';
+  String _symptomDuration = 'Dưới 24 giờ';
+  final Set<String> _spaAddOns = {};
   final TextEditingController _customerNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _conditionController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
 
   @override
@@ -244,6 +251,8 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
     _selectedDate = DateTime(now.year, now.month, now.day);
     _endDate = _selectedDate.add(const Duration(days: 1));
     _selectedTime = const TimeOfDay(hour: 9, minute: 0);
+    _hotelCheckInTime = const TimeOfDay(hour: 9, minute: 0);
+    _hotelCheckOutTime = const TimeOfDay(hour: 10, minute: 0);
     _selectedPackage = _packageOptions.first;
   }
 
@@ -251,6 +260,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
   void dispose() {
     _customerNameController.dispose();
     _phoneController.dispose();
+    _conditionController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -357,6 +367,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                 if (!_isHotel) ...[
                   const SizedBox(height: 12),
                   _TimePickCard(
+                    label: 'Giờ hẹn',
                     value: _timeText(_selectedTime),
                     onTap: _pickTime,
                   ),
@@ -475,6 +486,8 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                   },
                 ),
                 const SizedBox(height: 12),
+                ..._specializedFields(context),
+                const SizedBox(height: 12),
                 TextField(
                   controller: _noteController,
                   minLines: 2,
@@ -518,6 +531,11 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
         'Tiêm phòng / nhắc lịch vaccine',
         'Khám triệu chứng đang gặp',
       ],
+      'Grooming' => const [
+        'Cắt tỉa vệ sinh cơ bản',
+        'Tạo kiểu theo giống',
+        'Grooming trọn gói + dưỡng lông',
+      ],
       _ => const [
         'Tắm spa cơ bản',
         'Tắm + vệ sinh tai móng',
@@ -530,6 +548,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
     return switch (widget.service.category) {
       'Khách sạn' => 'Thông tin gửi pet',
       'Thú y' => 'Thông tin khám bệnh',
+      'Grooming' => 'Thông tin tạo kiểu',
       _ => 'Thông tin spa',
     };
   }
@@ -548,6 +567,117 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       'Thú y' => 'Ví dụ: bỏ ăn, ngứa da, cần kiểm tra tai...',
       _ => 'Ví dụ: bé hơi nhát, cần nhân viên nhẹ tay...',
     };
+  }
+
+  List<Widget> _specializedFields(BuildContext context) {
+    switch (widget.service.category) {
+      case 'Khách sạn':
+        return [
+          DropdownButtonFormField<int>(
+            initialValue: _roomCount,
+            decoration: const InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              labelText: 'Số phòng cần đặt',
+              prefixIcon: Icon(Icons.meeting_room_outlined),
+            ),
+            items: List.generate(
+              4,
+              (index) => DropdownMenuItem(
+                value: index + 1,
+                child: Text('${index + 1} phòng'),
+              ),
+            ),
+            onChanged: (value) => setState(() => _roomCount = value ?? 1),
+          ),
+          const SizedBox(height: 12),
+          _TimePickCard(
+            label: 'Giờ nhận pet',
+            value: _timeText(_hotelCheckInTime),
+            onTap: () => _pickHotelTime(isCheckIn: true),
+          ),
+          const SizedBox(height: 12),
+          _TimePickCard(
+            label: 'Giờ trả pet',
+            value: _timeText(_hotelCheckOutTime),
+            onTap: () => _pickHotelTime(isCheckIn: false),
+          ),
+        ];
+      case 'Thú y':
+        return [
+          DropdownButtonFormField<String>(
+            initialValue: _selectedUrgency,
+            decoration: const InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              labelText: 'Mức độ ưu tiên',
+              prefixIcon: Icon(Icons.monitor_heart_outlined),
+            ),
+            items:
+                const [
+                      'Khám theo lịch hẹn',
+                      'Cần khám trong hôm nay',
+                      'Ưu tiên cao – gọi xác nhận ngay',
+                    ]
+                    .map(
+                      (item) =>
+                          DropdownMenuItem(value: item, child: Text(item)),
+                    )
+                    .toList(),
+            onChanged: (value) =>
+                setState(() => _selectedUrgency = value ?? _selectedUrgency),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: _symptomDuration,
+            decoration: const InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              labelText: 'Thời gian xuất hiện triệu chứng',
+              prefixIcon: Icon(Icons.timelapse_rounded),
+            ),
+            items: const ['Dưới 24 giờ', '1–3 ngày', 'Trên 3 ngày', 'Không rõ']
+                .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                .toList(),
+            onChanged: (value) =>
+                setState(() => _symptomDuration = value ?? _symptomDuration),
+          ),
+        ];
+      default:
+        return [
+          TextField(
+            controller: _conditionController,
+            decoration: const InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              labelText: 'Tình trạng lông / da',
+              hintText: 'Ví dụ: lông rối nhẹ, da nhạy cảm...',
+              prefixIcon: Icon(Icons.pets_outlined),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Dịch vụ bổ sung',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: ['Cắt móng', 'Vệ sinh tai', 'Khử mùi', 'Dưỡng lông']
+                .map(
+                  (item) => FilterChip(
+                    label: Text(item),
+                    selected: _spaAddOns.contains(item),
+                    onSelected: (selected) => setState(() {
+                      selected ? _spaAddOns.add(item) : _spaAddOns.remove(item);
+                    }),
+                  ),
+                )
+                .toList(),
+          ),
+        ];
+    }
   }
 
   Future<void> _pickStartDate() async {
@@ -644,6 +774,26 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
     });
   }
 
+  Future<void> _pickHotelTime({required bool isCheckIn}) async {
+    final currentTime = isCheckIn ? _hotelCheckInTime : _hotelCheckOutTime;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: currentTime,
+      helpText: isCheckIn ? 'Chọn giờ nhận pet' : 'Chọn giờ trả pet',
+      cancelText: 'Hủy',
+      confirmText: 'Chọn',
+    );
+
+    if (picked == null) return;
+    setState(() {
+      if (isCheckIn) {
+        _hotelCheckInTime = picked;
+      } else {
+        _hotelCheckOutTime = picked;
+      }
+    });
+  }
+
   Future<void> _submitRequest() async {
     final localContext = context;
     final customerName = _customerNameController.text.trim();
@@ -663,8 +813,19 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       return;
     }
 
+    if (widget.service.category == 'Thú y' &&
+        _noteController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(localContext).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng mô tả triệu chứng để bác sĩ chuẩn bị.'),
+        ),
+      );
+      return;
+    }
+
     final pet = myPets[_selectedPetIndex];
     final service = widget.service;
+    final details = _serviceDetails();
     final request = ServiceBookingRequest(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       createdAt: DateTime.now(),
@@ -677,12 +838,30 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       petType: pet.type,
       startDay: _dateText(_selectedDate),
       endDay: _isHotel ? _dateText(_endDate) : '',
-      time: _isHotel ? 'Theo giờ nhận/trả tại quầy' : _timeText(_selectedTime),
+      time: _isHotel
+          ? 'Nhận ${_timeText(_hotelCheckInTime)} • Trả ${_timeText(_hotelCheckOutTime)}'
+          : _timeText(_selectedTime),
       note: _noteController.text.trim(),
+      details: details,
       status: ServiceBookingStatus.sent,
     );
 
-    await ServiceBookingStorage.saveRequest(request);
+    final shouldSend = await _showBookingSummary(request);
+    if (!shouldSend) return;
+
+    try {
+      await ServiceBookingStorage.saveRequest(request);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(localContext).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Chưa gửi được lên Firestore. Kiểm tra Firestore Database và rules: $error',
+          ),
+        ),
+      );
+      return;
+    }
     widget.onRequestSubmitted?.call();
 
     if (!mounted) return;
@@ -691,10 +870,10 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Đặt lịch thành công'),
+          title: const Text('Yêu cầu đã gửi admin'),
           content: Text(
-            'Lịch ${service.name} cho ${pet.name} đã được gửi về admin. '
-            'Admin có thể xác nhận lịch trong màn quản lý.',
+            'Tóm tắt đặt lịch của ${pet.name} đã được lưu. '
+            'Admin sẽ kiểm tra và xác nhận lịch qua số $phone.',
           ),
           actions: [
             TextButton(
@@ -705,6 +884,63 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
         );
       },
     );
+  }
+
+  Map<String, String> _serviceDetails() {
+    switch (widget.service.category) {
+      case 'Khách sạn':
+        return {
+          'Số phòng': '$_roomCount phòng',
+          'Giờ nhận pet': _timeText(_hotelCheckInTime),
+          'Giờ trả pet': _timeText(_hotelCheckOutTime),
+        };
+      case 'Thú y':
+        return {
+          'Mức độ ưu tiên': _selectedUrgency,
+          'Thời gian triệu chứng': _symptomDuration,
+        };
+      default:
+        return {
+          if (_conditionController.text.trim().isNotEmpty)
+            'Tình trạng lông / da': _conditionController.text.trim(),
+          if (_spaAddOns.isNotEmpty) 'Dịch vụ bổ sung': _spaAddOns.join(', '),
+        };
+    }
+  }
+
+  Future<bool> _showBookingSummary(ServiceBookingRequest request) async {
+    final summaryLines = <String>[
+      'Dịch vụ: ${request.serviceName}',
+      'Gói: ${request.packageName}',
+      'Pet: ${request.petName} (${request.petType})',
+      request.endDay.isEmpty
+          ? 'Lịch hẹn: ${request.startDay} • ${request.time}'
+          : 'Lưu trú: ${request.startDay} đến ${request.endDay} • ${request.time}',
+      ...request.details.entries.map((entry) => '${entry.key}: ${entry.value}'),
+      if (request.note.isNotEmpty) 'Ghi chú: ${request.note}',
+    ];
+
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Xác nhận thông tin đặt lịch'),
+            content: SingleChildScrollView(
+              child: Text(summaryLines.join('\n\n')),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Chỉnh sửa'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                icon: const Icon(Icons.send_rounded),
+                label: const Text('Gửi admin'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   String _dateText(DateTime date) {
@@ -787,10 +1023,15 @@ class _DatePickCard extends StatelessWidget {
 }
 
 class _TimePickCard extends StatelessWidget {
+  final String label;
   final String value;
   final VoidCallback onTap;
 
-  const _TimePickCard({required this.value, required this.onTap});
+  const _TimePickCard({
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -809,7 +1050,7 @@ class _TimePickCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Giờ hẹn', style: Theme.of(context).textTheme.bodyMedium),
+                Text(label, style: Theme.of(context).textTheme.bodyMedium),
                 const SizedBox(height: 3),
                 Text(
                   value,

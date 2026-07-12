@@ -1,6 +1,4 @@
-import 'dart:convert';
-
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum ServiceBookingStatus {
   sent('Đã gửi admin'),
@@ -32,6 +30,7 @@ class ServiceBookingRequest {
   final String endDay;
   final String time;
   final String note;
+  final Map<String, String> details;
   final ServiceBookingStatus status;
 
   const ServiceBookingRequest({
@@ -48,6 +47,7 @@ class ServiceBookingRequest {
     required this.endDay,
     required this.time,
     required this.note,
+    this.details = const {},
     required this.status,
   });
 
@@ -66,6 +66,7 @@ class ServiceBookingRequest {
       endDay: endDay,
       time: time,
       note: note,
+      details: details,
       status: status ?? this.status,
     );
   }
@@ -85,6 +86,7 @@ class ServiceBookingRequest {
       'endDay': endDay,
       'time': time,
       'note': note,
+      'details': details,
       'status': status.name,
     };
   }
@@ -106,56 +108,35 @@ class ServiceBookingRequest {
       endDay: json['endDay'] as String? ?? '',
       time: json['time'] as String? ?? '',
       note: json['note'] as String? ?? '',
+      details: (json['details'] as Map<Object?, Object?>? ?? const {}).map(
+        (key, value) => MapEntry(key.toString(), value.toString()),
+      ),
       status: ServiceBookingStatus.fromName(json['status'] as String? ?? ''),
     );
   }
 }
 
 class ServiceBookingStorage {
-  static const String _key = 'service_booking_requests';
+  static final CollectionReference<Map<String, dynamic>> _bookings =
+      FirebaseFirestore.instance.collection('service_bookings');
 
   static Future<List<ServiceBookingRequest>> loadRequests() async {
-    final prefs = await SharedPreferences.getInstance();
-    final encodedItems = prefs.getStringList(_key) ?? [];
-    final requests = <ServiceBookingRequest>[];
+    final snapshot = await _bookings
+        .orderBy('createdAt', descending: true)
+        .get();
 
-    for (final encoded in encodedItems) {
-      try {
-        final decoded = jsonDecode(encoded) as Map<String, dynamic>;
-        requests.add(ServiceBookingRequest.fromJson(decoded));
-      } catch (_) {}
-    }
-
-    requests.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return requests;
+    return snapshot.docs
+        .map((document) => ServiceBookingRequest.fromJson(document.data()))
+        .toList();
   }
 
   static Future<void> saveRequest(ServiceBookingRequest request) async {
-    final requests = await loadRequests();
-    requests.removeWhere((item) => item.id == request.id);
-    requests.insert(0, request);
-    await _saveRequests(requests);
+    await _bookings.doc(request.id).set(request.toJson());
   }
 
   static Future<void> confirmRequest(String id) async {
-    final requests = await loadRequests();
-    final updated = requests
-        .map(
-          (request) => request.id == id
-              ? request.copyWith(status: ServiceBookingStatus.confirmed)
-              : request,
-        )
-        .toList();
-    await _saveRequests(updated);
-  }
-
-  static Future<void> _saveRequests(
-    List<ServiceBookingRequest> requests,
-  ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      _key,
-      requests.map((request) => jsonEncode(request.toJson())).toList(),
-    );
+    await _bookings.doc(id).update({
+      'status': ServiceBookingStatus.confirmed.name,
+    });
   }
 }

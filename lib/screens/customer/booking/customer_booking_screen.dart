@@ -58,6 +58,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
       });
     });
     _loadBookingHistory();
+    unawaited(_syncBookingHistory());
   }
 
   @override
@@ -84,6 +85,11 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
               ),
         );
     });
+  }
+
+  Future<void> _syncBookingHistory() async {
+    await BookingHistoryStorage.syncLocalBookings();
+    await _loadBookingHistory();
   }
 
   String _bookingId() {
@@ -361,22 +367,31 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
                         bookingStatus = BookingStatus.pendingSync;
                       }
 
-                      await BookingHistoryStorage.saveBooking(
-                        BookingHistoryItem(
-                          id: _bookingId(),
-                          createdAt: now,
-                          branch: branch,
-                          day: selectedDayText,
-                          time: selectedTimeText,
-                          guests: selectedGuest,
-                          tableId: tableId,
-                          tableName: tableName,
-                          customerName: _customerNameController.text.trim(),
-                          phone: phone,
-                          note: _noteController.text.trim(),
-                          status: bookingStatus,
-                        ),
+                      final booking = BookingHistoryItem(
+                        id: _bookingId(),
+                        createdAt: now,
+                        branch: branch,
+                        day: selectedDayText,
+                        time: selectedTimeText,
+                        guests: selectedGuest,
+                        tableId: tableId,
+                        tableName: tableName,
+                        customerName: _customerNameController.text.trim(),
+                        phone: phone,
+                        note: _noteController.text.trim(),
+                        status: bookingStatus,
                       );
+                      final uploaded = await BookingHistoryStorage.saveBooking(
+                        booking,
+                      );
+                      if (!uploaded) {
+                        bookingStatus = BookingStatus.pendingSync;
+                        await BookingHistoryStorage.updateStatus(
+                          booking.id,
+                          bookingStatus,
+                          syncRemote: false,
+                        );
+                      }
 
                       await _loadBookingHistory();
 
