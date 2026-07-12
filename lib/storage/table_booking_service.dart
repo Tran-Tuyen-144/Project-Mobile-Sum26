@@ -47,7 +47,7 @@ class TableBookingService {
           _table(branch, 2, 'Bàn A2', 2, 'booked'),
           _table(branch, 3, 'Bàn B1', 4, 'available'),
           _table(branch, 4, 'Bàn B2', 4, 'available'),
-          _table(branch, 5, 'Bàn C1', 6, 'booked'),
+          _table(branch, 5, 'Bàn C1', 6, 'available'),
           _table(branch, 6, 'Bàn C2', 6, 'available'),
         ],
       );
