@@ -12,10 +12,16 @@ import '../booking_confirm/booking_confirm_data.dart';
 import 'customer_drink_order_screen.dart';
 
 class CustomerBookingScreen extends StatefulWidget {
-  const CustomerBookingScreen({super.key});
+  final String petName;
+
+  const CustomerBookingScreen({
+    super.key,
+    this.petName = 'Thú cưng của bạn',
+  });
 
   @override
-  State<CustomerBookingScreen> createState() => _CustomerBookingScreenState();
+  State<CustomerBookingScreen> createState() =>
+      _CustomerBookingScreenState();
 }
 
 class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
@@ -115,7 +121,9 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _BookingHeader(),
+          _BookingHeader(
+            petName: widget.petName,
+          ),
 
           const SizedBox(height: 12),
 
@@ -514,7 +522,11 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
 }
 
 class _BookingHeader extends StatelessWidget {
-  const _BookingHeader();
+  final String petName;
+
+  const _BookingHeader({
+    required this.petName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -551,6 +563,14 @@ class _BookingHeader extends StatelessWidget {
                 Text(
                   'Đặt bàn trước',
                   style: Theme.of(context).textTheme.titleLarge,
+                ),
+                Text(
+                  'Thú cưng đã chọn: $petName',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(

@@ -20,6 +20,31 @@ class PetListScreen extends StatelessWidget {
       "age": "4 tuổi",
       "image": "assets/image/dog2.jpg",
     },
+    {
+      "name": "Mèo Mochi",
+      "age": "1 tuổi",
+      "image": "assets/images/cat2.jpg",
+    },
+    {
+      "name": "Shiba Ken",
+      "age": "2 tuổi",
+      "image": "assets/images/dog3.jpg",
+    },
+    {
+      "name": "Poodle Coco",
+      "age": "3 tuổi",
+      "image": "assets/images/dog4.jpg",
+    },
+    {
+      "name": "Mèo Luna",
+      "age": "2 tuổi",
+      "image": "assets/images/cat3.jpg",
+    },
+    {
+      "name": "Husky Snow",
+      "age": "5 tuổi",
+      "image": "assets/images/dog5.jpg",
+    },
   ];
 
   @override
@@ -38,7 +63,11 @@ class PetListScreen extends StatelessWidget {
             child: ListTile(
               leading: CircleAvatar(
                 radius: 28,
-                backgroundImage: AssetImage(pet["image"]),
+                backgroundColor: Colors.orange.shade100,
+                child: Icon(
+                  Icons.pets,
+                  color: Colors.orange.shade800,
+                ),
               ),
               title: Text(pet["name"]),
               subtitle: Text(pet["age"]),
