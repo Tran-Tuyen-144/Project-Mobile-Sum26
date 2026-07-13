@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../storage/service_booking_storage.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/soft_card.dart';
-import '../profile/profile_models.dart';
 import 'pet_service.dart';
 
 class ServiceHeader extends StatelessWidget {
@@ -233,11 +233,15 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
   late TimeOfDay _selectedTime;
   late TimeOfDay _hotelCheckInTime;
   late TimeOfDay _hotelCheckOutTime;
-  int _selectedPetIndex = 0;
   int _roomCount = 1;
   late String _selectedPackage;
-  String _selectedUrgency = 'Khám theo lịch hẹn';
+  String _selectedHotelSize = 'Mèo dưới 3kg';
+  bool _hasVaccinationRecord = false;
+  bool _needsPickup = false;
   String _symptomDuration = 'Dưới 24 giờ';
+  String _selectedTherapy = 'Khám tổng quát & lập phác đồ';
+  String _healthConcern = 'Đau mãn tính / vận động';
+  String _selectedPaymentMethod = 'ZaloPay';
   final Set<String> _spaAddOns = {};
   final TextEditingController _customerNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -350,6 +354,46 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                     ],
                   ),
                 ),
+                if (_isSpa) ...[
+                  const SizedBox(height: 12),
+                  _SpaProcessCard(),
+                  const SizedBox(height: 12),
+                  SoftCard(
+                    color: AppColors.peach,
+                    onTap: _callHotline,
+                    child: const Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.white,
+                          child: Icon(
+                            Icons.phone_in_talk_rounded,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Cần tư vấn tình trạng lông hoặc báo giá trước? Liên hệ: 0822905915',
+                            style: TextStyle(
+                              color: AppColors.textDark,
+                              fontWeight: FontWeight.w700,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                if (_isHotel || _isVeterinary) ...[
+                  const SizedBox(height: 12),
+                  _ServiceContactCard(
+                    onTap: _callHotline,
+                    message: _isHotel
+                        ? 'Cần kiểm tra phòng hoặc tư vấn trước khi gửi bé? Liên hệ: 0822905915'
+                        : 'Cần tư vấn tình trạng của bé trước khi đặt lịch? Liên hệ: 0822905915',
+                  ),
+                ],
                 const SizedBox(height: 16),
                 _DatePickCard(
                   label: _isHotel ? 'Ngày nhận pet' : 'Ngày hẹn',
@@ -372,66 +416,6 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                     onTap: _pickTime,
                   ),
                 ],
-                const SizedBox(height: 16),
-                Text(
-                  'Chọn pet',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 10),
-                ...List.generate(myPets.length, (index) {
-                  final pet = myPets[index];
-                  final isSelected = _selectedPetIndex == index;
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: SoftCard(
-                      color: isSelected ? AppColors.primarySoft : Colors.white,
-                      onTap: () {
-                        setState(() {
-                          _selectedPetIndex = index;
-                        });
-                      },
-                      padding: const EdgeInsets.all(14),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: isSelected
-                                ? Colors.white
-                                : pet.color,
-                            child: Icon(pet.icon, color: AppColors.textDark),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  pet.name,
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(fontSize: 15),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  '${pet.type} • ${pet.age}',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            isSelected
-                                ? Icons.check_circle_rounded
-                                : Icons.circle_outlined,
-                            color: isSelected
-                                ? AppColors.primary
-                                : AppColors.textSoft,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-                const SizedBox(height: 4),
                 Text(
                   _formTitle,
                   style: Theme.of(context).textTheme.titleMedium,
@@ -488,6 +472,57 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                 const SizedBox(height: 12),
                 ..._specializedFields(context),
                 const SizedBox(height: 12),
+                SoftCard(
+                  color: AppColors.lavender,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.payments_rounded,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _isHotel ? 'Tạm tính lưu trú' : 'Tổng dịch vụ',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      Text(
+                        _money(_servicePrice),
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedPaymentMethod,
+                  decoration: const InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    labelText: 'Phương thức thanh toán',
+                    prefixIcon: Icon(Icons.account_balance_wallet_rounded),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'ZaloPay',
+                      child: Text('ZaloPay • Quét QR demo'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Thanh toán tại quầy',
+                      child: Text('Thanh toán tại quầy'),
+                    ),
+                  ],
+                  onChanged: (value) => setState(
+                    () => _selectedPaymentMethod =
+                        value ?? _selectedPaymentMethod,
+                  ),
+                ),
+                const SizedBox(height: 12),
                 TextField(
                   controller: _noteController,
                   minLines: 2,
@@ -506,7 +541,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                   child: ElevatedButton.icon(
                     onPressed: _submitRequest,
                     icon: const Icon(Icons.send_rounded),
-                    label: const Text('Đặt lịch dịch vụ'),
+                    label: Text('Thanh toán ${_money(_servicePrice)}'),
                   ),
                 ),
               ],
@@ -518,23 +553,60 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
   }
 
   bool get _isHotel => widget.service.category == 'Khách sạn';
+  bool get _isSpa => widget.service.category == 'Spa';
+  bool get _isVeterinary => widget.service.category == 'Thú y';
+
+  int get _servicePrice => switch (_selectedPackage) {
+    'Tắm spa trọn gói' => 120000,
+    'Tắm spa + vệ sinh tai, móng, bàn chân' => 180000,
+    'Spa trọn gói + cắt tỉa lông theo yêu cầu' => 280000,
+    'Khám tổng quát & lập phác đồ' => 90000,
+    'Châm cứu hỗ trợ' => 220000,
+    'Laser therapy' => 250000,
+    'Vật lý trị liệu' => 200000,
+    'Tư vấn thảo dược / dinh dưỡng' => 150000,
+    _ when _isHotel =>
+      _hotelDailyPrice *
+          _endDate.difference(_selectedDate).inDays.clamp(1, 60).toInt() *
+          _roomCount,
+    _ => 120000,
+  };
+
+  int get _hotelDailyPrice => switch (_selectedHotelSize) {
+    'Mèo dưới 3kg' => 100000,
+    'Mèo từ 3kg trở lên' => 120000,
+    'Chó dưới 5kg' => 150000,
+    'Chó từ 5kg đến dưới 10kg' => 200000,
+    'Chó từ 10kg đến 20kg' => 250000,
+    _ => 300000,
+  };
+
+  String _money(int value) =>
+      '${value.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => '.')}đ';
 
   List<String> get _packageOptions {
     return switch (widget.service.category) {
       'Khách sạn' => const [
-        'Phòng tiêu chuẩn qua đêm',
-        'Phòng riêng có camera',
-        'Gửi theo ngày + tắm nhanh',
+        'Phòng riêng tiêu chuẩn • 3 bữa/ngày',
+        'Phòng riêng + cập nhật video',
+        'Lưu trú dài ngày + tắm trước khi về',
       ],
       'Thú y' => const [
-        'Khám tổng quát',
-        'Tiêm phòng / nhắc lịch vaccine',
-        'Khám triệu chứng đang gặp',
+        'Khám tổng quát & lập phác đồ',
+        'Châm cứu hỗ trợ',
+        'Laser therapy',
+        'Vật lý trị liệu',
+        'Tư vấn thảo dược / dinh dưỡng',
       ],
       'Grooming' => const [
         'Cắt tỉa vệ sinh cơ bản',
         'Tạo kiểu theo giống',
         'Grooming trọn gói + dưỡng lông',
+      ],
+      'Spa' => const [
+        'Tắm spa trọn gói',
+        'Tắm spa + vệ sinh tai, móng, bàn chân',
+        'Spa trọn gói + cắt tỉa lông theo yêu cầu',
       ],
       _ => const [
         'Tắm spa cơ bản',
@@ -547,7 +619,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
   String get _formTitle {
     return switch (widget.service.category) {
       'Khách sạn' => 'Thông tin gửi pet',
-      'Thú y' => 'Thông tin khám bệnh',
+      'Thú y' => 'Thông tin khám & trị liệu',
       'Grooming' => 'Thông tin tạo kiểu',
       _ => 'Thông tin spa',
     };
@@ -556,7 +628,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
   String get _noteLabel {
     return switch (widget.service.category) {
       'Khách sạn' => 'Thói quen / đồ gửi kèm',
-      'Thú y' => 'Triệu chứng / vấn đề cần khám',
+      'Thú y' => 'Triệu chứng / tiền sử điều trị',
       _ => 'Yêu cầu chăm sóc',
     };
   }
@@ -564,7 +636,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
   String get _noteHint {
     return switch (widget.service.category) {
       'Khách sạn' => 'Ví dụ: ăn hạt riêng, sợ tiếng lớn, có gửi đồ chơi...',
-      'Thú y' => 'Ví dụ: bỏ ăn, ngứa da, cần kiểm tra tai...',
+      'Thú y' => 'Ví dụ: đau khớp, vừa phẫu thuật, lo âu, đang dùng thuốc...',
       _ => 'Ví dụ: bé hơi nhát, cần nhân viên nhẹ tay...',
     };
   }
@@ -573,6 +645,33 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
     switch (widget.service.category) {
       case 'Khách sạn':
         return [
+          DropdownButtonFormField<String>(
+            initialValue: _selectedHotelSize,
+            decoration: const InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              labelText: 'Loại pet / cân nặng',
+              prefixIcon: Icon(Icons.monitor_weight_outlined),
+            ),
+            items:
+                const [
+                      'Mèo dưới 3kg',
+                      'Mèo từ 3kg trở lên',
+                      'Chó dưới 5kg',
+                      'Chó từ 5kg đến dưới 10kg',
+                      'Chó từ 10kg đến 20kg',
+                      'Chó trên 20kg',
+                    ]
+                    .map(
+                      (item) =>
+                          DropdownMenuItem(value: item, child: Text(item)),
+                    )
+                    .toList(),
+            onChanged: (value) => setState(
+              () => _selectedHotelSize = value ?? _selectedHotelSize,
+            ),
+          ),
+          const SizedBox(height: 12),
           DropdownButtonFormField<int>(
             initialValue: _roomCount,
             decoration: const InputDecoration(
@@ -602,22 +701,43 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
             value: _timeText(_hotelCheckOutTime),
             onTap: () => _pickHotelTime(isCheckIn: false),
           ),
+          const SizedBox(height: 8),
+          CheckboxListTile(
+            value: _hasVaccinationRecord,
+            onChanged: (value) =>
+                setState(() => _hasVaccinationRecord = value ?? false),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: const Text('Bé đã tiêm phòng và có sổ sức khỏe'),
+            subtitle: const Text(
+              'Khách sạn chỉ nhận bé đủ điều kiện sức khỏe.',
+            ),
+          ),
+          CheckboxListTile(
+            value: _needsPickup,
+            onChanged: (value) => setState(() => _needsPickup = value ?? false),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: const Text('Cần hỗ trợ đưa đón thú cưng'),
+          ),
         ];
       case 'Thú y':
         return [
           DropdownButtonFormField<String>(
-            initialValue: _selectedUrgency,
+            initialValue: _selectedTherapy,
             decoration: const InputDecoration(
               filled: true,
               fillColor: Colors.white,
-              labelText: 'Mức độ ưu tiên',
-              prefixIcon: Icon(Icons.monitor_heart_outlined),
+              labelText: 'Phương pháp hỗ trợ',
+              prefixIcon: Icon(Icons.healing_rounded),
             ),
             items:
                 const [
-                      'Khám theo lịch hẹn',
-                      'Cần khám trong hôm nay',
-                      'Ưu tiên cao – gọi xác nhận ngay',
+                      'Khám tổng quát & lập phác đồ',
+                      'Châm cứu',
+                      'Laser therapy',
+                      'Vật lý trị liệu',
+                      'Thảo dược / dinh dưỡng',
                     ]
                     .map(
                       (item) =>
@@ -625,9 +745,54 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                     )
                     .toList(),
             onChanged: (value) =>
-                setState(() => _selectedUrgency = value ?? _selectedUrgency),
+                setState(() => _selectedTherapy = value ?? _selectedTherapy),
           ),
           const SizedBox(height: 12),
+          SoftCard(
+            color: AppColors.sky,
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  radius: 26,
+                  backgroundImage: AssetImage(
+                    'assets/images/bs_nguyen_xuan_hieu.jpg',
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Bác sĩ phụ trách: ${_doctorForTherapy}',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: _healthConcern,
+            decoration: const InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              labelText: 'Vấn đề cần hỗ trợ',
+              prefixIcon: Icon(Icons.favorite_border_rounded),
+            ),
+            items:
+                const [
+                      'Đau mãn tính / vận động',
+                      'Phục hồi sau chấn thương / phẫu thuật',
+                      'Lo âu / hành vi',
+                      'Da, dị ứng hoặc tiêu hóa',
+                      'Khác / cần bác sĩ đánh giá',
+                    ]
+                    .map(
+                      (item) =>
+                          DropdownMenuItem(value: item, child: Text(item)),
+                    )
+                    .toList(),
+            onChanged: (value) =>
+                setState(() => _healthConcern = value ?? _healthConcern),
+          ),
           DropdownButtonFormField<String>(
             initialValue: _symptomDuration,
             decoration: const InputDecoration(
@@ -643,7 +808,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                 setState(() => _symptomDuration = value ?? _symptomDuration),
           ),
         ];
-      default:
+      case 'Spa':
         return [
           TextField(
             controller: _conditionController,
@@ -664,17 +829,42 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: ['Cắt móng', 'Vệ sinh tai', 'Khử mùi', 'Dưỡng lông']
-                .map(
-                  (item) => FilterChip(
-                    label: Text(item),
-                    selected: _spaAddOns.contains(item),
-                    onSelected: (selected) => setState(() {
-                      selected ? _spaAddOns.add(item) : _spaAddOns.remove(item);
-                    }),
-                  ),
-                )
-                .toList(),
+            children:
+                [
+                      'Cạo lông bàn chân',
+                      'Vệ sinh tai',
+                      'Cắt & dũa móng',
+                      'Gỡ rối lông',
+                      'Vắt tuyến hôi',
+                      'Massage',
+                      'Dưỡng lông',
+                      'Cắt tạo kiểu',
+                    ]
+                    .map(
+                      (item) => FilterChip(
+                        label: Text(item),
+                        selected: _spaAddOns.contains(item),
+                        onSelected: (selected) => setState(() {
+                          selected
+                              ? _spaAddOns.add(item)
+                              : _spaAddOns.remove(item);
+                        }),
+                      ),
+                    )
+                    .toList(),
+          ),
+        ];
+      default:
+        return [
+          TextField(
+            controller: _conditionController,
+            decoration: const InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              labelText: 'Yêu cầu tạo kiểu',
+              hintText: 'Ví dụ: tỉa gọn mặt, giữ độ dài lông...',
+              prefixIcon: Icon(Icons.content_cut_rounded),
+            ),
           ),
         ];
     }
@@ -823,7 +1013,17 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       return;
     }
 
-    final pet = myPets[_selectedPetIndex];
+    if (_isHotel && !_hasVaccinationRecord) {
+      ScaffoldMessenger.of(localContext).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Vui lòng xác nhận bé đã tiêm phòng và có sổ sức khỏe.',
+          ),
+        ),
+      );
+      return;
+    }
+
     final service = widget.service;
     final details = _serviceDetails();
     final request = ServiceBookingRequest(
@@ -834,20 +1034,28 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       packageName: _selectedPackage,
       customerName: customerName,
       phone: phone,
-      petName: pet.name,
-      petType: pet.type,
+      petName: '',
+      petType: '',
       startDay: _dateText(_selectedDate),
       endDay: _isHotel ? _dateText(_endDate) : '',
       time: _isHotel
           ? 'Nhận ${_timeText(_hotelCheckInTime)} • Trả ${_timeText(_hotelCheckOutTime)}'
           : _timeText(_selectedTime),
       note: _noteController.text.trim(),
-      details: details,
+      details: {
+        ...details,
+        'Tổng thanh toán': _money(_servicePrice),
+        'Phương thức thanh toán': _selectedPaymentMethod,
+      },
       status: ServiceBookingStatus.sent,
     );
 
     final shouldSend = await _showBookingSummary(request);
     if (!shouldSend) return;
+
+    if (_selectedPaymentMethod == 'ZaloPay' && !await _showZaloPayPayment()) {
+      return;
+    }
 
     try {
       await ServiceBookingStorage.saveRequest(request);
@@ -872,8 +1080,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
         return AlertDialog(
           title: const Text('Yêu cầu đã gửi admin'),
           content: Text(
-            'Tóm tắt đặt lịch của ${pet.name} đã được lưu. '
-            'Admin sẽ kiểm tra và xác nhận lịch qua số $phone.',
+            'Lịch dịch vụ đã được lưu. Admin sẽ kiểm tra và xác nhận lịch qua số $phone.',
           ),
           actions: [
             TextButton(
@@ -890,20 +1097,29 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
     switch (widget.service.category) {
       case 'Khách sạn':
         return {
+          'Loại pet / cân nặng': _selectedHotelSize,
           'Số phòng': '$_roomCount phòng',
           'Giờ nhận pet': _timeText(_hotelCheckInTime),
           'Giờ trả pet': _timeText(_hotelCheckOutTime),
+          'Đưa đón': _needsPickup ? 'Cần hỗ trợ' : 'Tự đưa đón',
         };
       case 'Thú y':
         return {
-          'Mức độ ưu tiên': _selectedUrgency,
+          'Phương pháp hỗ trợ': _selectedTherapy,
+          'Bác sĩ phụ trách': _doctorForTherapy,
+          'Vấn đề cần hỗ trợ': _healthConcern,
           'Thời gian triệu chứng': _symptomDuration,
         };
-      default:
+      case 'Spa':
         return {
           if (_conditionController.text.trim().isNotEmpty)
             'Tình trạng lông / da': _conditionController.text.trim(),
           if (_spaAddOns.isNotEmpty) 'Dịch vụ bổ sung': _spaAddOns.join(', '),
+        };
+      default:
+        return {
+          if (_conditionController.text.trim().isNotEmpty)
+            'Yêu cầu tạo kiểu': _conditionController.text.trim(),
         };
     }
   }
@@ -912,7 +1128,6 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
     final summaryLines = <String>[
       'Dịch vụ: ${request.serviceName}',
       'Gói: ${request.packageName}',
-      'Pet: ${request.petName} (${request.petType})',
       request.endDay.isEmpty
           ? 'Lịch hẹn: ${request.startDay} • ${request.time}'
           : 'Lưu trú: ${request.startDay} đến ${request.endDay} • ${request.time}',
@@ -941,6 +1156,64 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
           ),
         ) ??
         false;
+  }
+
+  String get _doctorForTherapy => switch (_selectedTherapy) {
+    'Châm cứu' => 'BS. Nguyễn Xuân Hiếu • Châm cứu & giảm đau',
+    'Laser therapy' => 'BS. Nguyễn Xuân Hiếu • Laser & phục hồi mô',
+    'Vật lý trị liệu' => 'BS. Nguyễn Xuân Hiếu • Phục hồi vận động',
+    'Thảo dược / dinh dưỡng' => 'BS. Nguyễn Xuân Hiếu • Dinh dưỡng & thảo dược',
+    _ => 'BS. Nguyễn Xuân Hiếu • Khám tổng quát',
+  };
+
+  Future<bool> _showZaloPayPayment() async {
+    final paymentCode = 'ZLP-${DateTime.now().millisecondsSinceEpoch}';
+    Future<void>.delayed(const Duration(seconds: 8), () {
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop(true);
+      }
+    });
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('Quét mã ZaloPay'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.qr_code_2_rounded,
+                  size: 150,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  _money(_servicePrice),
+                  style: const TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(paymentCode),
+                const SizedBox(height: 8),
+                const Text(
+                  'Demo sẽ tự xác nhận thanh toán sau vài giây.',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _callHotline() async {
+    final opened = await launchUrl(Uri(scheme: 'tel', path: '0822905915'));
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Thiết bị này không hỗ trợ gọi điện.')),
+      );
+    }
   }
 
   String _dateText(DateTime date) {
@@ -1095,6 +1368,93 @@ class _InfoRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SpaProcessCard extends StatelessWidget {
+  const _SpaProcessCard();
+
+  @override
+  Widget build(BuildContext context) {
+    const steps = [
+      'Kiểm tra da & lông',
+      'Vệ sinh tai, móng, bàn chân',
+      'Tắm & massage',
+      'Sấy khô, dưỡng lông',
+      'Cắt tỉa theo yêu cầu',
+    ];
+
+    return SoftCard(
+      color: AppColors.mint,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Quy trình spa cho bé',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 10),
+          ...List.generate(
+            steps.length,
+            (index) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 11,
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      '${index + 1}',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(child: Text(steps[index])),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceContactCard extends StatelessWidget {
+  final String message;
+  final VoidCallback onTap;
+
+  const _ServiceContactCard({required this.message, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SoftCard(
+      color: AppColors.peach,
+      onTap: onTap,
+      child: Row(
+        children: [
+          const CircleAvatar(
+            backgroundColor: Colors.white,
+            child: Icon(Icons.phone_in_talk_rounded, color: AppColors.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontWeight: FontWeight.w700,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

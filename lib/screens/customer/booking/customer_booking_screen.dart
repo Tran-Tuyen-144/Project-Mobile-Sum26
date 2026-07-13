@@ -293,6 +293,10 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
                   booking.id,
                   BookingStatus.cancelled,
                 );
+                await TableBookingService.releaseTable(
+                  booking.branch,
+                  booking.tableId,
+                );
                 await _loadBookingHistory();
               },
             ),
@@ -363,6 +367,17 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
 
                       try {
                         await TableBookingService.bookTable(branch, tableId);
+                      } on StateError {
+                        if (localContext.mounted) {
+                          ScaffoldMessenger.of(localContext).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Bàn này vừa được đặt. Vui lòng chọn bàn khác.',
+                              ),
+                            ),
+                          );
+                        }
+                        return;
                       } catch (error) {
                         bookingStatus = BookingStatus.pendingSync;
                       }

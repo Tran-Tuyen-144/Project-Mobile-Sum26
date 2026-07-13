@@ -34,9 +34,10 @@ const List<String> serviceCategories = [
 
 const List<PetService> petServices = [
   PetService(
-    name: 'Spa thú cưng',
+    name: 'Spa chó mèo trọn gói',
     category: 'Spa',
-    description: 'Tắm, massage, dưỡng lông và vệ sinh nhẹ nhàng cho bé pet.',
+    description:
+        'Tắm massage, vệ sinh tai/móng, sấy dưỡng lông và cắt tỉa theo yêu cầu.',
     price: 'Từ 120.000đ',
     distance: '1.4 km',
     rating: 4.8,
@@ -62,25 +63,5 @@ const List<PetService> petServices = [
     rating: 4.9,
     icon: Icons.medical_services_rounded,
     color: AppColors.sky,
-  ),
-  PetService(
-    name: 'Grooming tạo kiểu',
-    category: 'Grooming',
-    description: 'Cắt tỉa lông, vệ sinh tai móng và tạo kiểu xinh xắn.',
-    price: 'Từ 150.000đ',
-    distance: '1.8 km',
-    rating: 4.6,
-    icon: Icons.content_cut_rounded,
-    color: AppColors.lavender,
-  ),
-  PetService(
-    name: 'Tắm khử mùi',
-    category: 'Spa',
-    description: 'Làm sạch nhanh, khử mùi nhẹ và giữ lông thơm mềm.',
-    price: 'Từ 80.000đ',
-    distance: '900 m',
-    rating: 4.5,
-    icon: Icons.water_drop_rounded,
-    color: AppColors.primarySoft,
   ),
 ];

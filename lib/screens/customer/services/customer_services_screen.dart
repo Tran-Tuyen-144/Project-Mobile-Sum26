@@ -5,6 +5,7 @@ import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
 import 'pet_service.dart';
+import 'featured_service_screen.dart';
 import 'service_widgets.dart';
 
 class CustomerServicesScreen extends StatefulWidget {
@@ -105,6 +106,14 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
               return ServiceCard(
                 service: service,
                 onTap: () {
+                  if (FeaturedServiceScreen.supports(service)) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => FeaturedServiceScreen(service: service),
+                      ),
+                    );
+                    return;
+                  }
                   showModalBottomSheet(
                     context: context,
                     backgroundColor: Colors.transparent,
