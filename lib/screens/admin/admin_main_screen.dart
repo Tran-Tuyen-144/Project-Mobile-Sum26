@@ -4,7 +4,6 @@ import '../../theme/app_colors.dart';
 // --- Import các màn hình con đã được tách file ---
 import 'dashboard/admin_dashboard_screen.dart';
 import 'reservations/admin_reservations_screen.dart';
-import 'shifts/admin_shifts_screen.dart';
 import 'staff/admin_staff_screen.dart';
 import 'manage/admin_manage_screen.dart';
 
@@ -22,7 +21,6 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
   final List<Widget> _screens = [
     const AdminDashboardScreen(),
     const AdminReservationsScreen(),
-    const AdminShiftsScreen(),
     const AdminStaffScreen(),
     const AdminManageScreen(),
   ];
@@ -109,11 +107,6 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
               icon: Icon(Icons.table_restaurant_rounded),
               activeIcon: Icon(Icons.table_restaurant),
               label: 'Đặt bàn',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.access_time_rounded),
-              activeIcon: Icon(Icons.access_time_filled_rounded),
-              label: 'Ca làm',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.badge_rounded),

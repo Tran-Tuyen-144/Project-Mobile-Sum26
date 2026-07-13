@@ -310,8 +310,9 @@ class _EditBookingScreenState extends State<EditBookingScreen> {
     setState(() {
       if (replaceIndex != null) {
         _pets[replaceIndex] = selected;
-      } else if (_pets.length < 3 && !_pets.contains(selected))
+      } else if (_pets.length < 3 && !_pets.contains(selected)) {
         _pets.add(selected);
+      }
     });
   }
 
