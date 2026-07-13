@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../../../models/pet_booking.dart';
 import '../booking/customer_booking_screen.dart';
+import 'booking_pet_screen.dart';
 
 class PetDetailScreen extends StatelessWidget {
   final Map<String, dynamic> pet;
@@ -8,8 +11,18 @@ class PetDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final name = (pet['name'] ?? 'Thú cưng').toString();
+    final age = (pet['age'] ?? 'Chưa cập nhật').toString();
+
+    final healthStatus = (pet['healthStatus'] ?? 'Khỏe mạnh').toString();
+
+    final bookingStatus = (pet['bookingStatus'] ?? 'Có sẵn').toString();
+
+    final isUnavailable =
+        bookingStatus == 'Đã được đặt' || pet['isAvailable'] == false;
+
     return Scaffold(
-      appBar: AppBar(title: Text(pet["name"])),
+      appBar: AppBar(title: Text(name)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -23,67 +36,110 @@ class PetDetailScreen extends StatelessWidget {
               ),
               child: Icon(Icons.pets, size: 80, color: Colors.orange.shade800),
             ),
-
             const SizedBox(height: 20),
-
             Text(
-              pet["name"],
+              name,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-
-            const SizedBox(height: 20),
-
-            ListTile(
-              leading: const Icon(Icons.cake),
-              title: const Text("Tuổi"),
-              subtitle: Text(pet["age"]),
-            ),
-
-            const ListTile(
-              leading: Icon(Icons.pets),
-              title: Text("Đặc điểm"),
-              subtitle: Text("Thân thiện, thích chơi với khách"),
-            ),
-
-            const ListTile(
-              leading: Icon(Icons.favorite),
-              title: Text("Sức khỏe"),
-              subtitle: Text("Khỏe mạnh"),
-            ),
-
-            const SizedBox(height: 30),
-
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isUnavailable
+                    ? Colors.red.shade50
+                    : Colors.green.shade50,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isUnavailable
+                        ? Icons.lock_rounded
+                        : Icons.check_circle_rounded,
+                    color: isUnavailable
+                        ? Colors.red.shade700
+                        : Colors.green.shade700,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    isUnavailable ? 'Đã được đặt' : bookingStatus,
+                    style: TextStyle(
+                      color: isUnavailable
+                          ? Colors.red.shade700
+                          : Colors.green.shade700,
+                      fontWeight: FontWeight.w700,
                     ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text("Hủy"),
                   ),
-                ),
-
-                const SizedBox(width: 15),
-
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              CustomerBookingScreen(petName: pet["name"]),
-                        ),
-                      );
-                    },
-                    child: Text("Đặt ${pet["name"]} Online"),
-                  ),
-                ),
-              ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.cake_rounded),
+              title: const Text('Tuổi'),
+              subtitle: Text(age),
+            ),
+            const ListTile(
+              leading: Icon(Icons.pets_rounded),
+              title: Text('Đặc điểm'),
+              subtitle: Text('Thân thiện, thích chơi với khách'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.favorite_rounded),
+              title: const Text('Sức khỏe'),
+              subtitle: Text(healthStatus),
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: isUnavailable
+                    ? null
+                    : () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) {
+                              return CustomerBookingScreen(petName: name);
+                            },
+                          ),
+                        );
+                      },
+                icon: const Icon(Icons.language_rounded),
+                label: Text('Đặt $name Online'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: isUnavailable
+                    ? null
+                    : () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) {
+                              return BookingPetScreen(
+                                petName: name,
+                                bookingType: BookingType.offline,
+                              );
+                            },
+                          ),
+                        );
+                      },
+                icon: const Icon(Icons.table_restaurant_rounded),
+                label: Text('Đặt $name tại chỗ'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Quay lại'),
+              ),
             ),
           ],
         ),

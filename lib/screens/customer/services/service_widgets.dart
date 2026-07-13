@@ -761,7 +761,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Bác sĩ phụ trách: ${_doctorForTherapy}',
+                    'Bác sĩ phụ trách: $_doctorForTherapy',
                     style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                 ),
@@ -1060,7 +1060,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
     try {
       await ServiceBookingStorage.saveRequest(request);
     } catch (error) {
-      if (!mounted) return;
+      if (!localContext.mounted) return;
       ScaffoldMessenger.of(localContext).showSnackBar(
         SnackBar(
           content: Text(

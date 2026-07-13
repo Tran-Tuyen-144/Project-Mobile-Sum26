@@ -2,9 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../services/pet_booking_store.dart' as booking_store;
 import '../../../theme/app_colors.dart';
 import '../../../widgets/soft_card.dart';
-import 'profile_models.dart';
+import 'profile_models.dart' as profile_models;
 
 class ProfileHeader extends StatelessWidget {
   final String displayName;
@@ -227,7 +228,7 @@ class _ProfileStatCard extends StatelessWidget {
 }
 
 class PetProfileCard extends StatelessWidget {
-  final PetProfile pet;
+  final profile_models.PetProfile pet;
 
   const PetProfileCard({super.key, required this.pet});
 
@@ -287,8 +288,70 @@ class PetProfileCard extends StatelessWidget {
   }
 }
 
+class ProfilePetProfileCard extends StatelessWidget {
+  final booking_store.PetProfile pet;
+
+  const ProfilePetProfileCard({super.key, required this.pet});
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isBooked = pet.bookingStatus == 'Đã được đặt';
+    return SizedBox(
+      width: 190,
+      child: SoftCard(
+        color: pet.isAvailable ? pet.color : Colors.grey.shade200,
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 26,
+              backgroundColor: Colors.white.withValues(alpha: 0.8),
+              child: Icon(Icons.pets_rounded, color: AppColors.textDark),
+            ),
+
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    pet.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(fontSize: 16),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    pet.age,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(fontSize: 12),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    isBooked ? 'Đã được đặt' : 'Có sẵn',
+                    style: TextStyle(
+                      color: isBooked
+                          ? Colors.red.shade700
+                          : Colors.green.shade700,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class ProfileMenuTile extends StatelessWidget {
-  final ProfileMenuItem item;
+  final profile_models.ProfileMenuItem item;
   final VoidCallback onTap;
 
   const ProfileMenuTile({super.key, required this.item, required this.onTap});

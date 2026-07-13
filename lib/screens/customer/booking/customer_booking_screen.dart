@@ -10,6 +10,7 @@ import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
 import '../booking_confirm/booking_confirm_data.dart';
 import 'customer_drink_order_screen.dart';
+import '../petprofile/pet_list_screen.dart';
 
 class CustomerBookingScreen extends StatefulWidget {
   final String petName;
@@ -304,6 +305,53 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
             ),
             const SizedBox(height: 18),
           ],
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: selectedTable == null
+                  ? null
+                  : () {
+                      final customerName = _customerNameController.text.trim();
+
+                      if (customerName.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Vui lòng nhập tên khách hàng.'),
+                          ),
+                        );
+                        return;
+                      }
+
+                      final tableName = tables
+                          .firstWhere((item) => item.id == selectedTable)
+                          .name;
+
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => PetListScreen(
+                            bookingData: BookingConfirmData(
+                              petNames: const [],
+                              petStatus: '',
+                              customerName: customerName,
+                              branch: branches[selectedBranch],
+                              day: selectedDayText,
+                              time: selectedTimeText,
+                              guests: selectedGuest,
+                              tableName: tableName,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+              icon: const Icon(Icons.pets_rounded),
+              label: const Text(
+                'Đặt Pet Online',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
 
           SizedBox(
             width: double.infinity,
