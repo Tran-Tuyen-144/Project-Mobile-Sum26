@@ -29,15 +29,11 @@ class CustomerHomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _WelcomeBanner(
-            onExplore: onOpenBooking,
-          ),
+          _WelcomeBanner(onExplore: onOpenBooking),
 
           const SizedBox(height: 24),
 
-          const SectionTitle(
-            title: 'Bạn muốn làm gì hôm nay?',
-          ),
+          const SectionTitle(title: 'Bạn muốn làm gì hôm nay?'),
 
           const SizedBox(height: 12),
 
@@ -121,9 +117,7 @@ class CustomerHomeScreen extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          _BranchList(
-            onOpenMap: onOpenMap,
-          ),
+          _BranchList(onOpenMap: onOpenMap),
 
           const SizedBox(height: 26),
 
@@ -135,9 +129,7 @@ class CustomerHomeScreen extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          _ServicePreview(
-            onOpenServices: onOpenServices,
-          ),
+          _ServicePreview(onOpenServices: onOpenServices),
         ],
       ),
     );
@@ -147,9 +139,7 @@ class CustomerHomeScreen extends StatelessWidget {
 class _WelcomeBanner extends StatelessWidget {
   final VoidCallback onExplore;
 
-  const _WelcomeBanner({
-    required this.onExplore,
-  });
+  const _WelcomeBanner({required this.onExplore});
 
   @override
   Widget build(BuildContext context) {
@@ -159,11 +149,7 @@ class _WelcomeBanner extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            AppColors.primarySoft,
-            AppColors.peach,
-            AppColors.cream,
-          ],
+          colors: [AppColors.primarySoft, AppColors.peach, AppColors.cream],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -176,16 +162,16 @@ class _WelcomeBanner extends StatelessWidget {
               children: [
                 Text(
                   'Cafe thú cưng\nấm áp gần bạn',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    height: 1.15,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(height: 1.15),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   'Đặt bàn trước, chọn món nhẹ nhàng và ghé chơi cùng các bé pet đáng yêu.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.45,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.45),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
@@ -203,7 +189,7 @@ class _WelcomeBanner extends StatelessWidget {
             width: 92,
             height: 92,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -239,17 +225,13 @@ class _QuickActionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: AppColors.textDark,
-            size: 30,
-          ),
+          Icon(icon, color: AppColors.textDark, size: 30),
           const SizedBox(height: 14),
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontSize: 16,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontSize: 16),
           ),
         ],
       ),
@@ -260,9 +242,7 @@ class _QuickActionCard extends StatelessWidget {
 class _BranchList extends StatelessWidget {
   final VoidCallback onOpenMap;
 
-  const _BranchList({
-    required this.onOpenMap,
-  });
+  const _BranchList({required this.onOpenMap});
 
   @override
   Widget build(BuildContext context) {
@@ -292,7 +272,7 @@ class _BranchList extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: branches.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final item = branches[index];
 
@@ -312,9 +292,9 @@ class _BranchList extends StatelessWidget {
                   const Spacer(),
                   Text(
                     item['name'] as String,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: 16,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(fontSize: 16),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -334,9 +314,7 @@ class _BranchList extends StatelessWidget {
 class _ServicePreview extends StatelessWidget {
   final VoidCallback onOpenServices;
 
-  const _ServicePreview({
-    required this.onOpenServices,
-  });
+  const _ServicePreview({required this.onOpenServices});
 
   @override
   Widget build(BuildContext context) {
@@ -395,10 +373,7 @@ class _ServiceTile extends StatelessWidget {
           CircleAvatar(
             radius: 28,
             backgroundColor: color,
-            child: Icon(
-              icon,
-              color: AppColors.textDark,
-            ),
+            child: Icon(icon, color: AppColors.textDark),
           ),
 
           const SizedBox(width: 14),
@@ -409,15 +384,12 @@ class _ServiceTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 16,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontSize: 16),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+                Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),
           ),

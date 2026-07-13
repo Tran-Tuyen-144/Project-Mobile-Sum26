@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../models/customer_profile.dart';
 import '../../../services/customer_auth_service.dart';
 import '../../../services/customer_profile_service.dart';
+import '../../../services/customer_saved_post_service.dart';
 import '../../../services/firebase_community_service.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
@@ -17,14 +18,11 @@ class CustomerProfileScreen extends StatefulWidget {
   const CustomerProfileScreen({super.key});
 
   @override
-  State<CustomerProfileScreen> createState() =>
-      _CustomerProfileScreenState();
+  State<CustomerProfileScreen> createState() => _CustomerProfileScreenState();
 }
 
 class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   late final Future<void> profileInitialization;
-
-  final Set<int> savedPostIds = {};
 
   final List<_ProfileAvatarOption> avatarOptions = const [
     _ProfileAvatarOption(
@@ -74,13 +72,12 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   @override
   void initState() {
     super.initState();
-    profileInitialization =
-        CustomerProfileService.ensureCurrentProfile();
+    profileInitialization = CustomerProfileService.ensureCurrentProfile();
   }
 
   _ProfileAvatarOption _avatarFromKey(String key) {
     return avatarOptions.firstWhere(
-          (option) => option.keyName == key,
+      (option) => option.keyName == key,
       orElse: () => avatarOptions.first,
     );
   }
@@ -90,9 +87,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
       context: context,
       backgroundColor: AppColors.cream,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (bottomSheetContext) {
         return SafeArea(
@@ -119,8 +114,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                   itemCount: avatarOptions.length,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 4,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
@@ -128,8 +122,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                   ),
                   itemBuilder: (context, index) {
                     final option = avatarOptions[index];
-                    final isSelected =
-                        option.keyName == profile.avatarIconKey;
+                    final isSelected = option.keyName == profile.avatarIconKey;
 
                     return InkWell(
                       borderRadius: BorderRadius.circular(22),
@@ -143,8 +136,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color:
-                          isSelected ? option.color : Colors.white,
+                          color: isSelected ? option.color : Colors.white,
                           borderRadius: BorderRadius.circular(22),
                           border: Border.all(
                             color: isSelected
@@ -158,8 +150,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                           children: [
                             CircleAvatar(
                               radius: 22,
-                              backgroundColor:
-                              Colors.white.withOpacity(0.85),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.85,
+                              ),
                               child: Icon(
                                 option.icon,
                                 color: AppColors.textDark,
@@ -191,11 +184,10 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   }
 
   Future<void> _editProfile(CustomerProfile profile) async {
-    final fullNameController =
-    TextEditingController(text: profile.fullName);
-
-    final displayNameController =
-    TextEditingController(text: profile.displayName);
+    final fullNameController = TextEditingController(text: profile.fullName);
+    final displayNameController = TextEditingController(
+      text: profile.displayName,
+    );
 
     final shouldSave = await showDialog<bool>(
       context: context,
@@ -256,18 +248,14 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã cập nhật thông tin cá nhân.'),
-          ),
+          const SnackBar(content: Text('Đã cập nhật thông tin cá nhân.')),
         );
       } catch (error) {
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              error.toString().replaceFirst('Exception: ', ''),
-            ),
+            content: Text(error.toString().replaceFirst('Exception: ', '')),
           ),
         );
       }
@@ -278,8 +266,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   }
 
   Future<void> _createPost(CustomerProfile profile) async {
-    final result =
-    await context.push<CommunityPost>('/community/create-post');
+    final result = await context.push<CommunityPost>('/community/create-post');
 
     if (result == null) return;
 
@@ -295,18 +282,14 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã đăng bài lên cộng đồng.'),
-        ),
+        const SnackBar(content: Text('Đã đăng bài lên cộng đồng.')),
       );
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không đăng được bài: $error'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Không đăng được bài: $error')));
     }
   }
 
@@ -330,18 +313,14 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã cập nhật bài viết.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đã cập nhật bài viết.')));
     } catch (error) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không sửa được bài viết: $error'),
-        ),
+        SnackBar(content: Text('Không sửa được bài viết: $error')),
       );
     }
   }
@@ -384,47 +363,51 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã xóa bài viết.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đã xóa bài viết.')));
     } catch (error) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không xóa được bài viết: $error'),
-        ),
+        SnackBar(content: Text('Không xóa được bài viết: $error')),
       );
     }
   }
 
   Future<void> _toggleLike(CommunityPost post, String userId) async {
     try {
-      await FirebaseCommunityService.toggleLike(
-        post: post,
+      await FirebaseCommunityService.toggleLike(post: post, userId: userId);
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Không thể thả tim: $error')));
+    }
+  }
+
+  Future<void> _toggleSave(CommunityPost post, String userId) async {
+    try {
+      final isSaved = await CustomerSavedPostService.toggleSavedPost(
         userId: userId,
+        post: post,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isSaved ? 'Đã lưu bài viết.' : 'Đã bỏ lưu bài viết.'),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không thể thả tim: $error'),
-        ),
+        SnackBar(content: Text('Không lưu được bài viết: $error')),
       );
     }
-  }
-
-  void _toggleSave(int postId) {
-    setState(() {
-      if (savedPostIds.contains(postId)) {
-        savedPostIds.remove(postId);
-      } else {
-        savedPostIds.add(postId);
-      }
-    });
   }
 
   Future<void> _sharePost(CommunityPost post) async {
@@ -432,7 +415,8 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
       await SharePlus.instance.share(
         ShareParams(
           title: 'Chia sẻ bài viết PetHub',
-          text: '''
+          text:
+              '''
 ${post.authorName} chia sẻ trên PetHub:
 
 ${post.content}
@@ -444,36 +428,37 @@ ${post.content}
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không chia sẻ được: $error'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Không chia sẻ được: $error')));
     }
   }
 
   Future<void> _openPostDetail(
-      CommunityPost post,
-      String userId,
-      ) async {
+    CommunityPost post,
+    String userId,
+    Set<int> savedPostIds,
+  ) async {
     final wasLiked = post.likedBy.contains(userId);
+    final wasSaved = savedPostIds.contains(post.id);
 
     final result = await context.push<PostDetailResult>(
       '/community/post-detail',
-      extra: PostDetailArgs(
-        post: post,
-        isLiked: wasLiked,
-        isSaved: savedPostIds.contains(post.id),
-      ),
+      extra: PostDetailArgs(post: post, isLiked: wasLiked, isSaved: wasSaved),
     );
 
     if (result == null) return;
 
     try {
       if (result.isLiked != wasLiked) {
-        await FirebaseCommunityService.toggleLike(
-          post: post,
+        await FirebaseCommunityService.toggleLike(post: post, userId: userId);
+      }
+
+      if (result.isSaved != wasSaved) {
+        await CustomerSavedPostService.setSavedPost(
           userId: userId,
+          post: post,
+          isSaved: result.isSaved,
         );
       }
 
@@ -481,8 +466,13 @@ ${post.content}
         authorId: post.authorId,
         authorName: post.authorName,
         authorRole: post.authorRole,
+        isAnonymous: post.isAnonymous,
+        avatarIconKey: post.avatarIconKey,
+        colorKey: post.colorKey,
         likes: post.likes,
         likedBy: post.likedBy,
+        imageUrl: post.imageUrl,
+        imagePublicId: post.imagePublicId,
       );
 
       await FirebaseCommunityService.updatePost(updatedPost);
@@ -490,19 +480,9 @@ ${post.content}
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không cập nhật bài viết: $error'),
-        ),
+        SnackBar(content: Text('Không cập nhật bài viết: $error')),
       );
     }
-
-    setState(() {
-      if (result.isSaved) {
-        savedPostIds.add(post.id);
-      } else {
-        savedPostIds.remove(post.id);
-      }
-    });
   }
 
   Future<void> _logout() async {
@@ -547,11 +527,9 @@ ${post.content}
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không đăng xuất được: $error'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Không đăng xuất được: $error')));
     }
   }
 
@@ -560,11 +538,8 @@ ${post.content}
     return FutureBuilder<void>(
       future: profileInitialization,
       builder: (context, initializationSnapshot) {
-        if (initializationSnapshot.connectionState !=
-            ConnectionState.done) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+        if (initializationSnapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (initializationSnapshot.hasError) {
@@ -573,7 +548,7 @@ ${post.content}
               padding: const EdgeInsets.all(18),
               child: Text(
                 'Không khởi tạo được hồ sơ:\n'
-                    '${initializationSnapshot.error}',
+                '${initializationSnapshot.error}',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -583,11 +558,8 @@ ${post.content}
         return StreamBuilder<CustomerProfile?>(
           stream: CustomerProfileService.watchCurrentProfile(),
           builder: (context, profileSnapshot) {
-            if (profileSnapshot.connectionState ==
-                ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
+            if (profileSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
             }
 
             final profile = profileSnapshot.data;
@@ -611,9 +583,7 @@ ${post.content}
                     onAvatarTap: () => _showAvatarPicker(profile),
                     onEditTap: () => _editProfile(profile),
                   ),
-
                   const SizedBox(height: 22),
-
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -622,114 +592,24 @@ ${post.content}
                       label: const Text('Đăng bài mới'),
                     ),
                   ),
-
                   const SizedBox(height: 26),
-
-                  const SectionTitle(
-                    title: 'Thông tin cá nhân',
-                  ),
-
+                  const SectionTitle(title: 'Thông tin cá nhân'),
                   const SizedBox(height: 12),
-
                   _PersonalInformationCard(profile: profile),
-
                   const SizedBox(height: 26),
-
-                  StreamBuilder<List<CommunityPost>>(
-                    stream:
-                    FirebaseCommunityService.watchPostsByAuthor(
-                      profile.uid,
-                    ),
-                    builder: (context, postsSnapshot) {
-                      if (postsSnapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(20),
-                            child: CircularProgressIndicator(),
-                          ),
-                        );
-                      }
-
-                      if (postsSnapshot.hasError) {
-                        return Text(
-                          'Không tải được bài viết: '
-                              '${postsSnapshot.error}',
-                        );
-                      }
-
-                      final posts = postsSnapshot.data ?? [];
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SectionTitle(
-                            title: 'Bài viết của tôi',
-                            actionText: '${posts.length} bài',
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          if (posts.isEmpty)
-                            const SoftCard(
-                              color: Colors.white,
-                              child: Text(
-                                'Bạn chưa đăng bài viết nào.',
-                                style: TextStyle(
-                                  color: AppColors.textSoft,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            )
-                          else
-                            ListView.separated(
-                              itemCount: posts.length,
-                              shrinkWrap: true,
-                              physics:
-                              const NeverScrollableScrollPhysics(),
-                              separatorBuilder: (_, __) =>
-                              const SizedBox(height: 12),
-                              itemBuilder: (context, index) {
-                                final post = posts[index];
-                                final isLiked =
-                                post.likedBy.contains(profile.uid);
-
-                                return CommunityPostCard(
-                                  post: post,
-                                  isLiked: isLiked,
-                                  isSaved:
-                                  savedPostIds.contains(post.id),
-                                  onLike: () => _toggleLike(
-                                    post,
-                                    profile.uid,
-                                  ),
-                                  onSave: () =>
-                                      _toggleSave(post.id),
-                                  onShare: () => _sharePost(post),
-                                  onOpenDetail: () =>
-                                      _openPostDetail(
-                                        post,
-                                        profile.uid,
-                                      ),
-                                  canManage: true,
-                                  onEdit: () => _editPost(post),
-                                  onDelete: () => _deletePost(post),
-                                );
-                              },
-                            ),
-                        ],
-                      );
-                    },
+                  _ProfileCommunitySections(
+                    profile: profile,
+                    onLike: (post) => _toggleLike(post, profile.uid),
+                    onSave: (post) => _toggleSave(post, profile.uid),
+                    onShare: _sharePost,
+                    onOpenDetail: (post, savedPostIds) =>
+                        _openPostDetail(post, profile.uid, savedPostIds),
+                    onEdit: _editPost,
+                    onDelete: _deletePost,
                   ),
-
                   const SizedBox(height: 30),
-
-                  const SectionTitle(
-                    title: 'Tài khoản',
-                  ),
-
+                  const SectionTitle(title: 'Tài khoản'),
                   const SizedBox(height: 12),
-
                   _LogoutCard(onLogout: _logout),
                 ],
               ),
@@ -737,6 +617,180 @@ ${post.content}
           },
         );
       },
+    );
+  }
+}
+
+class _ProfileCommunitySections extends StatelessWidget {
+  final CustomerProfile profile;
+  final ValueChanged<CommunityPost> onLike;
+  final ValueChanged<CommunityPost> onSave;
+  final ValueChanged<CommunityPost> onShare;
+  final void Function(CommunityPost post, Set<int> savedPostIds) onOpenDetail;
+  final ValueChanged<CommunityPost> onEdit;
+  final ValueChanged<CommunityPost> onDelete;
+
+  const _ProfileCommunitySections({
+    required this.profile,
+    required this.onLike,
+    required this.onSave,
+    required this.onShare,
+    required this.onOpenDetail,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<Set<int>>(
+      stream: CustomerSavedPostService.watchSavedPostIds(profile.uid),
+      builder: (context, savedSnapshot) {
+        final savedPostIds = savedSnapshot.data ?? <int>{};
+
+        return StreamBuilder<List<CommunityPost>>(
+          stream: FirebaseCommunityService.watchPosts(),
+          builder: (context, postsSnapshot) {
+            if (postsSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+
+            if (postsSnapshot.hasError) {
+              return Text('Không tải được bài viết: ${postsSnapshot.error}');
+            }
+
+            final allPosts = postsSnapshot.data ?? [];
+
+            final myPosts = allPosts
+                .where((post) => post.authorId == profile.uid)
+                .toList();
+
+            final savedPosts = allPosts
+                .where((post) => savedPostIds.contains(post.id))
+                .toList();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ProfilePostSection(
+                  title: 'Bài viết của tôi',
+                  emptyText: 'Bạn chưa đăng bài viết nào.',
+                  posts: myPosts,
+                  savedPostIds: savedPostIds,
+                  profile: profile,
+                  allowManageOwnPost: true,
+                  onLike: onLike,
+                  onSave: onSave,
+                  onShare: onShare,
+                  onOpenDetail: onOpenDetail,
+                  onEdit: onEdit,
+                  onDelete: onDelete,
+                ),
+                const SizedBox(height: 28),
+                _ProfilePostSection(
+                  title: 'Bài viết đã lưu',
+                  emptyText: 'Bạn chưa lưu bài viết nào.',
+                  posts: savedPosts,
+                  savedPostIds: savedPostIds,
+                  profile: profile,
+                  allowManageOwnPost: false,
+                  onLike: onLike,
+                  onSave: onSave,
+                  onShare: onShare,
+                  onOpenDetail: onOpenDetail,
+                  onEdit: onEdit,
+                  onDelete: onDelete,
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _ProfilePostSection extends StatelessWidget {
+  final String title;
+  final String emptyText;
+  final List<CommunityPost> posts;
+  final Set<int> savedPostIds;
+  final CustomerProfile profile;
+  final bool allowManageOwnPost;
+  final ValueChanged<CommunityPost> onLike;
+  final ValueChanged<CommunityPost> onSave;
+  final ValueChanged<CommunityPost> onShare;
+  final void Function(CommunityPost post, Set<int> savedPostIds) onOpenDetail;
+  final ValueChanged<CommunityPost> onEdit;
+  final ValueChanged<CommunityPost> onDelete;
+
+  const _ProfilePostSection({
+    required this.title,
+    required this.emptyText,
+    required this.posts,
+    required this.savedPostIds,
+    required this.profile,
+    required this.allowManageOwnPost,
+    required this.onLike,
+    required this.onSave,
+    required this.onShare,
+    required this.onOpenDetail,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionTitle(title: title, actionText: '${posts.length} bài'),
+        const SizedBox(height: 12),
+        if (posts.isEmpty)
+          SoftCard(
+            color: Colors.white,
+            child: Text(
+              emptyText,
+              style: const TextStyle(
+                color: AppColors.textSoft,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          )
+        else
+          ListView.separated(
+            itemCount: posts.length,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final post = posts[index];
+
+              final isLiked = post.likedBy.contains(profile.uid);
+              final isSaved = savedPostIds.contains(post.id);
+
+              final canManage =
+                  allowManageOwnPost && post.authorId == profile.uid;
+
+              return CommunityPostCard(
+                post: post,
+                isLiked: isLiked,
+                isSaved: isSaved,
+                onLike: () => onLike(post),
+                onSave: () => onSave(post),
+                onShare: () => onShare(post),
+                onOpenDetail: () => onOpenDetail(post, savedPostIds),
+                canManage: canManage,
+                onEdit: () => onEdit(post),
+                onDelete: () => onDelete(post),
+              );
+            },
+          ),
+      ],
     );
   }
 }
@@ -762,11 +816,7 @@ class _ProfileHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            AppColors.primarySoft,
-            AppColors.peach,
-            AppColors.cream,
-          ],
+          colors: [AppColors.primarySoft, AppColors.peach, AppColors.cream],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -782,11 +832,7 @@ class _ProfileHeader extends StatelessWidget {
                 CircleAvatar(
                   radius: 42,
                   backgroundColor: avatar.color,
-                  child: Icon(
-                    avatar.icon,
-                    size: 44,
-                    color: AppColors.textDark,
-                  ),
+                  child: Icon(avatar.icon, size: 44, color: AppColors.textDark),
                 ),
                 Positioned(
                   right: -2,
@@ -808,18 +854,16 @@ class _ProfileHeader extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(width: 16),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   profile.displayName,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 21,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontSize: 21),
                 ),
                 const SizedBox(height: 5),
                 Text(
@@ -840,13 +884,9 @@ class _ProfileHeader extends StatelessWidget {
               ],
             ),
           ),
-
           IconButton(
             onPressed: onEditTap,
-            icon: const Icon(
-              Icons.edit_note_rounded,
-              color: AppColors.primary,
-            ),
+            icon: const Icon(Icons.edit_note_rounded, color: AppColors.primary),
           ),
         ],
       ),
@@ -857,9 +897,7 @@ class _ProfileHeader extends StatelessWidget {
 class _PersonalInformationCard extends StatelessWidget {
   final CustomerProfile profile;
 
-  const _PersonalInformationCard({
-    required this.profile,
-  });
+  const _PersonalInformationCard({required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -908,11 +946,7 @@ class _InformationRow extends StatelessWidget {
         CircleAvatar(
           radius: 21,
           backgroundColor: AppColors.primarySoft,
-          child: Icon(
-            icon,
-            size: 20,
-            color: AppColors.primary,
-          ),
+          child: Icon(icon, size: 20, color: AppColors.primary),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -946,9 +980,7 @@ class _InformationRow extends StatelessWidget {
 class _LogoutCard extends StatelessWidget {
   final VoidCallback onLogout;
 
-  const _LogoutCard({
-    required this.onLogout,
-  });
+  const _LogoutCard({required this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -960,10 +992,7 @@ class _LogoutCard extends StatelessWidget {
           CircleAvatar(
             radius: 23,
             backgroundColor: Color(0xFFFFE2E2),
-            child: Icon(
-              Icons.logout_rounded,
-              color: Colors.redAccent,
-            ),
+            child: Icon(Icons.logout_rounded, color: Colors.redAccent),
           ),
           SizedBox(width: 14),
           Expanded(

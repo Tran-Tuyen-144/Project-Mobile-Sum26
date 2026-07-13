@@ -34,7 +34,9 @@ class _AdminMenuFormScreenState extends State<AdminMenuFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: Text(widget.menuItem == null ? 'Thêm món mới' : 'Sửa món')),
+      appBar: AppBar(
+        title: Text(widget.menuItem == null ? 'Thêm món mới' : 'Sửa món'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -42,55 +44,92 @@ class _AdminMenuFormScreenState extends State<AdminMenuFormScreen> {
           children: [
             _buildTextField(label: 'Tên món', controller: _nameController),
 
-            const Text("Phân loại:", style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              "Phân loại:",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             Wrap(
               spacing: 8,
-              children: _categories.map((cat) => ChoiceChip(
-                label: Text(cat),
-                selected: _selectedCategory == cat,
-                onSelected: (selected) => setState(() => _selectedCategory = cat),
-                selectedColor: AppColors.primary.withOpacity(0.3),
-              )).toList(),
+              children: _categories
+                  .map(
+                    (cat) => ChoiceChip(
+                      label: Text(cat),
+                      selected: _selectedCategory == cat,
+                      onSelected: (selected) =>
+                          setState(() => _selectedCategory = cat),
+                      selectedColor: AppColors.primary.withValues(alpha: 0.3),
+                    ),
+                  )
+                  .toList(),
             ),
             const SizedBox(height: 16),
 
-            _buildTextField(label: 'Giá tiền', controller: _priceController, isNumber: true),
-            _buildTextField(label: 'Ghi chú', controller: _noteController, maxLines: 2),
+            _buildTextField(
+              label: 'Giá tiền',
+              controller: _priceController,
+              isNumber: true,
+            ),
+            _buildTextField(
+              label: 'Ghi chú',
+              controller: _noteController,
+              maxLines: 2,
+            ),
 
             const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy'))),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Hủy'),
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Expanded(child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                  onPressed: () {
-                    Navigator.pop(context, {
-                      'name': _nameController.text,
-                      'category': _selectedCategory,
-                      'price': _priceController.text,
-                      'note': _noteController.text,
-                      'image': 'assets/image/cat1.jpg' // Giả lập ảnh
-                    });
-                  },
-                  child: const Text('Xác nhận', style: TextStyle(color: Colors.white)),
-                )),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context, {
+                        'name': _nameController.text,
+                        'category': _selectedCategory,
+                        'price': _priceController.text,
+                        'note': _noteController.text,
+                        'image': 'assets/image/cat1.jpg', // Giả lập ảnh
+                      });
+                    },
+                    child: const Text(
+                      'Xác nhận',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
               ],
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField({required String label, required TextEditingController controller, bool isNumber = false, int maxLines = 1}) {
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    bool isNumber = false,
+    int maxLines = 1,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: TextField(
         controller: controller,
         keyboardType: isNumber ? TextInputType.number : TextInputType.text,
         maxLines: maxLines,
-        decoration: InputDecoration(labelText: label, filled: true, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       ),
     );
   }

@@ -11,10 +11,7 @@ import 'community/customer_community_screen.dart';
 class CustomerShellScreen extends StatefulWidget {
   final int initialIndex;
 
-  const CustomerShellScreen({
-    super.key,
-    this.initialIndex = 0,
-  });
+  const CustomerShellScreen({super.key, this.initialIndex = 0});
 
   @override
   State<CustomerShellScreen> createState() => _CustomerShellScreenState();
@@ -108,10 +105,7 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
           ],
         ),
 
-        body: IndexedStack(
-          index: _currentIndex,
-          children: screens,
-        ),
+        body: IndexedStack(index: _currentIndex, children: screens),
 
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,
@@ -123,10 +117,7 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(
-                Icons.home_rounded,
-                color: AppColors.primary,
-              ),
+              selectedIcon: Icon(Icons.home_rounded, color: AppColors.primary),
               label: 'Home',
             ),
             NavigationDestination(
@@ -139,26 +130,17 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
             ),
             NavigationDestination(
               icon: Icon(Icons.spa_outlined),
-              selectedIcon: Icon(
-                Icons.spa_rounded,
-                color: AppColors.primary,
-              ),
+              selectedIcon: Icon(Icons.spa_rounded, color: AppColors.primary),
               label: 'Dịch vụ',
             ),
             NavigationDestination(
               icon: Icon(Icons.map_outlined),
-              selectedIcon: Icon(
-                Icons.map_rounded,
-                color: AppColors.primary,
-              ),
+              selectedIcon: Icon(Icons.map_rounded, color: AppColors.primary),
               label: 'Map',
             ),
             NavigationDestination(
               icon: Icon(Icons.forum_outlined),
-              selectedIcon: Icon(
-                Icons.forum_rounded,
-                color: AppColors.primary,
-              ),
+              selectedIcon: Icon(Icons.forum_rounded, color: AppColors.primary),
               label: 'Forum',
             ),
           ],

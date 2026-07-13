@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../../services/customer_saved_post_service.dart';
 import '../../../services/firebase_community_service.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
@@ -24,11 +26,10 @@ class _CustomerCommunityScreenState extends State<CustomerCommunityScreen> {
   String currentUserId = '';
   bool isLoadingUser = true;
 
-  final Set<int> savedPostIds = {};
-
   @override
   void initState() {
     super.initState();
+
     _loadCurrentUser();
   }
 
@@ -65,22 +66,29 @@ class _CustomerCommunityScreenState extends State<CustomerCommunityScreen> {
 
       final matchKeyword =
           post.authorName.toLowerCase().contains(lowerKeyword) ||
-              post.content.toLowerCase().contains(lowerKeyword) ||
-              post.category.toLowerCase().contains(lowerKeyword);
+          post.content.toLowerCase().contains(lowerKeyword) ||
+          post.category.toLowerCase().contains(lowerKeyword);
 
       return matchCategory && matchKeyword;
     }).toList();
   }
 
+  Stream<Set<int>> _watchSavedPostIds() {
+    if (currentUserId.isEmpty) {
+      return Stream.value(<int>{});
+    }
+
+    return CustomerSavedPostService.watchSavedPostIds(currentUserId);
+  }
+
   Future<void> _openCreatePost() async {
     if (currentUserId.isEmpty) {
       context.go('/customer-auth');
+
       return;
     }
 
-    final result = await context.push<CommunityPost>(
-      '/community/create-post',
-    );
+    final result = await context.push<CommunityPost>('/community/create-post');
 
     if (result == null) return;
 
@@ -95,31 +103,24 @@ class _CustomerCommunityScreenState extends State<CustomerCommunityScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã đăng bài.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đã đăng bài.')));
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Không đăng được bài: $error',
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Không đăng được bài: $error')));
     }
   }
 
   Future<void> _editPost(CommunityPost post) async {
     if (!_isUserPost(post)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chỉ có thể chỉnh sửa bài viết của bạn.'),
-        ),
+        const SnackBar(content: Text('Chỉ có thể chỉnh sửa bài viết của bạn.')),
       );
+
       return;
     }
 
@@ -142,29 +143,24 @@ class _CustomerCommunityScreenState extends State<CustomerCommunityScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã cập nhật bài viết.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đã cập nhật bài viết.')));
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không sửa được bài: $error'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Không sửa được bài: $error')));
     }
   }
 
   Future<void> _deletePost(CommunityPost post) async {
     if (!_isUserPost(post)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chỉ có thể xóa bài viết của bạn.'),
-        ),
+        const SnackBar(content: Text('Chỉ có thể xóa bài viết của bạn.')),
       );
+
       return;
     }
 
@@ -203,23 +199,25 @@ class _CustomerCommunityScreenState extends State<CustomerCommunityScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã xóa bài viết.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đã xóa bài viết.')));
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không xóa được bài: $error'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Không xóa được bài: $error')));
     }
   }
 
   Future<void> _toggleLike(CommunityPost post) async {
+    if (currentUserId.isEmpty) {
+      context.go('/customer-auth');
+
+      return;
+    }
+
     try {
       await FirebaseCommunityService.toggleLike(
         post: post,
@@ -228,22 +226,39 @@ class _CustomerCommunityScreenState extends State<CustomerCommunityScreen> {
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không thể thả tim: $error'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Không thể thả tim: $error')));
     }
   }
 
-  void _toggleSave(int postId) {
-    setState(() {
-      if (savedPostIds.contains(postId)) {
-        savedPostIds.remove(postId);
-      } else {
-        savedPostIds.add(postId);
-      }
-    });
+  Future<void> _toggleSave(CommunityPost post) async {
+    if (currentUserId.isEmpty) {
+      context.go('/customer-auth');
+
+      return;
+    }
+
+    try {
+      final isSaved = await CustomerSavedPostService.toggleSavedPost(
+        userId: currentUserId,
+        post: post,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isSaved ? 'Đã lưu bài viết.' : 'Đã bỏ lưu bài viết.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không lưu được bài viết: $error')),
+      );
+    }
   }
 
   Future<void> _sharePost(CommunityPost post) async {
@@ -251,7 +266,8 @@ class _CustomerCommunityScreenState extends State<CustomerCommunityScreen> {
       await SharePlus.instance.share(
         ShareParams(
           title: 'Chia sẻ bài viết PetHub',
-          text: '''
+          text:
+              '''
 ${post.authorName} chia sẻ trên PetHub:
 
 ${post.content}
@@ -263,33 +279,39 @@ ${post.content}
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không chia sẻ được: $error'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Không chia sẻ được: $error')));
     }
   }
 
-  Future<void> _openPostDetail(CommunityPost post) async {
+  Future<void> _openPostDetail(
+    CommunityPost post,
+    Set<int> savedPostIds,
+  ) async {
     final wasLiked = post.likedBy.contains(currentUserId);
+    final wasSaved = savedPostIds.contains(post.id);
 
     final result = await context.push<PostDetailResult>(
       '/community/post-detail',
-      extra: PostDetailArgs(
-        post: post,
-        isLiked: wasLiked,
-        isSaved: savedPostIds.contains(post.id),
-      ),
+      extra: PostDetailArgs(post: post, isLiked: wasLiked, isSaved: wasSaved),
     );
 
     if (result == null) return;
 
     try {
-      if (result.isLiked != wasLiked) {
+      if (currentUserId.isNotEmpty && result.isLiked != wasLiked) {
         await FirebaseCommunityService.toggleLike(
           post: post,
           userId: currentUserId,
+        );
+      }
+
+      if (currentUserId.isNotEmpty && result.isSaved != wasSaved) {
+        await CustomerSavedPostService.setSavedPost(
+          userId: currentUserId,
+          post: post,
+          isSaved: result.isSaved,
         );
       }
 
@@ -297,8 +319,13 @@ ${post.content}
         authorId: post.authorId,
         authorName: post.authorName,
         authorRole: post.authorRole,
+        isAnonymous: post.isAnonymous,
+        avatarIconKey: post.avatarIconKey,
+        colorKey: post.colorKey,
         likes: post.likes,
         likedBy: post.likedBy,
+        imageUrl: post.imageUrl,
+        imagePublicId: post.imagePublicId,
       );
 
       await FirebaseCommunityService.updatePost(updatedPost);
@@ -306,142 +333,137 @@ ${post.content}
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không cập nhật bài viết: $error'),
-        ),
+        SnackBar(content: Text('Không cập nhật bài viết: $error')),
       );
     }
-
-    setState(() {
-      if (result.isSaved) {
-        savedPostIds.add(result.post.id);
-      } else {
-        savedPostIds.remove(result.post.id);
-      }
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     if (isLoadingUser) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
-    return StreamBuilder<List<CommunityPost>>(
-      stream: FirebaseCommunityService.watchPosts(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
+    return StreamBuilder<Set<int>>(
+      stream: _watchSavedPostIds(),
+      builder: (context, savedSnapshot) {
+        final savedPostIds = savedSnapshot.data ?? <int>{};
 
-        if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Text(
-                'Không tải được cộng đồng:\n${snapshot.error}',
-                textAlign: TextAlign.center,
-              ),
-            ),
-          );
-        }
+        return StreamBuilder<List<CommunityPost>>(
+          stream: FirebaseCommunityService.watchPosts(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-        final posts = snapshot.data ?? [];
-        final filteredPosts = _filterPosts(posts);
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 26),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const CommunityHeader(),
-
-              const SizedBox(height: 22),
-
-              CreatePostCard(
-                onTap: _openCreatePost,
-              ),
-
-              const SizedBox(height: 22),
-
-              TextField(
-                onChanged: (value) {
-                  setState(() {
-                    keyword = value;
-                  });
-                },
-                decoration: const InputDecoration(
-                  hintText: 'Tìm bài viết, tag, nội dung...',
-                  prefixIcon: Icon(
-                    Icons.search_rounded,
-                    color: AppColors.primary,
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Text(
+                    'Không tải được cộng đồng:\n${snapshot.error}',
+                    textAlign: TextAlign.center,
                   ),
                 ),
-              ),
+              );
+            }
 
-              const SizedBox(height: 24),
+            final posts = snapshot.data ?? [];
+            final filteredPosts = _filterPosts(posts);
 
-              const SectionTitle(title: 'Tag cộng đồng'),
+            return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 26),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const CommunityHeader(),
 
-              const SizedBox(height: 12),
+                  const SizedBox(height: 22),
 
-              CommunityCategorySelector(
-                categories: communityCategories,
-                selectedCategory: selectedCategory,
-                onSelected: (value) {
-                  setState(() {
-                    selectedCategory = value;
-                  });
-                },
-              ),
+                  CreatePostCard(onTap: _openCreatePost),
 
-              const SizedBox(height: 24),
+                  const SizedBox(height: 22),
 
-              SectionTitle(
-                title: 'Bài viết mới',
-                actionText: '${filteredPosts.length} bài',
-              ),
-
-              const SizedBox(height: 12),
-
-              if (filteredPosts.isEmpty)
-                const Text(
-                  'Chưa có bài viết nào.',
-                  style: TextStyle(
-                    color: AppColors.textSoft,
-                    fontWeight: FontWeight.w600,
+                  TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        keyword = value;
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      hintText: 'Tìm bài viết, tag, nội dung...',
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
-                )
-              else
-                ListView.separated(
-                  itemCount: filteredPosts.length,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final post = filteredPosts[index];
-                    final isLiked = post.likedBy.contains(currentUserId);
 
-                    return CommunityPostCard(
-                      post: post,
-                      isLiked: isLiked,
-                      isSaved: savedPostIds.contains(post.id),
-                      onLike: () => _toggleLike(post),
-                      onSave: () => _toggleSave(post.id),
-                      onShare: () => _sharePost(post),
-                      onOpenDetail: () => _openPostDetail(post),
-                      canManage: _isUserPost(post),
-                      onEdit: () => _editPost(post),
-                      onDelete: () => _deletePost(post),
-                    );
-                  },
-                ),
-            ],
-          ),
+                  const SizedBox(height: 24),
+
+                  const SectionTitle(title: 'Tag cộng đồng'),
+
+                  const SizedBox(height: 12),
+
+                  CommunityCategorySelector(
+                    categories: communityCategories,
+                    selectedCategory: selectedCategory,
+                    onSelected: (value) {
+                      setState(() {
+                        selectedCategory = value;
+                      });
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  SectionTitle(
+                    title: 'Bài viết mới',
+                    actionText: '${filteredPosts.length} bài',
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  if (filteredPosts.isEmpty)
+                    const Text(
+                      'Chưa có bài viết nào.',
+                      style: TextStyle(
+                        color: AppColors.textSoft,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                  else
+                    ListView.separated(
+                      itemCount: filteredPosts.length,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final post = filteredPosts[index];
+
+                        final isLiked = post.likedBy.contains(currentUserId);
+
+                        final isSaved = savedPostIds.contains(post.id);
+
+                        return CommunityPostCard(
+                          post: post,
+                          isLiked: isLiked,
+                          isSaved: isSaved,
+                          onLike: () => _toggleLike(post),
+                          onSave: () => _toggleSave(post),
+                          onShare: () => _sharePost(post),
+                          onOpenDetail: () =>
+                              _openPostDetail(post, savedPostIds),
+                          canManage: _isUserPost(post),
+                          onEdit: () => _editPost(post),
+                          onDelete: () => _deletePost(post),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            );
+          },
         );
       },
     );

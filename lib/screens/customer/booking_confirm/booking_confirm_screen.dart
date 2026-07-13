@@ -10,10 +10,7 @@ import 'booking_confirm_data.dart';
 class BookingConfirmScreen extends StatefulWidget {
   final BookingConfirmData data;
 
-  const BookingConfirmScreen({
-    super.key,
-    required this.data,
-  });
+  const BookingConfirmScreen({super.key, required this.data});
 
   @override
   State<BookingConfirmScreen> createState() => _BookingConfirmScreenState();
@@ -40,11 +37,9 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không lưu được đặt bàn: $error'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Không lưu được đặt bàn: $error')));
     } finally {
       if (mounted) {
         setState(() {
@@ -154,9 +149,9 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
                 Expanded(
                   child: Text(
                     'Vui lòng đến trước giờ hẹn khoảng 10 phút. Nếu cần đổi giờ, bạn có thể liên hệ nhân viên PetHub.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      height: 1.4,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(height: 1.4),
                   ),
                 ),
               ],
@@ -196,8 +191,8 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
                   onPressed: _isSaving
                       ? null
                       : () {
-                    context.pop();
-                  },
+                          context.pop();
+                        },
                   icon: const Icon(Icons.edit_rounded),
                   label: const Text('Chỉnh sửa'),
                 ),
@@ -208,16 +203,12 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
                   onPressed: _isSaving ? null : _confirmBooking,
                   icon: _isSaving
                       ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ),
-                  )
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Icon(Icons.check_circle_rounded),
-                  label: Text(
-                    _isSaving ? 'Đang lưu...' : 'Xác nhận',
-                  ),
+                  label: Text(_isSaving ? 'Đang lưu...' : 'Xác nhận'),
                 ),
               ),
             ],
@@ -239,11 +230,7 @@ class _ConfirmHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            AppColors.primarySoft,
-            AppColors.peach,
-            AppColors.cream,
-          ],
+          colors: [AppColors.primarySoft, AppColors.peach, AppColors.cream],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -275,9 +262,9 @@ class _ConfirmHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'Kiểm tra lại thông tin trước khi hoàn tất lịch ghé PetHub.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
               ],
             ),
@@ -303,16 +290,9 @@ class _ConfirmRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          color: AppColors.primary,
-          size: 21,
-        ),
+        Icon(icon, color: AppColors.primary, size: 21),
         const SizedBox(width: 10),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
         const Spacer(),
         Flexible(
           child: Text(

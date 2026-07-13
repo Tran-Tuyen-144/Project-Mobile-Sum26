@@ -23,8 +23,8 @@ class _CustomerNotificationScreenState
 
   List<PetNotification> get filteredNotifications {
     return petNotifications.where((notification) {
-      final matchCategory = selectedCategory == 'Tất cả' ||
-          notification.type == selectedCategory;
+      final matchCategory =
+          selectedCategory == 'Tất cả' || notification.type == selectedCategory;
 
       return matchCategory;
     }).toList();
@@ -57,9 +57,7 @@ class _CustomerNotificationScreenState
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đã đánh dấu tất cả thông báo là đã đọc.'),
-      ),
+      const SnackBar(content: Text('Đã đánh dấu tất cả thông báo là đã đọc.')),
     );
   }
 
@@ -70,9 +68,7 @@ class _CustomerNotificationScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          NotificationHeader(
-            unreadCount: unreadCount,
-          ),
+          NotificationHeader(unreadCount: unreadCount),
 
           const SizedBox(height: 24),
 
@@ -107,7 +103,7 @@ class _CustomerNotificationScreenState
             itemCount: filteredNotifications.length,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final notification = filteredNotifications[index];
 

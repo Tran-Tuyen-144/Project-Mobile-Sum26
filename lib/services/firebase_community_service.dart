@@ -6,13 +6,12 @@ class FirebaseCommunityService {
   FirebaseCommunityService._();
 
   static final CollectionReference<Map<String, dynamic>> _posts =
-  FirebaseFirestore.instance.collection('community_posts');
+      FirebaseFirestore.instance.collection('community_posts');
 
   static Stream<List<CommunityPost>> watchPosts() {
-    return _posts
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
+    return _posts.orderBy('createdAt', descending: true).snapshots().map((
+      snapshot,
+    ) {
       return snapshot.docs.map((doc) {
         final data = doc.data();
 
@@ -24,13 +23,10 @@ class FirebaseCommunityService {
     });
   }
 
-  static Stream<List<CommunityPost>> watchPostsByAuthor(
-      String authorId,
-      ) {
-    return _posts
-        .where('authorId', isEqualTo: authorId)
-        .snapshots()
-        .map((snapshot) {
+  static Stream<List<CommunityPost>> watchPostsByAuthor(String authorId) {
+    return _posts.where('authorId', isEqualTo: authorId).snapshots().map((
+      snapshot,
+    ) {
       final posts = snapshot.docs.map((doc) {
         final data = doc.data();
 
@@ -40,17 +36,13 @@ class FirebaseCommunityService {
         });
       }).toList();
 
-      posts.sort(
-            (first, second) => second.id.compareTo(first.id),
-      );
+      posts.sort((first, second) => second.id.compareTo(first.id));
 
       return posts;
     });
   }
 
-  static Future<void> createPost(
-      CommunityPost post,
-      ) async {
+  static Future<void> createPost(CommunityPost post) async {
     await _posts.doc(post.id.toString()).set({
       'id': post.id,
       'authorId': post.authorId,
@@ -62,6 +54,11 @@ class FirebaseCommunityService {
       'timeAgo': post.timeAgo,
       'content': post.content,
       'category': post.category,
+
+      // Ảnh lưu trên Cloudinary, Firestore chỉ lưu link.
+      'imageUrl': post.imageUrl,
+      'imagePublicId': post.imagePublicId,
+
       'likes': post.likes,
       'likedBy': post.likedBy,
       'commentList': post.commentList
@@ -72,9 +69,7 @@ class FirebaseCommunityService {
     });
   }
 
-  static Future<void> updatePost(
-      CommunityPost post,
-      ) async {
+  static Future<void> updatePost(CommunityPost post) async {
     await _posts.doc(post.id.toString()).update({
       'authorId': post.authorId,
       'authorName': post.authorName,
@@ -85,6 +80,11 @@ class FirebaseCommunityService {
       'timeAgo': post.timeAgo,
       'content': post.content,
       'category': post.category,
+
+      // Cập nhật ảnh khi sửa bài viết.
+      'imageUrl': post.imageUrl,
+      'imagePublicId': post.imagePublicId,
+
       'commentList': post.commentList
           .map((comment) => comment.toJson())
           .toList(),
@@ -92,9 +92,7 @@ class FirebaseCommunityService {
     });
   }
 
-  static Future<void> deletePost(
-      CommunityPost post,
-      ) async {
+  static Future<void> deletePost(CommunityPost post) async {
     await _posts.doc(post.id.toString()).delete();
   }
 
@@ -104,81 +102,59 @@ class FirebaseCommunityService {
   }) async {
     final postRef = _posts.doc(post.id.toString());
 
-    await FirebaseFirestore.instance.runTransaction(
-          (transaction) async {
-        final snapshot = await transaction.get(postRef);
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final snapshot = await transaction.get(postRef);
 
-        if (!snapshot.exists) return;
+      if (!snapshot.exists) return;
 
-        final data = snapshot.data();
+      final data = snapshot.data();
 
-        if (data == null) return;
+      if (data == null) return;
 
-        final rawLikedBy = data['likedBy'];
+      final rawLikedBy = data['likedBy'];
 
-        final likedBy = rawLikedBy is List
-            ? rawLikedBy
-            .map((item) => item.toString())
-            .toList()
-            : <String>[];
+      final likedBy = rawLikedBy is List
+          ? rawLikedBy.map((item) => item.toString()).toList()
+          : <String>[];
 
-        final currentLikes =
-            (data['likes'] as num?)?.toInt() ?? 0;
+      final currentLikes = (data['likes'] as num?)?.toInt() ?? 0;
 
-        if (likedBy.contains(userId)) {
-          likedBy.remove(userId);
+      if (likedBy.contains(userId)) {
+        likedBy.remove(userId);
 
-          transaction.update(postRef, {
-            'likedBy': likedBy,
-            'likes':
-            currentLikes > 0 ? currentLikes - 1 : 0,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-        } else {
-          likedBy.add(userId);
+        transaction.update(postRef, {
+          'likedBy': likedBy,
+          'likes': currentLikes > 0 ? currentLikes - 1 : 0,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        likedBy.add(userId);
 
-          transaction.update(postRef, {
-            'likedBy': likedBy,
-            'likes': currentLikes + 1,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-        }
-      },
-    );
+        transaction.update(postRef, {
+          'likedBy': likedBy,
+          'likes': currentLikes + 1,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    });
   }
 
-  /*
-   * Đồng bộ tên và avatar Profile sang tất cả bài viết
-   * của một người dùng.
-   *
-   * Dùng khi người dùng thay đổi:
-   * - tên hiển thị
-   * - avatar công khai
-   * - tên ẩn danh
-   * - avatar ẩn danh
-   */
   static Future<void> syncAuthorIdentity({
     required String authorId,
     required bool isAnonymous,
     required String authorName,
     required String avatarIconKey,
   }) async {
-    final snapshot = await _posts
-        .where('authorId', isEqualTo: authorId)
-        .get();
+    final snapshot = await _posts.where('authorId', isEqualTo: authorId).get();
 
-    final matchingDocuments =
-    snapshot.docs.where((document) {
+    final matchingDocuments = snapshot.docs.where((document) {
       final data = document.data();
 
-      final storedRole =
-          data['authorRole'] as String? ?? '';
+      final storedRole = data['authorRole'] as String? ?? '';
 
       final storedAnonymous =
           data['isAnonymous'] as bool? ??
-              storedRole
-                  .toLowerCase()
-                  .contains('ẩn danh');
+          storedRole.toLowerCase().contains('ẩn danh');
 
       return storedAnonymous == isAnonymous;
     }).toList();
@@ -190,13 +166,11 @@ class FirebaseCommunityService {
     const maximumWritesPerBatch = 450;
 
     for (
-    var start = 0;
-    start < matchingDocuments.length;
-    start += maximumWritesPerBatch
+      var start = 0;
+      start < matchingDocuments.length;
+      start += maximumWritesPerBatch
     ) {
-      final end =
-      start + maximumWritesPerBatch <
-          matchingDocuments.length
+      final end = start + maximumWritesPerBatch < matchingDocuments.length
           ? start + maximumWritesPerBatch
           : matchingDocuments.length;
 
@@ -212,10 +186,7 @@ class FirebaseCommunityService {
               : 'Thành viên PetHub',
           'isAnonymous': isAnonymous,
           'avatarIconKey': avatarIconKey,
-          'colorKey':
-          CommunityPost.colorKeyFromIconKey(
-            avatarIconKey,
-          ),
+          'colorKey': CommunityPost.colorKeyFromIconKey(avatarIconKey),
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }

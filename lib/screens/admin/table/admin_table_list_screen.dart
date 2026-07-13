@@ -18,7 +18,10 @@ class _AdminTableListScreenState extends State<AdminTableListScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () async {
-          final newTable = await Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminTableFormScreen()));
+          final newTable = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminTableFormScreen()),
+          );
           if (newTable != null) setState(() => _tables.add(newTable));
         },
         child: const Icon(Icons.add, color: Colors.white),
@@ -31,7 +34,10 @@ class _AdminTableListScreenState extends State<AdminTableListScreen> {
             leading: const Icon(Icons.table_restaurant),
             title: Text(table['name']),
             subtitle: Text("${table['seats']} ghế"),
-            trailing: IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => setState(() => _tables.removeAt(index))),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => setState(() => _tables.removeAt(index)),
+            ),
           );
         },
       ),

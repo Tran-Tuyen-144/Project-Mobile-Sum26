@@ -19,12 +19,12 @@ class _CustomerMapScreenState extends State<CustomerMapScreen> {
 
   List<BranchLocation> get filteredLocations {
     return branchLocations.where((location) {
-      final matchCategory = selectedCategory == 'Tất cả' ||
-          location.category == selectedCategory;
+      final matchCategory =
+          selectedCategory == 'Tất cả' || location.category == selectedCategory;
 
       final matchKeyword =
           location.name.toLowerCase().contains(keyword.toLowerCase()) ||
-              location.address.toLowerCase().contains(keyword.toLowerCase());
+          location.address.toLowerCase().contains(keyword.toLowerCase());
 
       return matchCategory && matchKeyword;
     }).toList();
@@ -56,9 +56,7 @@ class _CustomerMapScreenState extends State<CustomerMapScreen> {
 
           const SizedBox(height: 22),
 
-          FakeMapPanel(
-            selectedLocation: selectedLocation,
-          ),
+          FakeMapPanel(selectedLocation: selectedLocation),
 
           const SizedBox(height: 22),
 
@@ -70,10 +68,7 @@ class _CustomerMapScreenState extends State<CustomerMapScreen> {
             },
             decoration: const InputDecoration(
               hintText: 'Tìm chi nhánh, địa chỉ...',
-              prefixIcon: Icon(
-                Icons.search_rounded,
-                color: AppColors.primary,
-              ),
+              prefixIcon: Icon(Icons.search_rounded, color: AppColors.primary),
             ),
           ),
 
@@ -106,7 +101,7 @@ class _CustomerMapScreenState extends State<CustomerMapScreen> {
             itemCount: filteredLocations.length,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final location = filteredLocations[index];
 

@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -43,42 +44,42 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
     switch (widget.department) {
       case StaffDepartment.cafe:
         return _StaffProfile(
-          name: 'Nguyễn Minh An',
+          name: 'Nguyá»…n Minh An',
           id: 'NV-CF-001',
           phone: '0901 234 567',
-          departmentName: 'Nhân viên Café',
-          branch: 'PetHub Quận 1',
-          shift: 'Ca sáng',
+          departmentName: 'NhĂ¢n viĂªn CafĂ©',
+          branch: 'PetHub Quáº­n 1',
+          shift: 'Ca sĂ¡ng',
           shiftTime: '07:30 - 15:30',
-          status: 'Đang làm việc',
+          status: 'Äang lĂ m viá»‡c',
           avatarColor: AppColors.peach,
           icon: Icons.local_cafe_rounded,
         );
 
       case StaffDepartment.spa:
         return _StaffProfile(
-          name: 'Trần Ngọc Mai',
+          name: 'Tráº§n Ngá»c Mai',
           id: 'NV-SP-002',
           phone: '0912 345 678',
-          departmentName: 'Nhân viên Spa / Khách sạn',
-          branch: 'PetHub Quận 1',
-          shift: 'Ca hành chính',
+          departmentName: 'NhĂ¢n viĂªn Spa / KhĂ¡ch sáº¡n',
+          branch: 'PetHub Quáº­n 1',
+          shift: 'Ca hĂ nh chĂ­nh',
           shiftTime: '08:00 - 17:00',
-          status: 'Đang làm việc',
+          status: 'Äang lĂ m viá»‡c',
           avatarColor: AppColors.lavender,
           icon: Icons.pets_rounded,
         );
 
       case StaffDepartment.hospital:
         return _StaffProfile(
-          name: 'Lê Hoàng Nam',
+          name: 'LĂª HoĂ ng Nam',
           id: 'NV-BV-003',
           phone: '0987 654 321',
-          departmentName: 'Nhân viên Bệnh viện',
+          departmentName: 'NhĂ¢n viĂªn Bá»‡nh viá»‡n',
           branch: 'PetHub Veterinary',
-          shift: 'Ca sáng',
+          shift: 'Ca sĂ¡ng',
           shiftTime: '08:00 - 16:00',
-          status: 'Đang làm việc',
+          status: 'Äang lĂ m viá»‡c',
           avatarColor: AppColors.sky,
           icon: Icons.medical_services_rounded,
         );
@@ -86,14 +87,14 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
       case StaffDepartment.petCare:
       case StaffDepartment.reception:
         return _StaffProfile(
-          name: 'Nhân viên PetHub',
+          name: 'NhĂ¢n viĂªn PetHub',
           id: 'NV-000',
           phone: '0900 000 000',
           departmentName: widget.department.title,
           branch: 'PetHub',
-          shift: 'Ca tạm thời',
+          shift: 'Ca táº¡m thá»i',
           shiftTime: '08:00 - 17:00',
-          status: 'Đang làm việc',
+          status: 'Äang lĂ m viá»‡c',
           avatarColor: widget.department.color,
           icon: widget.department.icon,
         );
@@ -104,9 +105,9 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
     switch (widget.department) {
       case StaffDepartment.cafe:
         return const [
-          _StaffPageInfo(title: 'Tổng quan', icon: Icons.home_rounded),
+          _StaffPageInfo(title: 'Tá»•ng quan', icon: Icons.home_rounded),
           _StaffPageInfo(
-            title: 'Đặt bàn',
+            title: 'Äáº·t bĂ n',
             icon: Icons.table_restaurant_rounded,
           ),
           _StaffPageInfo(title: 'Menu', icon: Icons.restaurant_menu_rounded),
@@ -115,36 +116,36 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
 
       case StaffDepartment.spa:
         return const [
-          _StaffPageInfo(title: 'Tổng quan', icon: Icons.home_rounded),
+          _StaffPageInfo(title: 'Tá»•ng quan', icon: Icons.home_rounded),
           _StaffPageInfo(
-            title: 'Lịch dịch vụ',
+            title: 'Lá»‹ch dá»‹ch vá»¥',
             icon: Icons.calendar_month_rounded,
           ),
           _StaffPageInfo(
-            title: 'Tạo dịch vụ',
+            title: 'Táº¡o dá»‹ch vá»¥',
             icon: Icons.add_business_rounded,
           ),
           _StaffPageInfo(
-            title: 'Phiếu dịch vụ',
+            title: 'Phiáº¿u dá»‹ch vá»¥',
             icon: Icons.receipt_long_rounded,
           ),
         ];
 
       case StaffDepartment.hospital:
         return const [
-          _StaffPageInfo(title: 'Tổng quan', icon: Icons.home_rounded),
+          _StaffPageInfo(title: 'Tá»•ng quan', icon: Icons.home_rounded),
           _StaffPageInfo(
-            title: 'Lịch khám',
+            title: 'Lá»‹ch khĂ¡m',
             icon: Icons.calendar_month_rounded,
           ),
-          _StaffPageInfo(title: 'Bệnh án', icon: Icons.assignment_rounded),
-          _StaffPageInfo(title: 'Chi phí', icon: Icons.payments_rounded),
+          _StaffPageInfo(title: 'Bá»‡nh Ă¡n', icon: Icons.assignment_rounded),
+          _StaffPageInfo(title: 'Chi phĂ­', icon: Icons.payments_rounded),
         ];
 
       case StaffDepartment.petCare:
       case StaffDepartment.reception:
         return const [
-          _StaffPageInfo(title: 'Tổng quan', icon: Icons.home_rounded),
+          _StaffPageInfo(title: 'Tá»•ng quan', icon: Icons.home_rounded),
         ];
     }
   }
@@ -155,28 +156,31 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
         return [
           _StaffTask(
             time: '07:30 - 08:00',
-            title: 'Kiểm tra khu vực Café',
-            description: 'Kiểm tra bàn ghế, quầy pha chế và vệ sinh đầu ca.',
+            title: 'Kiá»ƒm tra khu vá»±c CafĂ©',
+            description:
+                'Kiá»ƒm tra bĂ n gháº¿, quáº§y pha cháº¿ vĂ  vá»‡ sinh Ä‘áº§u ca.',
           ),
           _StaffTask(
             time: '08:00 - 08:30',
-            title: 'Kiểm tra đơn đặt bàn',
-            description: 'Xem danh sách khách đã đặt bàn trong ngày.',
+            title: 'Kiá»ƒm tra Ä‘Æ¡n Ä‘áº·t bĂ n',
+            description: 'Xem danh sĂ¡ch khĂ¡ch Ä‘Ă£ Ä‘áº·t bĂ n trong ngĂ y.',
           ),
           _StaffTask(
             time: '08:30 - 09:00',
-            title: 'Kiểm tra Menu',
-            description: 'Cập nhật món còn phục vụ và món đã hết.',
+            title: 'Kiá»ƒm tra Menu',
+            description:
+                'Cáº­p nháº­t mĂ³n cĂ²n phá»¥c vá»¥ vĂ  mĂ³n Ä‘Ă£ háº¿t.',
           ),
           _StaffTask(
             time: 'Trong ca',
-            title: 'Tiếp nhận khách và gọi món',
-            description: 'Tra cứu đặt bàn, chọn món và xuất Bill cho khách.',
+            title: 'Tiáº¿p nháº­n khĂ¡ch vĂ  gá»i mĂ³n',
+            description:
+                'Tra cá»©u Ä‘áº·t bĂ n, chá»n mĂ³n vĂ  xuáº¥t Bill cho khĂ¡ch.',
           ),
           _StaffTask(
             time: '15:00 - 15:30',
-            title: 'Kiểm kê cuối ca',
-            description: 'Kiểm tra nguyên liệu và bàn giao cho ca sau.',
+            title: 'Kiá»ƒm kĂª cuá»‘i ca',
+            description: 'Kiá»ƒm tra nguyĂªn liá»‡u vĂ  bĂ n giao cho ca sau.',
           ),
         ];
 
@@ -184,28 +188,33 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
         return [
           _StaffTask(
             time: '08:00 - 08:30',
-            title: 'Chuẩn bị khu vực Spa',
-            description: 'Kiểm tra khăn, dụng cụ, phòng Spa và khu lưu trú.',
+            title: 'Chuáº©n bá»‹ khu vá»±c Spa',
+            description:
+                'Kiá»ƒm tra khÄƒn, dá»¥ng cá»¥, phĂ²ng Spa vĂ  khu lÆ°u trĂº.',
           ),
           _StaffTask(
             time: '08:30 - 09:00',
-            title: 'Kiểm tra lịch dịch vụ',
-            description: 'Xem lịch Spa và lịch gửi Pet khách sạn trong ngày.',
+            title: 'Kiá»ƒm tra lá»‹ch dá»‹ch vá»¥',
+            description:
+                'Xem lá»‹ch Spa vĂ  lá»‹ch gá»­i Pet khĂ¡ch sáº¡n trong ngĂ y.',
           ),
           _StaffTask(
             time: '09:00 - 10:00',
-            title: 'Tiếp nhận Pet',
-            description: 'Xác nhận thông tin khách, Pet và tình trạng ban đầu.',
+            title: 'Tiáº¿p nháº­n Pet',
+            description:
+                'XĂ¡c nháº­n thĂ´ng tin khĂ¡ch, Pet vĂ  tĂ¬nh tráº¡ng ban Ä‘áº§u.',
           ),
           _StaffTask(
             time: 'Trong ca',
-            title: 'Kiểm tra Pet lưu trú',
-            description: 'Theo dõi ăn uống, sức khỏe và khu vực nghỉ của Pet.',
+            title: 'Kiá»ƒm tra Pet lÆ°u trĂº',
+            description:
+                'Theo dĂµi Äƒn uá»‘ng, sá»©c khá»e vĂ  khu vá»±c nghá»‰ cá»§a Pet.',
           ),
           _StaffTask(
             time: '16:00 - 17:00',
-            title: 'Bàn giao Pet cho khách',
-            description: 'Cập nhật chi phí, tình trạng Pet và thời gian nhận.',
+            title: 'BĂ n giao Pet cho khĂ¡ch',
+            description:
+                'Cáº­p nháº­t chi phĂ­, tĂ¬nh tráº¡ng Pet vĂ  thá»i gian nháº­n.',
           ),
         ];
 
@@ -213,28 +222,32 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
         return [
           _StaffTask(
             time: '08:00 - 08:30',
-            title: 'Kiểm tra lịch khám',
-            description: 'Xem danh sách khách và Pet đã đặt lịch khám.',
+            title: 'Kiá»ƒm tra lá»‹ch khĂ¡m',
+            description:
+                'Xem danh sĂ¡ch khĂ¡ch vĂ  Pet Ä‘Ă£ Ä‘áº·t lá»‹ch khĂ¡m.',
           ),
           _StaffTask(
             time: '08:30 - 09:00',
-            title: 'Chuẩn bị phòng khám',
-            description: 'Kiểm tra dụng cụ, thuốc và thiết bị khám.',
+            title: 'Chuáº©n bá»‹ phĂ²ng khĂ¡m',
+            description:
+                'Kiá»ƒm tra dá»¥ng cá»¥, thuá»‘c vĂ  thiáº¿t bá»‹ khĂ¡m.',
           ),
           _StaffTask(
             time: 'Trong ca',
-            title: 'Tiếp nhận Pet',
-            description: 'Xác nhận thông tin khách, Pet và lý do khám.',
+            title: 'Tiáº¿p nháº­n Pet',
+            description: 'XĂ¡c nháº­n thĂ´ng tin khĂ¡ch, Pet vĂ  lĂ½ do khĂ¡m.',
           ),
           _StaffTask(
-            time: 'Sau mỗi lượt khám',
-            title: 'Cập nhật bệnh án',
-            description: 'Ghi triệu chứng, chẩn đoán, thuốc và hướng dẫn.',
+            time: 'Sau má»—i lÆ°á»£t khĂ¡m',
+            title: 'Cáº­p nháº­t bá»‡nh Ă¡n',
+            description:
+                'Ghi triá»‡u chá»©ng, cháº©n Ä‘oĂ¡n, thuá»‘c vĂ  hÆ°á»›ng dáº«n.',
           ),
           _StaffTask(
             time: '15:30 - 16:00',
-            title: 'Kiểm tra lịch tái khám',
-            description: 'Xác nhận lịch tái khám và hồ sơ còn thiếu.',
+            title: 'Kiá»ƒm tra lá»‹ch tĂ¡i khĂ¡m',
+            description:
+                'XĂ¡c nháº­n lá»‹ch tĂ¡i khĂ¡m vĂ  há»“ sÆ¡ cĂ²n thiáº¿u.',
           ),
         ];
 
@@ -243,8 +256,8 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
         return [
           _StaffTask(
             time: '08:00 - 09:00',
-            title: 'Công việc tạm thời',
-            description: 'Chức vụ này tạm thời không sử dụng.',
+            title: 'CĂ´ng viá»‡c táº¡m thá»i',
+            description: 'Chá»©c vá»¥ nĂ y táº¡m thá»i khĂ´ng sá»­ dá»¥ng.',
           ),
         ];
     }
@@ -296,7 +309,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'Công việc hôm nay',
+                                  'CĂ´ng viá»‡c hĂ´m nay',
                                   style: TextStyle(
                                     color: AppColors.textDark,
                                     fontWeight: FontWeight.w900,
@@ -304,7 +317,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                                   ),
                                 ),
                                 Text(
-                                  'Đã hoàn thành $completedCount/${tasks.length}',
+                                  'ÄĂ£ hoĂ n thĂ nh $completedCount/${tasks.length}',
                                   style: const TextStyle(
                                     color: AppColors.textSoft,
                                     fontWeight: FontWeight.w600,
@@ -478,7 +491,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  '${staff.id} • ${staff.departmentName}',
+                  '${staff.id} â€¢ ${staff.departmentName}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: AppColors.textSoft,
@@ -492,38 +505,38 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                     children: [
                       _ProfileLine(
                         icon: Icons.store_rounded,
-                        label: 'Chi nhánh',
+                        label: 'Chi nhĂ¡nh',
                         value: staff.branch,
                       ),
                       const Divider(height: 26),
                       _ProfileLine(
                         icon: Icons.work_rounded,
-                        label: 'Khu vực',
+                        label: 'Khu vá»±c',
                         value: staff.departmentName,
                       ),
                       const Divider(height: 26),
                       _ProfileLine(
                         icon: Icons.schedule_rounded,
-                        label: 'Ca làm',
-                        value: '${staff.shift} • ${staff.shiftTime}',
+                        label: 'Ca lĂ m',
+                        value: '${staff.shift} â€¢ ${staff.shiftTime}',
                       ),
                       const Divider(height: 26),
                       _ProfileLine(
                         icon: Icons.phone_rounded,
-                        label: 'Số điện thoại',
+                        label: 'Sá»‘ Ä‘iá»‡n thoáº¡i',
                         value: staff.phone,
                       ),
                       const Divider(height: 26),
                       _ProfileLine(
                         icon: Icons.circle,
-                        label: 'Trạng thái',
+                        label: 'Tráº¡ng thĂ¡i',
                         value: staff.status,
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 22),
-                const SectionTitle(title: 'Tiến độ công việc hôm nay'),
+                const SectionTitle(title: 'Tiáº¿n Ä‘á»™ cĂ´ng viá»‡c hĂ´m nay'),
                 const SizedBox(height: 10),
                 SoftCard(
                   color: AppColors.mint,
@@ -533,19 +546,19 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                         children: [
                           Expanded(
                             child: _ProfileTaskNumber(
-                              label: 'Tổng việc',
+                              label: 'Tá»•ng viá»‡c',
                               value: '${tasks.length}',
                             ),
                           ),
                           Expanded(
                             child: _ProfileTaskNumber(
-                              label: 'Hoàn thành',
+                              label: 'HoĂ n thĂ nh',
                               value: '$completedCount',
                             ),
                           ),
                           Expanded(
                             child: _ProfileTaskNumber(
-                              label: 'Còn thiếu',
+                              label: 'CĂ²n thiáº¿u',
                               value: '$remainingCount',
                             ),
                           ),
@@ -562,7 +575,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${(progress * 100).round()}% công việc đã hoàn thành',
+                        '${(progress * 100).round()}% cĂ´ng viá»‡c Ä‘Ă£ hoĂ n thĂ nh',
                         style: const TextStyle(
                           color: AppColors.textDark,
                           fontWeight: FontWeight.w800,
@@ -572,22 +585,23 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                   ),
                 ),
                 const SizedBox(height: 22),
-                const SectionTitle(title: 'Đã hoàn thành'),
+                const SectionTitle(title: 'ÄĂ£ hoĂ n thĂ nh'),
                 const SizedBox(height: 9),
                 if (completedTasks.isEmpty)
                   const _EmptyMessage(
-                    message: 'Chưa có công việc nào được hoàn thành.',
+                    message:
+                        'ChÆ°a cĂ³ cĂ´ng viá»‡c nĂ o Ä‘Æ°á»£c hoĂ n thĂ nh.',
                   )
                 else
                   ...completedTasks.map(
                     (task) => _ProfileTaskRow(task: task, completed: true),
                   ),
                 const SizedBox(height: 20),
-                const SectionTitle(title: 'Còn thiếu'),
+                const SectionTitle(title: 'CĂ²n thiáº¿u'),
                 const SizedBox(height: 9),
                 if (incompleteTasks.isEmpty)
                   const _EmptyMessage(
-                    message: 'Đã hoàn thành đầy đủ công việc.',
+                    message: 'ÄĂ£ hoĂ n thĂ nh Ä‘áº§y Ä‘á»§ cĂ´ng viá»‡c.',
                   )
                 else
                   ...incompleteTasks.map(
@@ -648,7 +662,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Profile nhân viên',
+            tooltip: 'Profile nhĂ¢n viĂªn',
             onPressed: _openStaffProfile,
             icon: const Icon(
               Icons.account_circle_rounded,
@@ -657,7 +671,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
             ),
           ),
           IconButton(
-            tooltip: 'Đổi chức vụ',
+            tooltip: 'Äá»•i chá»©c vá»¥',
             onPressed: () {
               context.go('/staff-role');
             },
@@ -715,7 +729,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
             children: [
               CircleAvatar(
                 radius: 33,
-                backgroundColor: Colors.white.withOpacity(0.85),
+                backgroundColor: Colors.white.withValues(alpha: 0.85),
                 child: Icon(
                   widget.department.icon,
                   color: AppColors.primary,
@@ -728,7 +742,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Chào ${profile.name}',
+                      'ChĂ o ${profile.name}',
                       style: const TextStyle(
                         color: AppColors.textDark,
                         fontWeight: FontWeight.w900,
@@ -737,7 +751,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '${profile.shift} • ${profile.shiftTime}\n${profile.branch}',
+                      '${profile.shift} â€¢ ${profile.shiftTime}\n${profile.branch}',
                       style: const TextStyle(
                         color: AppColors.textSoft,
                         height: 1.4,
@@ -751,7 +765,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        const SectionTitle(title: 'Công việc hôm nay'),
+        const SectionTitle(title: 'CĂ´ng viá»‡c hĂ´m nay'),
         const SizedBox(height: 11),
         SoftCard(
           color: AppColors.mint,
@@ -776,7 +790,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Danh sách công việc',
+                          'Danh sĂ¡ch cĂ´ng viá»‡c',
                           style: TextStyle(
                             color: AppColors.textDark,
                             fontWeight: FontWeight.w900,
@@ -785,8 +799,8 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${now.day}/${now.month}/${now.year} • '
-                          '$completedCount/${tasks.length} hoàn thành',
+                          '${now.day}/${now.month}/${now.year} â€¢ '
+                          '$completedCount/${tasks.length} hoĂ n thĂ nh',
                           style: const TextStyle(
                             color: AppColors.textSoft,
                             fontWeight: FontWeight.w700,
@@ -815,7 +829,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
               Row(
                 children: [
                   Text(
-                    '${(progress * 100).round()}% hoàn thành',
+                    '${(progress * 100).round()}% hoĂ n thĂ nh',
                     style: const TextStyle(
                       color: AppColors.textDark,
                       fontWeight: FontWeight.w800,
@@ -823,7 +837,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
                   ),
                   const Spacer(),
                   Text(
-                    'Còn $remainingCount việc',
+                    'CĂ²n $remainingCount viá»‡c',
                     style: const TextStyle(
                       color: AppColors.textSoft,
                       fontWeight: FontWeight.w700,
@@ -835,7 +849,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
           ),
         ),
         const SizedBox(height: 26),
-        SectionTitle(title: 'Chức năng ${widget.department.shortTitle}'),
+        SectionTitle(title: 'Chá»©c nÄƒng ${widget.department.shortTitle}'),
         const SizedBox(height: 11),
         Wrap(
           spacing: 12,
@@ -913,48 +927,48 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
 
   String _placeholderText(String title) {
     if (widget.department == StaffDepartment.cafe) {
-      if (title == 'Đặt bàn') {
-        return 'Bước tiếp theo sẽ làm form nhập tên khách, số điện thoại và hiện tóm tắt đặt bàn.';
+      if (title == 'Äáº·t bĂ n') {
+        return 'BÆ°á»›c tiáº¿p theo sáº½ lĂ m form nháº­p tĂªn khĂ¡ch, sá»‘ Ä‘iá»‡n thoáº¡i vĂ  hiá»‡n tĂ³m táº¯t Ä‘áº·t bĂ n.';
       }
 
       if (title == 'Menu') {
-        return 'Bước tiếp theo sẽ làm giao diện chọn món, tính tổng tiền và xuất Bill.';
+        return 'BÆ°á»›c tiáº¿p theo sáº½ lĂ m giao diá»‡n chá»n mĂ³n, tĂ­nh tá»•ng tiá»n vĂ  xuáº¥t Bill.';
       }
 
       if (title == 'Bill') {
-        return 'Bước tiếp theo sẽ làm danh sách Bill và chi tiết hóa đơn.';
+        return 'BÆ°á»›c tiáº¿p theo sáº½ lĂ m danh sĂ¡ch Bill vĂ  chi tiáº¿t hĂ³a Ä‘Æ¡n.';
       }
     }
 
     if (widget.department == StaffDepartment.spa) {
-      if (title == 'Lịch dịch vụ') {
-        return 'Bước sau sẽ làm danh sách lịch Spa và khách sạn Pet.';
+      if (title == 'Lá»‹ch dá»‹ch vá»¥') {
+        return 'BÆ°á»›c sau sáº½ lĂ m danh sĂ¡ch lá»‹ch Spa vĂ  khĂ¡ch sáº¡n Pet.';
       }
 
-      if (title == 'Tạo dịch vụ') {
-        return 'Bước sau sẽ làm form thông tin khách, Pet, ngày giờ Spa, ngày gửi nhận và chi phí.';
+      if (title == 'Táº¡o dá»‹ch vá»¥') {
+        return 'BÆ°á»›c sau sáº½ lĂ m form thĂ´ng tin khĂ¡ch, Pet, ngĂ y giá» Spa, ngĂ y gá»­i nháº­n vĂ  chi phĂ­.';
       }
 
-      if (title == 'Phiếu dịch vụ') {
-        return 'Bước sau sẽ làm phiếu dịch vụ Spa / Khách sạn.';
+      if (title == 'Phiáº¿u dá»‹ch vá»¥') {
+        return 'BÆ°á»›c sau sáº½ lĂ m phiáº¿u dá»‹ch vá»¥ Spa / KhĂ¡ch sáº¡n.';
       }
     }
 
     if (widget.department == StaffDepartment.hospital) {
-      if (title == 'Lịch khám') {
-        return 'Bước sau sẽ làm danh sách lịch khám có ngày giờ, tên khách, SĐT và lý do khám.';
+      if (title == 'Lá»‹ch khĂ¡m') {
+        return 'BÆ°á»›c sau sáº½ lĂ m danh sĂ¡ch lá»‹ch khĂ¡m cĂ³ ngĂ y giá», tĂªn khĂ¡ch, SÄT vĂ  lĂ½ do khĂ¡m.';
       }
 
-      if (title == 'Bệnh án') {
-        return 'Bước sau sẽ làm form hồ sơ bệnh án khi khám thú cưng.';
+      if (title == 'Bá»‡nh Ă¡n') {
+        return 'BÆ°á»›c sau sáº½ lĂ m form há»“ sÆ¡ bá»‡nh Ă¡n khi khĂ¡m thĂº cÆ°ng.';
       }
 
-      if (title == 'Chi phí') {
-        return 'Bước sau sẽ làm chi phí khám và giao diện xuất bệnh án PDF.';
+      if (title == 'Chi phĂ­') {
+        return 'BÆ°á»›c sau sáº½ lĂ m chi phĂ­ khĂ¡m vĂ  giao diá»‡n xuáº¥t bá»‡nh Ă¡n PDF.';
       }
     }
 
-    return 'Chức năng này sẽ được làm ở bước tiếp theo.';
+    return 'Chá»©c nÄƒng nĂ y sáº½ Ä‘Æ°á»£c lĂ m á»Ÿ bÆ°á»›c tiáº¿p theo.';
   }
 }
 
@@ -996,13 +1010,12 @@ class _StaffTask {
   final String title;
   final String description;
 
-  bool isCompleted;
+  bool isCompleted = false;
 
   _StaffTask({
     required this.time,
     required this.title,
     required this.description,
-    this.isCompleted = false,
   });
 }
 
@@ -1029,7 +1042,7 @@ class _FeatureCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 27,
-            backgroundColor: Colors.white.withOpacity(0.8),
+            backgroundColor: Colors.white.withValues(alpha: 0.8),
             child: Icon(icon, color: AppColors.textDark, size: 27),
           ),
           const SizedBox(height: 10),

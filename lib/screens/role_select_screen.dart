@@ -33,33 +33,26 @@ class RoleSelectScreen extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               'PetHub',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(
-                fontSize: 34,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontSize: 34),
             ),
             const SizedBox(height: 8),
             Text(
               'Cafe thú cưng, dịch vụ chăm sóc Pet và cộng đồng dành cho người yêu động vật.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(
-                height: 1.5,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(height: 1.5),
             ),
             const SizedBox(height: 32),
             _RoleCard(
               title: 'Khách hàng',
               subtitle:
-              'Đặt bàn, tìm dịch vụ, xem bản đồ và tham gia cộng đồng.',
+                  'Đặt bàn, tìm dịch vụ, xem bản đồ và tham gia cộng đồng.',
               icon: Icons.favorite_rounded,
               color: AppColors.primarySoft,
               onTap: () {
-                final user =
-                    FirebaseAuth.instance.currentUser;
+                final user = FirebaseAuth.instance.currentUser;
 
                 if (user == null) {
                   context.push('/customer-auth');
@@ -71,8 +64,7 @@ class RoleSelectScreen extends StatelessWidget {
             const SizedBox(height: 15),
             _RoleCard(
               title: 'Nhân viên',
-              subtitle:
-              'Xử lý công việc, đơn hàng, Pet và Check-in.',
+              subtitle: 'Xử lý công việc, đơn hàng, Pet và Check-in.',
               icon: Icons.badge_rounded,
               color: AppColors.mint,
               onTap: () {
@@ -82,8 +74,7 @@ class RoleSelectScreen extends StatelessWidget {
             const SizedBox(height: 15),
             _RoleCard(
               title: 'Quản lý',
-              subtitle:
-              'Quản lý đặt bàn, ca làm, nhân viên và doanh thu.',
+              subtitle: 'Quản lý đặt bàn, ca làm, nhân viên và doanh thu.',
               icon: Icons.admin_panel_settings_rounded,
               color: AppColors.sky,
               onTap: () {
@@ -94,8 +85,7 @@ class RoleSelectScreen extends StatelessWidget {
             Center(
               child: Text(
                 'Pet-friendly • Pastel UI • Flutter App',
-                style:
-                Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ],
@@ -130,33 +120,17 @@ class _RoleCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 28,
-            backgroundColor:
-            Colors.white.withOpacity(0.75),
-            child: Icon(
-              icon,
-              color: AppColors.textDark,
-              size: 28,
-            ),
+            backgroundColor: Colors.white.withValues(alpha: 0.75),
+            child: Icon(icon, color: AppColors.textDark, size: 28),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium,
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium,
-                ),
+                Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),
           ),

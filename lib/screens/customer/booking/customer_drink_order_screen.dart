@@ -17,6 +17,7 @@ const List<String> _categories = [
   'Trà',
   'Sinh tố',
   'Bánh ngọt',
+  'combo chạy thận',
 ];
 
 const List<_PaymentMethod> _paymentMethods = [
@@ -83,7 +84,7 @@ const List<_DrinkItem> _drinks = [
     name: 'Sinh Tố Bơ Sữa',
     description: 'Bơ béo nhẹ, thơm sữa, no bụng.',
     category: 'Sinh tố',
-    price: 52000,
+    price: 500000000,
     icon: Icons.eco_rounded,
     color: Color(0xFFE0F7E9),
   ),
@@ -104,6 +105,24 @@ const List<_DrinkItem> _drinks = [
     price: 29000,
     icon: Icons.cookie_rounded,
     color: Color(0xFFFFE8D6),
+  ),
+  _DrinkItem(
+    id: 9,
+    name: 'Nước Suối',
+    description: 'Nước suối tinh khiết, giải khát.',
+    category: 'Khác',
+    price: 15000,
+    icon: Icons.water_drop_rounded,
+    color: Color(0xFFE8F7FF),
+  ),
+  _DrinkItem(
+    id: 10,
+    name: 'Tài lộc',
+    description: 'Giúp nhanh chạy thận .',
+    category: 'combo chạy thận',
+    price: 15000,
+    icon: Icons.local_drink_rounded,
+    color: Color(0xFFFFF0D9),
   ),
 ];
 
@@ -135,7 +154,7 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
     setState(() {
       _cart.clear();
       _cart.addAll(storedCart);
-      _orderHistory = history.reversed.take(3).toList();
+      _orderHistory = history.reversed.take(10).toList();
     });
   }
 
@@ -250,7 +269,7 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
   Future<bool> _showZaloPayQrAndAutoConfirm() async {
     final paymentCode = 'ZLP-${DateTime.now().millisecondsSinceEpoch}';
 
-    Future<void>.delayed(const Duration(seconds: 3), () {
+    Future<void>.delayed(const Duration(seconds: 15), () {
       if (!mounted) return;
       final navigator = Navigator.of(context);
       if (navigator.canPop()) {
@@ -316,7 +335,7 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
     return Scaffold(
       backgroundColor: _bluePale,
       appBar: AppBar(
-        title: const Text('Gọi nước trước'),
+        title: const Text('Gọi nước đi mà'),
         backgroundColor: _bluePale,
         foregroundColor: AppColors.textDark,
         actions: const [
@@ -549,7 +568,7 @@ class _DrinkHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Đặt nước trước',
+                  'Chọn nước lẹ lên ',
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(color: _blueDeep),

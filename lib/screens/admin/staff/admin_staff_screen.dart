@@ -45,12 +45,18 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc chắn muốn xóa nhân viên ${_staffList[index]['name']} không?'),
+        content: Text(
+          'Bạn có chắc chắn muốn xóa nhân viên ${_staffList[index]['name']} không?',
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), // Đóng dialog, không làm gì
-            child: const Text('Hủy bỏ', style: TextStyle(color: AppColors.textSoft)),
+            onPressed: () =>
+                Navigator.pop(context), // Đóng dialog, không làm gì
+            child: const Text(
+              'Hủy bỏ',
+              style: TextStyle(color: AppColors.textSoft),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -60,7 +66,10 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
               Navigator.pop(context); // Đóng dialog
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            child: const Text('Xác nhận', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Xác nhận',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -72,12 +81,19 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Danh sách nhân sự', style: TextStyle(color: AppColors.textSoft, fontSize: 16)),
+        title: const Text(
+          'Danh sách nhân sự',
+          style: TextStyle(color: AppColors.textSoft, fontSize: 16),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle, color: AppColors.primary, size: 28),
+            icon: const Icon(
+              Icons.add_circle,
+              color: AppColors.primary,
+              size: 28,
+            ),
             onPressed: () async {
               // Mở màn hình thêm mới
               final newStaff = await Navigator.push(
@@ -100,28 +116,39 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: AppColors.mint.withOpacity(0.15),
+              color: AppColors.mint.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
               leading: const CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(Icons.person, color: AppColors.mint),
               ),
-              title: Text(staff['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+              title: Text(
+                staff['name'],
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: Text(staff['role']),
               // Vùng chứa 2 icon Sửa / Xóa (Trailing)
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.edit_rounded, color: AppColors.primary),
+                    icon: const Icon(
+                      Icons.edit_rounded,
+                      color: AppColors.primary,
+                    ),
                     onPressed: () async {
                       // Mở màn hình sửa và chờ nhận lại data
                       final updatedStaff = await Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => AdminStaffFormScreen(staff: staff)),
+                        MaterialPageRoute(
+                          builder: (_) => AdminStaffFormScreen(staff: staff),
+                        ),
                       );
                       if (updatedStaff != null) {
                         setState(() => _staffList[index] = updatedStaff);
@@ -129,7 +156,10 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete_rounded, color: Colors.redAccent),
+                    icon: const Icon(
+                      Icons.delete_rounded,
+                      color: Colors.redAccent,
+                    ),
                     onPressed: () => _showDeleteDialog(index),
                   ),
                 ],
@@ -138,7 +168,9 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
                 // Nhảy sang màn hình chi tiết
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => AdminStaffDetailScreen(staff: staff)),
+                  MaterialPageRoute(
+                    builder: (_) => AdminStaffDetailScreen(staff: staff),
+                  ),
                 );
               },
             ),

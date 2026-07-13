@@ -9,41 +9,32 @@ import 'firebase_community_service.dart';
 class CustomerProfileService {
   CustomerProfileService._();
 
-  static final FirebaseAuth _auth =
-      FirebaseAuth.instance;
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  static final FirebaseFirestore _firestore =
-      FirebaseFirestore.instance;
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   static User get _currentUser {
     final user = _auth.currentUser;
 
     if (user == null) {
-      throw Exception(
-        'Người dùng chưa đăng nhập.',
-      );
+      throw Exception('Người dùng chưa đăng nhập.');
     }
 
     return user;
   }
 
-  static DocumentReference<Map<String, dynamic>>
-  get _currentProfileRef {
-    return _firestore
-        .collection('users')
-        .doc(_currentUser.uid);
+  static DocumentReference<Map<String, dynamic>> get _currentProfileRef {
+    return _firestore.collection('users').doc(_currentUser.uid);
   }
 
   static String _generateRandomDisplayName() {
-    const characters =
-        'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
     final random = Random.secure();
 
     final code = List.generate(
       6,
-          (_) => characters[
-      random.nextInt(characters.length)],
+      (_) => characters[random.nextInt(characters.length)],
     ).join();
 
     return 'PetHub#$code';
@@ -52,8 +43,7 @@ class CustomerProfileService {
   static Future<void> ensureCurrentProfile() async {
     final user = _currentUser;
 
-    final reference =
-    _firestore.collection('users').doc(user.uid);
+    final reference = _firestore.collection('users').doc(user.uid);
 
     final snapshot = await reference.get();
 
@@ -61,10 +51,8 @@ class CustomerProfileService {
       await reference.set({
         'uid': user.uid,
         'role': 'customer',
-        'fullName':
-        user.displayName ?? 'Khách hàng PetHub',
-        'displayName':
-        _generateRandomDisplayName(),
+        'fullName': user.displayName ?? 'Khách hàng PetHub',
+        'displayName': _generateRandomDisplayName(),
         'email': user.email ?? '',
         'phoneNumber': user.phoneNumber,
         'avatarIconKey': 'default_person',
@@ -87,58 +75,41 @@ class CustomerProfileService {
     if (data['profileInitialized'] != true) {
       final oldName =
           data['displayName'] as String? ??
-              user.displayName ??
-              'Khách hàng PetHub';
+          user.displayName ??
+          'Khách hàng PetHub';
 
       await reference.set({
         'uid': user.uid,
         'role': data['role'] ?? 'customer',
-        'fullName':
-        data['fullName'] ?? oldName,
-        'displayName':
-        _generateRandomDisplayName(),
-        'email':
-        data['email'] ?? user.email ?? '',
-        'phoneNumber':
-        data['phoneNumber'] ??
-            user.phoneNumber,
+        'fullName': data['fullName'] ?? oldName,
+        'displayName': _generateRandomDisplayName(),
+        'email': data['email'] ?? user.email ?? '',
+        'phoneNumber': data['phoneNumber'] ?? user.phoneNumber,
         'avatarIconKey': 'default_person',
-        'anonymousName':
-        data['anonymousName'] ??
-            'Ẩn danh PetHub',
-        'anonymousAvatarIconKey':
-        data['anonymousAvatarIconKey'] ??
-            'anonymous',
+        'anonymousName': data['anonymousName'] ?? 'Ẩn danh PetHub',
+        'anonymousAvatarIconKey': data['anonymousAvatarIconKey'] ?? 'anonymous',
         'profileInitialized': true,
-        'updatedAt':
-        FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     }
   }
 
-  static Future<CustomerProfile>
-  getCurrentProfile() async {
+  static Future<CustomerProfile> getCurrentProfile() async {
     await ensureCurrentProfile();
 
-    final snapshot =
-    await _currentProfileRef.get();
+    final snapshot = await _currentProfileRef.get();
 
     final data = snapshot.data();
 
     if (!snapshot.exists || data == null) {
-      throw Exception(
-        'Không tìm thấy hồ sơ khách hàng.',
-      );
+      throw Exception('Không tìm thấy hồ sơ khách hàng.');
     }
 
     return CustomerProfile.fromMap(data);
   }
 
-  static Stream<CustomerProfile?>
-  watchCurrentProfile() {
-    return _currentProfileRef
-        .snapshots()
-        .map((snapshot) {
+  static Stream<CustomerProfile?> watchCurrentProfile() {
+    return _currentProfileRef.snapshots().map((snapshot) {
       final data = snapshot.data();
 
       if (!snapshot.exists || data == null) {
@@ -149,35 +120,26 @@ class CustomerProfileService {
     });
   }
 
-  static Future<void>
-  updatePersonalInformation({
+  static Future<void> updatePersonalInformation({
     required String fullName,
     required String displayName,
   }) async {
     final cleanFullName = fullName.trim();
-    final cleanDisplayName =
-    displayName.trim();
+    final cleanDisplayName = displayName.trim();
 
     if (cleanFullName.isEmpty) {
-      throw Exception(
-        'Họ tên không được để trống.',
-      );
+      throw Exception('Họ tên không được để trống.');
     }
 
     if (cleanDisplayName.isEmpty) {
-      throw Exception(
-        'Tên hiển thị không được để trống.',
-      );
+      throw Exception('Tên hiển thị không được để trống.');
     }
 
-    final snapshot =
-    await _currentProfileRef.get();
+    final snapshot = await _currentProfileRef.get();
 
     final data = snapshot.data() ?? {};
 
-    final avatarIconKey =
-        data['avatarIconKey'] as String? ??
-            'default_person';
+    final avatarIconKey = data['avatarIconKey'] as String? ?? 'default_person';
 
     await _currentProfileRef.update({
       'fullName': cleanFullName,
@@ -188,16 +150,13 @@ class CustomerProfileService {
     /*
      * Cập nhật luôn Firebase Auth displayName.
      */
-    await _currentUser.updateDisplayName(
-      cleanDisplayName,
-    );
+    await _currentUser.updateDisplayName(cleanDisplayName);
 
     /*
      * Đồng bộ tên mới sang tất cả bài
      * không ẩn danh của người dùng.
      */
-    await FirebaseCommunityService
-        .syncAuthorIdentity(
+    await FirebaseCommunityService.syncAuthorIdentity(
       authorId: _currentUser.uid,
       isAnonymous: false,
       authorName: cleanDisplayName,
@@ -205,25 +164,18 @@ class CustomerProfileService {
     );
   }
 
-  static Future<void> updateAvatarIcon(
-      String iconKey,
-      ) async {
+  static Future<void> updateAvatarIcon(String iconKey) async {
     final cleanIconKey = iconKey.trim();
 
     if (cleanIconKey.isEmpty) {
-      throw Exception(
-        'Avatar không hợp lệ.',
-      );
+      throw Exception('Avatar không hợp lệ.');
     }
 
-    final snapshot =
-    await _currentProfileRef.get();
+    final snapshot = await _currentProfileRef.get();
 
     final data = snapshot.data() ?? {};
 
-    final displayName =
-        data['displayName'] as String? ??
-            'Bạn PetHub';
+    final displayName = data['displayName'] as String? ?? 'Bạn PetHub';
 
     await _currentProfileRef.update({
       'avatarIconKey': cleanIconKey,
@@ -234,8 +186,7 @@ class CustomerProfileService {
      * Đồng bộ avatar mới sang các bài
      * không ẩn danh.
      */
-    await FirebaseCommunityService
-        .syncAuthorIdentity(
+    await FirebaseCommunityService.syncAuthorIdentity(
       authorId: _currentUser.uid,
       isAnonymous: false,
       authorName: displayName,
@@ -247,28 +198,21 @@ class CustomerProfileService {
     required String anonymousName,
     required String anonymousAvatarIconKey,
   }) async {
-    final cleanAnonymousName =
-    anonymousName.trim();
+    final cleanAnonymousName = anonymousName.trim();
 
-    final cleanAnonymousAvatar =
-    anonymousAvatarIconKey.trim();
+    final cleanAnonymousAvatar = anonymousAvatarIconKey.trim();
 
     if (cleanAnonymousName.isEmpty) {
-      throw Exception(
-        'Tên ẩn danh không được để trống.',
-      );
+      throw Exception('Tên ẩn danh không được để trống.');
     }
 
     if (cleanAnonymousAvatar.isEmpty) {
-      throw Exception(
-        'Avatar ẩn danh không hợp lệ.',
-      );
+      throw Exception('Avatar ẩn danh không hợp lệ.');
     }
 
     await _currentProfileRef.update({
       'anonymousName': cleanAnonymousName,
-      'anonymousAvatarIconKey':
-      cleanAnonymousAvatar,
+      'anonymousAvatarIconKey': cleanAnonymousAvatar,
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
@@ -276,8 +220,7 @@ class CustomerProfileService {
      * Đồng bộ danh tính mới sang tất cả
      * bài ẩn danh của tài khoản.
      */
-    await FirebaseCommunityService
-        .syncAuthorIdentity(
+    await FirebaseCommunityService.syncAuthorIdentity(
       authorId: _currentUser.uid,
       isAnonymous: true,
       authorName: cleanAnonymousName,
@@ -285,22 +228,16 @@ class CustomerProfileService {
     );
   }
 
-  static Future<void> updateAnonymousName(
-      String anonymousName,
-      ) async {
+  static Future<void> updateAnonymousName(String anonymousName) async {
     final profile = await getCurrentProfile();
 
     await updateAnonymousIdentity(
       anonymousName: anonymousName,
-      anonymousAvatarIconKey:
-      profile.anonymousAvatarIconKey,
+      anonymousAvatarIconKey: profile.anonymousAvatarIconKey,
     );
   }
 
-  static Future<void>
-  updateAnonymousAvatarIcon(
-      String iconKey,
-      ) async {
+  static Future<void> updateAnonymousAvatarIcon(String iconKey) async {
     final profile = await getCurrentProfile();
 
     await updateAnonymousIdentity(

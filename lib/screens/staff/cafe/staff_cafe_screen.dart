@@ -29,46 +29,49 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
   final List<_CafeTask> _tasks = [
     _CafeTask(
       time: '07:30 - 08:00',
-      title: 'Kiểm tra khu vực Café',
-      description: 'Kiểm tra bàn ghế, khu vực khách ngồi và vệ sinh đầu ca.',
+      title: 'KiĂ¡Â»Æ’m tra khu vĂ¡Â»Â±c CafÄ‚Â©',
+      description:
+          'KiĂ¡Â»Æ’m tra bÄ‚Â n ghĂ¡ÂºÂ¿, khu vĂ¡Â»Â±c khÄ‚Â¡ch ngĂ¡Â»â€œi vÄ‚Â  vĂ¡Â»â€¡ sinh Ă„â€˜Ă¡ÂºÂ§u ca.',
     ),
     _CafeTask(
       time: '08:00 - 08:30',
-      title: 'Kiểm tra Menu',
+      title: 'KiĂ¡Â»Æ’m tra Menu',
       description:
-          'Kiểm tra món còn phục vụ, món đã hết và nguyên liệu trong ngày.',
+          'KiĂ¡Â»Æ’m tra mÄ‚Â³n cÄ‚Â²n phĂ¡Â»Â¥c vĂ¡Â»Â¥, mÄ‚Â³n Ă„â€˜Ä‚Â£ hĂ¡ÂºÂ¿t vÄ‚Â  nguyÄ‚Âªn liĂ¡Â»â€¡u trong ngÄ‚Â y.',
     ),
     _CafeTask(
       time: '08:30 - 11:30',
-      title: 'Tiếp nhận khách và gọi món',
-      description: 'Tra cứu đặt bàn, xác nhận khách đến và tạo đơn gọi món.',
+      title: 'TiĂ¡ÂºÂ¿p nhĂ¡ÂºÂ­n khÄ‚Â¡ch vÄ‚Â  gĂ¡Â»Âi mÄ‚Â³n',
+      description:
+          'Tra cĂ¡Â»Â©u Ă„â€˜Ă¡ÂºÂ·t bÄ‚Â n, xÄ‚Â¡c nhĂ¡ÂºÂ­n khÄ‚Â¡ch Ă„â€˜Ă¡ÂºÂ¿n vÄ‚Â  tĂ¡ÂºÂ¡o Ă„â€˜Ă†Â¡n gĂ¡Â»Âi mÄ‚Â³n.',
     ),
     _CafeTask(
       time: '11:30 - 12:00',
-      title: 'Kiểm tra khu vực Pet',
-      description: 'Kiểm tra nước uống, đồ chơi và tình trạng khu vực Pet.',
+      title: 'KiĂ¡Â»Æ’m tra khu vĂ¡Â»Â±c Pet',
+      description:
+          'KiĂ¡Â»Æ’m tra nĂ†Â°Ă¡Â»â€ºc uĂ¡Â»â€˜ng, Ă„â€˜Ă¡Â»â€œ chĂ†Â¡i vÄ‚Â  tÄ‚Â¬nh trĂ¡ÂºÂ¡ng khu vĂ¡Â»Â±c Pet.',
     ),
     _CafeTask(
       time: '14:30 - 15:00',
-      title: 'Kiểm kê cuối ca',
+      title: 'KiĂ¡Â»Æ’m kÄ‚Âª cuĂ¡Â»â€˜i ca',
       description:
-          'Kiểm tra nguyên liệu và bàn giao công việc cho ca tiếp theo.',
+          'KiĂ¡Â»Æ’m tra nguyÄ‚Âªn liĂ¡Â»â€¡u vÄ‚Â  bÄ‚Â n giao cÄ‚Â´ng viĂ¡Â»â€¡c cho ca tiĂ¡ÂºÂ¿p theo.',
     ),
   ];
 
   final List<_CafeMenuItem> _menuItems = [
     _CafeMenuItem(
       id: 'MN001',
-      name: 'Cà phê sữa',
-      category: 'Cà phê',
+      name: 'CÄ‚Â  phÄ‚Âª sĂ¡Â»Â¯a',
+      category: 'CÄ‚Â  phÄ‚Âª',
       price: 35000,
       icon: Icons.local_cafe_rounded,
       color: AppColors.peach,
     ),
     _CafeMenuItem(
       id: 'MN002',
-      name: 'Cà phê đen',
-      category: 'Cà phê',
+      name: 'CÄ‚Â  phÄ‚Âª Ă„â€˜en',
+      category: 'CÄ‚Â  phÄ‚Âª',
       price: 30000,
       icon: Icons.coffee_rounded,
       color: AppColors.peach,
@@ -76,31 +79,31 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
     _CafeMenuItem(
       id: 'MN003',
       name: 'Matcha Latte',
-      category: 'Đồ uống',
+      category: 'Ă„ÂĂ¡Â»â€œ uĂ¡Â»â€˜ng',
       price: 45000,
       icon: Icons.emoji_food_beverage_rounded,
       color: AppColors.mint,
     ),
     _CafeMenuItem(
       id: 'MN004',
-      name: 'Trà đào',
-      category: 'Đồ uống',
+      name: 'TrÄ‚Â  Ă„â€˜Ä‚Â o',
+      category: 'Ă„ÂĂ¡Â»â€œ uĂ¡Â»â€˜ng',
       price: 40000,
       icon: Icons.local_drink_rounded,
       color: AppColors.sky,
     ),
     _CafeMenuItem(
       id: 'MN005',
-      name: 'Bánh Tiramisu',
-      category: 'Bánh ngọt',
+      name: 'BÄ‚Â¡nh Tiramisu',
+      category: 'BÄ‚Â¡nh ngĂ¡Â»Ât',
       price: 45000,
       icon: Icons.cake_rounded,
       color: AppColors.lavender,
     ),
     _CafeMenuItem(
       id: 'MN006',
-      name: 'Bánh quy hình Pet',
-      category: 'Bánh ngọt',
+      name: 'BÄ‚Â¡nh quy hÄ‚Â¬nh Pet',
+      category: 'BÄ‚Â¡nh ngĂ¡Â»Ât',
       price: 30000,
       icon: Icons.cookie_rounded,
       color: AppColors.primarySoft,
@@ -111,13 +114,13 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
 
   _BookingSummary? _bookingSummary;
 
-  String _selectedMenuCategory = 'Tất cả';
+  String _selectedMenuCategory = 'TĂ¡ÂºÂ¥t cĂ¡ÂºÂ£';
 
   final List<String> _menuCategories = const [
-    'Tất cả',
-    'Cà phê',
-    'Đồ uống',
-    'Bánh ngọt',
+    'TĂ¡ÂºÂ¥t cĂ¡ÂºÂ£',
+    'CÄ‚Â  phÄ‚Âª',
+    'Ă„ÂĂ¡Â»â€œ uĂ¡Â»â€˜ng',
+    'BÄ‚Â¡nh ngĂ¡Â»Ât',
   ];
 
   int get _completedTaskCount {
@@ -210,7 +213,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'Công việc hôm nay',
+                                  'CÄ‚Â´ng viĂ¡Â»â€¡c hÄ‚Â´m nay',
                                   style: TextStyle(
                                     color: AppColors.textDark,
                                     fontWeight: FontWeight.w900,
@@ -218,7 +221,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                                   ),
                                 ),
                                 Text(
-                                  'Đã hoàn thành $completed/${_tasks.length}',
+                                  'Ă„ÂÄ‚Â£ hoÄ‚Â n thÄ‚Â nh $completed/${_tasks.length}',
                                   style: const TextStyle(
                                     color: AppColors.textSoft,
                                     fontWeight: FontWeight.w600,
@@ -380,7 +383,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Nguyễn Minh An',
+                  'NguyĂ¡Â»â€¦n Minh An',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.textDark,
@@ -390,7 +393,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                 ),
                 const SizedBox(height: 5),
                 const Text(
-                  'NV-CF-001 • Nhân viên Café',
+                  'NV-CF-001 Ă¢â‚¬Â¢ NhÄ‚Â¢n viÄ‚Âªn CafÄ‚Â©',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.textSoft,
@@ -404,32 +407,32 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                     children: [
                       _ProfileInformationLine(
                         icon: Icons.store_rounded,
-                        label: 'Chi nhánh',
-                        value: 'PetHub Quận 1',
+                        label: 'Chi nhÄ‚Â¡nh',
+                        value: 'PetHub QuĂ¡ÂºÂ­n 1',
                       ),
                       Divider(height: 26),
                       _ProfileInformationLine(
                         icon: Icons.schedule_rounded,
-                        label: 'Ca làm',
-                        value: 'Ca sáng • 07:30 - 15:30',
+                        label: 'Ca lÄ‚Â m',
+                        value: 'Ca sÄ‚Â¡ng Ă¢â‚¬Â¢ 07:30 - 15:30',
                       ),
                       Divider(height: 26),
                       _ProfileInformationLine(
                         icon: Icons.phone_rounded,
-                        label: 'Số điện thoại',
+                        label: 'SĂ¡Â»â€˜ Ă„â€˜iĂ¡Â»â€¡n thoĂ¡ÂºÂ¡i',
                         value: '0901 234 567',
                       ),
                       Divider(height: 26),
                       _ProfileInformationLine(
                         icon: Icons.circle,
-                        label: 'Trạng thái',
-                        value: 'Đang làm việc',
+                        label: 'TrĂ¡ÂºÂ¡ng thÄ‚Â¡i',
+                        value: 'Ă„Âang lÄ‚Â m viĂ¡Â»â€¡c',
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 22),
-                const SectionTitle(title: 'Tiến độ hôm nay'),
+                const SectionTitle(title: 'TiĂ¡ÂºÂ¿n Ă„â€˜Ă¡Â»â„¢ hÄ‚Â´m nay'),
                 const SizedBox(height: 10),
                 SoftCard(
                   color: AppColors.mint,
@@ -439,19 +442,19 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                         children: [
                           Expanded(
                             child: _ProfileTaskNumber(
-                              label: 'Tổng việc',
+                              label: 'TĂ¡Â»â€¢ng viĂ¡Â»â€¡c',
                               value: '${_tasks.length}',
                             ),
                           ),
                           Expanded(
                             child: _ProfileTaskNumber(
-                              label: 'Hoàn thành',
+                              label: 'HoÄ‚Â n thÄ‚Â nh',
                               value: '$_completedTaskCount',
                             ),
                           ),
                           Expanded(
                             child: _ProfileTaskNumber(
-                              label: 'Còn thiếu',
+                              label: 'CÄ‚Â²n thiĂ¡ÂºÂ¿u',
                               value: '$_remainingTaskCount',
                             ),
                           ),
@@ -468,7 +471,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${(_taskProgress * 100).round()}% công việc đã hoàn thành',
+                        '${(_taskProgress * 100).round()}% cÄ‚Â´ng viĂ¡Â»â€¡c Ă„â€˜Ä‚Â£ hoÄ‚Â n thÄ‚Â nh',
                         style: const TextStyle(
                           color: AppColors.textDark,
                           fontWeight: FontWeight.w800,
@@ -478,22 +481,24 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                   ),
                 ),
                 const SizedBox(height: 22),
-                const SectionTitle(title: 'Đã hoàn thành'),
+                const SectionTitle(title: 'Ă„ÂÄ‚Â£ hoÄ‚Â n thÄ‚Â nh'),
                 const SizedBox(height: 9),
                 if (completedTasks.isEmpty)
                   const _EmptyTaskMessage(
-                    message: 'Chưa có công việc nào được hoàn thành.',
+                    message:
+                        'ChĂ†Â°a cÄ‚Â³ cÄ‚Â´ng viĂ¡Â»â€¡c nÄ‚Â o Ă„â€˜Ă†Â°Ă¡Â»Â£c hoÄ‚Â n thÄ‚Â nh.',
                   )
                 else
                   ...completedTasks.map(
                     (task) => _ProfileTaskRow(task: task, completed: true),
                   ),
                 const SizedBox(height: 20),
-                const SectionTitle(title: 'Còn thiếu'),
+                const SectionTitle(title: 'CÄ‚Â²n thiĂ¡ÂºÂ¿u'),
                 const SizedBox(height: 9),
                 if (incompleteTasks.isEmpty)
                   const _EmptyTaskMessage(
-                    message: 'Đã hoàn thành đầy đủ công việc.',
+                    message:
+                        'Ă„ÂÄ‚Â£ hoÄ‚Â n thÄ‚Â nh Ă„â€˜Ă¡ÂºÂ§y Ă„â€˜Ă¡Â»Â§ cÄ‚Â´ng viĂ¡Â»â€¡c.',
                   )
                 else
                   ...incompleteTasks.map(
@@ -513,7 +518,9 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
     final phoneNumber = _bookingPhoneController.text.trim();
 
     if (customerName.isEmpty || phoneNumber.isEmpty) {
-      _showMessage('Vui lòng nhập đầy đủ tên và số điện thoại.');
+      _showMessage(
+        'Vui lÄ‚Â²ng nhĂ¡ÂºÂ­p Ă„â€˜Ă¡ÂºÂ§y Ă„â€˜Ă¡Â»Â§ tÄ‚Âªn vÄ‚Â  sĂ¡Â»â€˜ Ă„â€˜iĂ¡Â»â€¡n thoĂ¡ÂºÂ¡i.',
+      );
       return;
     }
 
@@ -523,11 +530,11 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
         phoneNumber: phoneNumber,
         bookingDate: '20/07/2026',
         bookingTime: '09:30',
-        branchName: 'PetHub Quận 1',
-        tableName: 'Bàn A03',
+        branchName: 'PetHub QuĂ¡ÂºÂ­n 1',
+        tableName: 'BÄ‚Â n A03',
         guestCount: 4,
-        serviceName: 'Gọi món tại quầy',
-        status: 'Đã xác nhận',
+        serviceName: 'GĂ¡Â»Âi mÄ‚Â³n tĂ¡ÂºÂ¡i quĂ¡ÂºÂ§y',
+        status: 'Ă„ÂÄ‚Â£ xÄ‚Â¡c nhĂ¡ÂºÂ­n',
       );
     });
   }
@@ -538,10 +545,10 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
     if (booking == null) return;
 
     setState(() {
-      booking.status = 'Khách đã đến';
+      booking.status = 'KhÄ‚Â¡ch Ă„â€˜Ä‚Â£ Ă„â€˜Ă¡ÂºÂ¿n';
     });
 
-    _showMessage('Đã xác nhận khách đến quán.');
+    _showMessage('Ă„ÂÄ‚Â£ xÄ‚Â¡c nhĂ¡ÂºÂ­n khÄ‚Â¡ch Ă„â€˜Ă¡ÂºÂ¿n quÄ‚Â¡n.');
   }
 
   void _increaseQuantity(_CafeMenuItem item) {
@@ -574,12 +581,14 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
     final tableName = _tableController.text.trim();
 
     if (customerName.isEmpty || phoneNumber.isEmpty || tableName.isEmpty) {
-      _showMessage('Vui lòng nhập tên khách, số điện thoại và số bàn.');
+      _showMessage(
+        'Vui lÄ‚Â²ng nhĂ¡ÂºÂ­p tÄ‚Âªn khÄ‚Â¡ch, sĂ¡Â»â€˜ Ă„â€˜iĂ¡Â»â€¡n thoĂ¡ÂºÂ¡i vÄ‚Â  sĂ¡Â»â€˜ bÄ‚Â n.',
+      );
       return;
     }
 
     if (_selectedOrderItems.isEmpty) {
-      _showMessage('Vui lòng chọn ít nhất một món.');
+      _showMessage('Vui lÄ‚Â²ng chĂ¡Â»Ân Ä‚Â­t nhĂ¡ÂºÂ¥t mĂ¡Â»â„¢t mÄ‚Â³n.');
       return;
     }
 
@@ -590,7 +599,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
       customerName: customerName,
       phoneNumber: phoneNumber,
       tableName: tableName,
-      staffName: 'Nguyễn Minh An',
+      staffName: 'NguyĂ¡Â»â€¦n Minh An',
       createdTime:
           '${now.hour.toString().padLeft(2, '0')}:'
           '${now.minute.toString().padLeft(2, '0')} '
@@ -640,7 +649,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'PET HUB CAFÉ',
+                    'PET HUB CAFÄ‚â€°',
                     style: TextStyle(
                       color: AppColors.textDark,
                       fontWeight: FontWeight.w900,
@@ -649,29 +658,32 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'HÓA ĐƠN THANH TOÁN',
+                    'HÄ‚â€œA Ă„ÂĂ†Â N THANH TOÄ‚ÂN',
                     style: TextStyle(
                       color: AppColors.textSoft,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 18),
-                  _BillInformationLine(label: 'Mã Bill', value: bill.id),
+                  _BillInformationLine(label: 'MÄ‚Â£ Bill', value: bill.id),
                   _BillInformationLine(
-                    label: 'Khách hàng',
+                    label: 'KhÄ‚Â¡ch hÄ‚Â ng',
                     value: bill.customerName,
                   ),
                   _BillInformationLine(
-                    label: 'Số điện thoại',
+                    label: 'SĂ¡Â»â€˜ Ă„â€˜iĂ¡Â»â€¡n thoĂ¡ÂºÂ¡i',
                     value: bill.phoneNumber,
                   ),
-                  _BillInformationLine(label: 'Số bàn', value: bill.tableName),
                   _BillInformationLine(
-                    label: 'Nhân viên',
+                    label: 'SĂ¡Â»â€˜ bÄ‚Â n',
+                    value: bill.tableName,
+                  ),
+                  _BillInformationLine(
+                    label: 'NhÄ‚Â¢n viÄ‚Âªn',
                     value: bill.staffName,
                   ),
                   _BillInformationLine(
-                    label: 'Thời gian',
+                    label: 'ThĂ¡Â»Âi gian',
                     value: bill.createdTime,
                   ),
                   const Divider(height: 28),
@@ -705,7 +717,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                     children: [
                       const Expanded(
                         child: Text(
-                          'Tổng tiền',
+                          'TĂ¡Â»â€¢ng tiĂ¡Â»Ân',
                           style: TextStyle(
                             color: AppColors.textDark,
                             fontWeight: FontWeight.w900,
@@ -725,7 +737,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'Cảm ơn quý khách đã sử dụng dịch vụ PetHub!',
+                    'CĂ¡ÂºÂ£m Ă†Â¡n quÄ‚Â½ khÄ‚Â¡ch Ă„â€˜Ä‚Â£ sĂ¡Â»Â­ dĂ¡Â»Â¥ng dĂ¡Â»â€¹ch vĂ¡Â»Â¥ PetHub!',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: AppColors.textSoft, height: 1.4),
                   ),
@@ -737,7 +749,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                         Navigator.pop(dialogContext);
                       },
                       icon: const Icon(Icons.check_rounded),
-                      label: const Text('Hoàn tất'),
+                      label: const Text('HoÄ‚Â n tĂ¡ÂºÂ¥t'),
                     ),
                   ),
                 ],
@@ -783,7 +795,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                     ),
                   ),
                   Text(
-                    'Nhân viên Café',
+                    'NhÄ‚Â¢n viÄ‚Âªn CafÄ‚Â©',
                     style: TextStyle(
                       color: AppColors.textSoft,
                       fontSize: 11,
@@ -797,7 +809,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Profile nhân viên',
+            tooltip: 'Profile nhÄ‚Â¢n viÄ‚Âªn',
             onPressed: _openStaffProfile,
             icon: const Icon(
               Icons.account_circle_rounded,
@@ -806,7 +818,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
             ),
           ),
           IconButton(
-            tooltip: 'Đổi chức vụ',
+            tooltip: 'Ă„ÂĂ¡Â»â€¢i chĂ¡Â»Â©c vĂ¡Â»Â¥',
             onPressed: () {
               context.go('/staff-role');
             },
@@ -830,12 +842,12 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home_rounded),
-            label: 'Tổng quan',
+            label: 'TĂ¡Â»â€¢ng quan',
           ),
           NavigationDestination(
             icon: Icon(Icons.table_restaurant_outlined),
             selectedIcon: Icon(Icons.table_restaurant_rounded),
-            label: 'Đặt bàn',
+            label: 'Ă„ÂĂ¡ÂºÂ·t bÄ‚Â n',
           ),
           NavigationDestination(
             icon: Icon(Icons.restaurant_menu_outlined),
@@ -885,7 +897,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Chào Nguyễn Minh An',
+                      'ChÄ‚Â o NguyĂ¡Â»â€¦n Minh An',
                       style: TextStyle(
                         color: AppColors.textDark,
                         fontWeight: FontWeight.w900,
@@ -894,7 +906,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                     ),
                     SizedBox(height: 5),
                     Text(
-                      'Ca sáng • 07:30 - 15:30\nPetHub Quận 1',
+                      'Ca sÄ‚Â¡ng Ă¢â‚¬Â¢ 07:30 - 15:30\nPetHub QuĂ¡ÂºÂ­n 1',
                       style: TextStyle(
                         color: AppColors.textSoft,
                         height: 1.4,
@@ -908,10 +920,10 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        const SectionTitle(title: 'Công việc hôm nay'),
+        const SectionTitle(title: 'CÄ‚Â´ng viĂ¡Â»â€¡c hÄ‚Â´m nay'),
         const SizedBox(height: 11),
 
-        // Chỉ có một card công việc.
+        // ChĂ¡Â»â€° cÄ‚Â³ mĂ¡Â»â„¢t card cÄ‚Â´ng viĂ¡Â»â€¡c.
         SoftCard(
           color: AppColors.mint,
           onTap: _openTaskList,
@@ -935,7 +947,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Danh sách công việc',
+                          'Danh sÄ‚Â¡ch cÄ‚Â´ng viĂ¡Â»â€¡c',
                           style: TextStyle(
                             color: AppColors.textDark,
                             fontWeight: FontWeight.w900,
@@ -944,8 +956,8 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${now.day}/${now.month}/${now.year} • '
-                          '$_completedTaskCount/${_tasks.length} hoàn thành',
+                          '${now.day}/${now.month}/${now.year} Ă¢â‚¬Â¢ '
+                          '$_completedTaskCount/${_tasks.length} hoÄ‚Â n thÄ‚Â nh',
                           style: const TextStyle(
                             color: AppColors.textSoft,
                             fontWeight: FontWeight.w700,
@@ -974,7 +986,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
               Row(
                 children: [
                   Text(
-                    '${(_taskProgress * 100).round()}% hoàn thành',
+                    '${(_taskProgress * 100).round()}% hoÄ‚Â n thÄ‚Â nh',
                     style: const TextStyle(
                       color: AppColors.textDark,
                       fontWeight: FontWeight.w800,
@@ -982,7 +994,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                   ),
                   const Spacer(),
                   Text(
-                    'Còn $_remainingTaskCount việc',
+                    'CÄ‚Â²n $_remainingTaskCount viĂ¡Â»â€¡c',
                     style: const TextStyle(
                       color: AppColors.textSoft,
                       fontWeight: FontWeight.w700,
@@ -994,13 +1006,13 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
           ),
         ),
         const SizedBox(height: 26),
-        const SectionTitle(title: 'Chức năng Café'),
+        const SectionTitle(title: 'ChĂ¡Â»Â©c nĂ„Æ’ng CafÄ‚Â©'),
         const SizedBox(height: 11),
         Row(
           children: [
             Expanded(
               child: _CafeFeatureCard(
-                title: 'Tra cứu\nđặt bàn',
+                title: 'Tra cĂ¡Â»Â©u\nĂ„â€˜Ă¡ÂºÂ·t bÄ‚Â n',
                 icon: Icons.search_rounded,
                 color: AppColors.sky,
                 onTap: () {
@@ -1013,7 +1025,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _CafeFeatureCard(
-                title: 'Menu và\ngọi món',
+                title: 'Menu vÄ‚Â \ngĂ¡Â»Âi mÄ‚Â³n',
                 icon: Icons.restaurant_menu_rounded,
                 color: AppColors.peach,
                 onTap: () {
@@ -1030,7 +1042,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
           children: [
             Expanded(
               child: _CafeFeatureCard(
-                title: 'Danh sách\nBill',
+                title: 'Danh sÄ‚Â¡ch\nBill',
                 icon: Icons.receipt_long_rounded,
                 color: AppColors.lavender,
                 onTap: () {
@@ -1043,7 +1055,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _CafeFeatureCard(
-                title: 'Profile\nnhân viên',
+                title: 'Profile\nnhÄ‚Â¢n viÄ‚Âªn',
                 icon: Icons.badge_rounded,
                 color: AppColors.mint,
                 onTap: _openStaffProfile,
@@ -1059,10 +1071,10 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
       children: [
-        const SectionTitle(title: 'Tra cứu đặt bàn'),
+        const SectionTitle(title: 'Tra cĂ¡Â»Â©u Ă„â€˜Ă¡ÂºÂ·t bÄ‚Â n'),
         const SizedBox(height: 6),
         const Text(
-          'Nhập tên và số điện thoại của khách để tìm thông tin đặt bàn.',
+          'NhĂ¡ÂºÂ­p tÄ‚Âªn vÄ‚Â  sĂ¡Â»â€˜ Ă„â€˜iĂ¡Â»â€¡n thoĂ¡ÂºÂ¡i cĂ¡Â»Â§a khÄ‚Â¡ch Ă„â€˜Ă¡Â»Æ’ tÄ‚Â¬m thÄ‚Â´ng tin Ă„â€˜Ă¡ÂºÂ·t bÄ‚Â n.',
           style: TextStyle(color: AppColors.textSoft, height: 1.4),
         ),
         const SizedBox(height: 18),
@@ -1074,8 +1086,8 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                 controller: _bookingNameController,
                 textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(
-                  labelText: 'Tên khách hàng',
-                  hintText: 'Ví dụ: Nguyễn Hải Yến',
+                  labelText: 'TÄ‚Âªn khÄ‚Â¡ch hÄ‚Â ng',
+                  hintText: 'VÄ‚Â­ dĂ¡Â»Â¥: NguyĂ¡Â»â€¦n HĂ¡ÂºÂ£i YĂ¡ÂºÂ¿n',
                   prefixIcon: Icon(Icons.person_outline_rounded),
                 ),
               ),
@@ -1084,8 +1096,8 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                 controller: _bookingPhoneController,
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
-                  labelText: 'Số điện thoại',
-                  hintText: 'Ví dụ: 0901234567',
+                  labelText: 'SĂ¡Â»â€˜ Ă„â€˜iĂ¡Â»â€¡n thoĂ¡ÂºÂ¡i',
+                  hintText: 'VÄ‚Â­ dĂ¡Â»Â¥: 0901234567',
                   prefixIcon: Icon(Icons.phone_outlined),
                 ),
               ),
@@ -1095,7 +1107,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                 child: FilledButton.icon(
                   onPressed: _searchBooking,
                   icon: const Icon(Icons.search_rounded),
-                  label: const Text('Tìm đơn đặt bàn'),
+                  label: const Text('TÄ‚Â¬m Ă„â€˜Ă†Â¡n Ă„â€˜Ă¡ÂºÂ·t bÄ‚Â n'),
                 ),
               ),
             ],
@@ -1114,7 +1126,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'Thông tin đặt bàn sẽ hiển thị tại đây.',
+                  'ThÄ‚Â´ng tin Ă„â€˜Ă¡ÂºÂ·t bÄ‚Â n sĂ¡ÂºÂ½ hiĂ¡Â»Æ’n thĂ¡Â»â€¹ tĂ¡ÂºÂ¡i Ă„â€˜Ä‚Â¢y.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.textSoft,
@@ -1149,7 +1161,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  'Tóm tắt đặt bàn',
+                  'TÄ‚Â³m tĂ¡ÂºÂ¯t Ă„â€˜Ă¡ÂºÂ·t bÄ‚Â n',
                   style: TextStyle(
                     color: AppColors.textDark,
                     fontWeight: FontWeight.w900,
@@ -1162,40 +1174,46 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
           ),
           const Divider(height: 30),
           _BookingInformationLine(
-            label: 'Khách hàng',
+            label: 'KhÄ‚Â¡ch hÄ‚Â ng',
             value: booking.customerName,
           ),
           _BookingInformationLine(
-            label: 'Số điện thoại',
+            label: 'SĂ¡Â»â€˜ Ă„â€˜iĂ¡Â»â€¡n thoĂ¡ÂºÂ¡i',
             value: booking.phoneNumber,
           ),
           _BookingInformationLine(
-            label: 'Ngày đặt',
+            label: 'NgÄ‚Â y Ă„â€˜Ă¡ÂºÂ·t',
             value: booking.bookingDate,
           ),
-          _BookingInformationLine(label: 'Giờ đến', value: booking.bookingTime),
           _BookingInformationLine(
-            label: 'Chi nhánh',
+            label: 'GiĂ¡Â»Â Ă„â€˜Ă¡ÂºÂ¿n',
+            value: booking.bookingTime,
+          ),
+          _BookingInformationLine(
+            label: 'Chi nhÄ‚Â¡nh',
             value: booking.branchName,
           ),
-          _BookingInformationLine(label: 'Bàn', value: booking.tableName),
+          _BookingInformationLine(label: 'BÄ‚Â n', value: booking.tableName),
           _BookingInformationLine(
-            label: 'Số khách',
+            label: 'SĂ¡Â»â€˜ khÄ‚Â¡ch',
             value: '${booking.guestCount}',
           ),
-          _BookingInformationLine(label: 'Dịch vụ', value: booking.serviceName),
+          _BookingInformationLine(
+            label: 'DĂ¡Â»â€¹ch vĂ¡Â»Â¥',
+            value: booking.serviceName,
+          ),
           const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: booking.status == 'Khách đã đến'
+              onPressed: booking.status == 'KhÄ‚Â¡ch Ă„â€˜Ä‚Â£ Ă„â€˜Ă¡ÂºÂ¿n'
                   ? null
                   : _confirmCustomerArrival,
               icon: const Icon(Icons.how_to_reg_rounded),
               label: Text(
-                booking.status == 'Khách đã đến'
-                    ? 'Đã xác nhận khách đến'
-                    : 'Xác nhận khách đến',
+                booking.status == 'KhÄ‚Â¡ch Ă„â€˜Ä‚Â£ Ă„â€˜Ă¡ÂºÂ¿n'
+                    ? 'Ă„ÂÄ‚Â£ xÄ‚Â¡c nhĂ¡ÂºÂ­n khÄ‚Â¡ch Ă„â€˜Ă¡ÂºÂ¿n'
+                    : 'XÄ‚Â¡c nhĂ¡ÂºÂ­n khÄ‚Â¡ch Ă„â€˜Ă¡ÂºÂ¿n',
               ),
             ),
           ),
@@ -1205,7 +1223,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
   }
 
   Widget _buildMenuScreen() {
-    final filteredItems = _selectedMenuCategory == 'Tất cả'
+    final filteredItems = _selectedMenuCategory == 'TĂ¡ÂºÂ¥t cĂ¡ÂºÂ£'
         ? _menuItems
         : _menuItems
               .where((item) => item.category == _selectedMenuCategory)
@@ -1214,7 +1232,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 150),
       children: [
-        const SectionTitle(title: 'Menu gọi món'),
+        const SectionTitle(title: 'Menu gĂ¡Â»Âi mÄ‚Â³n'),
         const SizedBox(height: 12),
         SoftCard(
           color: Colors.white,
@@ -1223,7 +1241,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
               TextField(
                 controller: _customerNameController,
                 decoration: const InputDecoration(
-                  labelText: 'Tên khách hàng',
+                  labelText: 'TÄ‚Âªn khÄ‚Â¡ch hÄ‚Â ng',
                   prefixIcon: Icon(Icons.person_outline_rounded),
                 ),
               ),
@@ -1232,7 +1250,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                 controller: _customerPhoneController,
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
-                  labelText: 'Số điện thoại',
+                  labelText: 'SĂ¡Â»â€˜ Ă„â€˜iĂ¡Â»â€¡n thoĂ¡ÂºÂ¡i',
                   prefixIcon: Icon(Icons.phone_outlined),
                 ),
               ),
@@ -1240,8 +1258,8 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
               TextField(
                 controller: _tableController,
                 decoration: const InputDecoration(
-                  labelText: 'Số bàn',
-                  hintText: 'Ví dụ: A03',
+                  labelText: 'SĂ¡Â»â€˜ bÄ‚Â n',
+                  hintText: 'VÄ‚Â­ dĂ¡Â»Â¥: A03',
                   prefixIcon: Icon(Icons.table_restaurant_outlined),
                 ),
               ),
@@ -1350,7 +1368,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                 children: [
                   const Expanded(
                     child: Text(
-                      'Số món đã chọn',
+                      'SĂ¡Â»â€˜ mÄ‚Â³n Ă„â€˜Ä‚Â£ chĂ¡Â»Ân',
                       style: TextStyle(
                         color: AppColors.textSoft,
                         fontWeight: FontWeight.w700,
@@ -1371,7 +1389,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                 children: [
                   const Expanded(
                     child: Text(
-                      'Tổng tiền',
+                      'TĂ¡Â»â€¢ng tiĂ¡Â»Ân',
                       style: TextStyle(
                         color: AppColors.textDark,
                         fontWeight: FontWeight.w900,
@@ -1398,7 +1416,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                           ? null
                           : _clearCurrentOrder,
                       icon: const Icon(Icons.delete_outline_rounded),
-                      label: const Text('Xóa món'),
+                      label: const Text('XÄ‚Â³a mÄ‚Â³n'),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -1406,7 +1424,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                     child: FilledButton.icon(
                       onPressed: _createBill,
                       icon: const Icon(Icons.receipt_long_rounded),
-                      label: const Text('Xuất Bill'),
+                      label: const Text('XuĂ¡ÂºÂ¥t Bill'),
                     ),
                   ),
                 ],
@@ -1422,10 +1440,13 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
       children: [
-        SectionTitle(title: 'Danh sách Bill', actionText: '${_bills.length}'),
+        SectionTitle(
+          title: 'Danh sÄ‚Â¡ch Bill',
+          actionText: '${_bills.length}',
+        ),
         const SizedBox(height: 6),
         const Text(
-          'Danh sách hóa đơn được tạo trong ca làm hiện tại.',
+          'Danh sÄ‚Â¡ch hÄ‚Â³a Ă„â€˜Ă†Â¡n Ă„â€˜Ă†Â°Ă¡Â»Â£c tĂ¡ÂºÂ¡o trong ca lÄ‚Â m hiĂ¡Â»â€¡n tĂ¡ÂºÂ¡i.',
           style: TextStyle(color: AppColors.textSoft),
         ),
         const SizedBox(height: 18),
@@ -1441,7 +1462,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'Chưa có Bill nào được tạo.',
+                  'ChĂ†Â°a cÄ‚Â³ Bill nÄ‚Â o Ă„â€˜Ă†Â°Ă¡Â»Â£c tĂ¡ÂºÂ¡o.',
                   style: TextStyle(
                     color: AppColors.textSoft,
                     fontWeight: FontWeight.w700,
@@ -1491,7 +1512,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            '${bill.tableName} • ${bill.createdTime}',
+                            '${bill.tableName} Ă¢â‚¬Â¢ ${bill.createdTime}',
                             style: const TextStyle(
                               color: AppColors.textSoft,
                               fontSize: 12,
@@ -1529,7 +1550,7 @@ class _StaffCafeScreenState extends State<StaffCafeScreen> {
 }
 
 // ============================================================
-// WIDGET DÙNG CHUNG
+// WIDGET DÄ‚â„¢NG CHUNG
 // ============================================================
 
 class _CafeFeatureCard extends StatelessWidget {
@@ -1555,7 +1576,7 @@ class _CafeFeatureCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 27,
-            backgroundColor: Colors.white.withOpacity(0.8),
+            backgroundColor: Colors.white.withValues(alpha: 0.8),
             child: Icon(icon, color: AppColors.textDark, size: 27),
           ),
           const SizedBox(height: 10),
@@ -1762,7 +1783,7 @@ class _BookingStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = status == 'Khách đã đến'
+    final color = status == 'KhÄ‚Â¡ch Ă„â€˜Ä‚Â£ Ă„â€˜Ă¡ÂºÂ¿n'
         ? AppColors.mint
         : AppColors.primarySoft;
 
@@ -1820,7 +1841,7 @@ class _BillInformationLine extends StatelessWidget {
 }
 
 // ============================================================
-// DỮ LIỆU MẪU TRONG GIAO DIỆN
+// DĂ¡Â»Â® LIĂ¡Â»â€ U MĂ¡ÂºÂªU TRONG GIAO DIĂ¡Â»â€ N
 // ============================================================
 
 class _CafeTask {
@@ -1828,13 +1849,12 @@ class _CafeTask {
   final String title;
   final String description;
 
-  bool isCompleted;
+  bool isCompleted = false;
 
   _CafeTask({
     required this.time,
     required this.title,
     required this.description,
-    this.isCompleted = false,
   });
 }
 
@@ -1871,7 +1891,7 @@ class _CafeMenuItem {
   final IconData icon;
   final Color color;
 
-  int quantity;
+  int quantity = 0;
 
   _CafeMenuItem({
     required this.id,
@@ -1880,7 +1900,6 @@ class _CafeMenuItem {
     required this.price,
     required this.icon,
     required this.color,
-    this.quantity = 0,
   });
 }
 
@@ -1932,5 +1951,5 @@ String _formatMoney(int value) {
     result.write(text[index]);
   }
 
-  return '${result.toString()} đ';
+  return '${result.toString()} Ă„â€˜';
 }

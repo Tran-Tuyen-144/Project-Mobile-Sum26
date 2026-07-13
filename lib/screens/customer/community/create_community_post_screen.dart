@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../models/customer_profile.dart';
+import '../../../services/cloudinary_upload_service.dart';
 import '../../../services/customer_profile_service.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
@@ -12,10 +16,7 @@ import 'create_community_post_widgets.dart';
 class CreateCommunityPostScreen extends StatefulWidget {
   final CommunityPost? initialPost;
 
-  const CreateCommunityPostScreen({
-    super.key,
-    this.initialPost,
-  });
+  const CreateCommunityPostScreen({super.key, this.initialPost});
 
   bool get isEditMode => initialPost != null;
 
@@ -24,25 +25,28 @@ class CreateCommunityPostScreen extends StatefulWidget {
       _CreateCommunityPostScreenState();
 }
 
-class _CreateCommunityPostScreenState
-    extends State<CreateCommunityPostScreen> {
-  final TextEditingController contentController =
-  TextEditingController();
+class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
+  final TextEditingController contentController = TextEditingController();
 
   CustomerProfile? currentProfile;
 
   bool isLoadingProfile = true;
   bool isSavingIdentity = false;
+  bool isUploadingPost = false;
 
   String? loadingError;
 
-  // Mặc định đăng công khai giống Facebook.
   bool isAnonymous = false;
 
   String anonymousName = 'Ẩn danh PetHub';
   String anonymousAvatarIconKey = 'anonymous';
 
   String selectedCategory = '';
+
+  XFile? selectedImageFile;
+  String? currentImageUrl;
+  String? currentImagePublicId;
+  bool removeCurrentImage = false;
 
   final List<String> postCategories = const [
     'Mèo',
@@ -121,6 +125,8 @@ class _CreateCommunityPostScreenState
       contentController.text = oldPost.content;
       selectedCategory = oldPost.category;
       isAnonymous = oldPost.isAnonymous;
+      currentImageUrl = oldPost.imageUrl;
+      currentImagePublicId = oldPost.imagePublicId;
     }
 
     _loadCurrentProfile();
@@ -134,8 +140,7 @@ class _CreateCommunityPostScreenState
 
   Future<void> _loadCurrentProfile() async {
     try {
-      final profile =
-      await CustomerProfileService.getCurrentProfile();
+      final profile = await CustomerProfileService.getCurrentProfile();
 
       if (!mounted) return;
 
@@ -146,8 +151,7 @@ class _CreateCommunityPostScreenState
             ? 'Ẩn danh PetHub'
             : profile.anonymousName.trim();
 
-        anonymousAvatarIconKey =
-        profile.anonymousAvatarIconKey.trim().isEmpty
+        anonymousAvatarIconKey = profile.anonymousAvatarIconKey.trim().isEmpty
             ? 'anonymous'
             : profile.anonymousAvatarIconKey.trim();
 
@@ -158,10 +162,7 @@ class _CreateCommunityPostScreenState
       if (!mounted) return;
 
       setState(() {
-        loadingError = error
-            .toString()
-            .replaceFirst('Exception: ', '');
-
+        loadingError = error.toString().replaceFirst('Exception: ', '');
         isLoadingProfile = false;
       });
     }
@@ -178,7 +179,7 @@ class _CreateCommunityPostScreenState
 
   PetIconOption _findIconOption(String iconKey) {
     return iconOptions.firstWhere(
-          (option) => option.iconKey == iconKey,
+      (option) => option.iconKey == iconKey,
       orElse: () => iconOptions.first,
     );
   }
@@ -216,7 +217,7 @@ class _CreateCommunityPostScreenState
   }
 
   void _toggleAnonymous(bool value) {
-    if (isSavingIdentity) return;
+    if (isSavingIdentity || isUploadingPost) return;
 
     setState(() {
       isAnonymous = value;
@@ -224,11 +225,11 @@ class _CreateCommunityPostScreenState
   }
 
   Future<void> _changeAnonymousName() async {
-    if (!isAnonymous || isSavingIdentity) return;
+    if (!isAnonymous || isSavingIdentity || isUploadingPost) {
+      return;
+    }
 
-    final controller = TextEditingController(
-      text: anonymousName,
-    );
+    final controller = TextEditingController(text: anonymousName);
 
     final result = await showDialog<String>(
       context: context,
@@ -246,9 +247,7 @@ class _CreateCommunityPostScreenState
             decoration: const InputDecoration(
               labelText: 'Tên ẩn danh',
               hintText: 'Ví dụ: Mèo Cam 152',
-              prefixIcon: Icon(
-                Icons.person_outline_rounded,
-              ),
+              prefixIcon: Icon(Icons.person_outline_rounded),
             ),
             onSubmitted: (value) {
               Navigator.of(dialogContext).pop(value.trim());
@@ -263,9 +262,7 @@ class _CreateCommunityPostScreenState
             ),
             FilledButton.icon(
               onPressed: () {
-                Navigator.of(dialogContext).pop(
-                  controller.text.trim(),
-                );
+                Navigator.of(dialogContext).pop(controller.text.trim());
               },
               icon: const Icon(Icons.save_rounded),
               label: const Text('Lưu'),
@@ -282,9 +279,7 @@ class _CreateCommunityPostScreenState
     final cleanName = result.trim();
 
     if (cleanName.isEmpty) {
-      _showMessage(
-        'Tên ẩn danh không được để trống.',
-      );
+      _showMessage('Tên ẩn danh không được để trống.');
       return;
     }
 
@@ -295,9 +290,7 @@ class _CreateCommunityPostScreenState
     });
 
     try {
-      await CustomerProfileService.updateAnonymousName(
-        cleanName,
-      );
+      await CustomerProfileService.updateAnonymousName(cleanName);
 
       if (!mounted) return;
 
@@ -305,15 +298,11 @@ class _CreateCommunityPostScreenState
         anonymousName = cleanName;
       });
 
-      _showMessage(
-        'Đã cập nhật tên ẩn danh.',
-      );
+      _showMessage('Đã cập nhật tên ẩn danh.');
     } catch (error) {
       if (!mounted) return;
 
-      _showMessage(
-        error.toString().replaceFirst('Exception: ', ''),
-      );
+      _showMessage(error.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) {
         setState(() {
@@ -324,27 +313,21 @@ class _CreateCommunityPostScreenState
   }
 
   Future<void> _showAnonymousAvatarPicker() async {
-    if (!isAnonymous || isSavingIdentity) return;
+    if (!isAnonymous || isSavingIdentity || isUploadingPost) {
+      return;
+    }
 
-    final selectedOption =
-    await showModalBottomSheet<PetIconOption>(
+    final selectedOption = await showModalBottomSheet<PetIconOption>(
       context: context,
       backgroundColor: AppColors.cream,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (bottomSheetContext) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              18,
-              14,
-              18,
-              22,
-            ),
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 22),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -353,25 +336,20 @@ class _CreateCommunityPostScreenState
                   height: 5,
                   decoration: BoxDecoration(
                     color: AppColors.peach,
-                    borderRadius:
-                    BorderRadius.circular(99),
+                    borderRadius: BorderRadius.circular(99),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Chọn avatar ẩn danh',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 16),
                 GridView.builder(
                   itemCount: iconOptions.length,
                   shrinkWrap: true,
-                  physics:
-                  const NeverScrollableScrollPhysics(),
-                  gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 4,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
@@ -380,26 +358,18 @@ class _CreateCommunityPostScreenState
                   itemBuilder: (context, index) {
                     final option = iconOptions[index];
 
-                    final isSelected =
-                        option.iconKey ==
-                            anonymousAvatarIconKey;
+                    final isSelected = option.iconKey == anonymousAvatarIconKey;
 
                     return InkWell(
-                      borderRadius:
-                      BorderRadius.circular(22),
+                      borderRadius: BorderRadius.circular(22),
                       onTap: () {
-                        Navigator.of(
-                          bottomSheetContext,
-                        ).pop(option);
+                        Navigator.of(bottomSheetContext).pop(option);
                       },
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? option.color
-                              : Colors.white,
-                          borderRadius:
-                          BorderRadius.circular(22),
+                          color: isSelected ? option.color : Colors.white,
+                          borderRadius: BorderRadius.circular(22),
                           border: Border.all(
                             color: isSelected
                                 ? AppColors.primary
@@ -408,14 +378,12 @@ class _CreateCommunityPostScreenState
                           ),
                         ),
                         child: Column(
-                          mainAxisAlignment:
-                          MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             CircleAvatar(
                               radius: 22,
-                              backgroundColor:
-                              Colors.white.withOpacity(
-                                0.85,
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.85,
                               ),
                               child: Icon(
                                 option.icon,
@@ -426,13 +394,10 @@ class _CreateCommunityPostScreenState
                             Text(
                               option.label,
                               maxLines: 1,
-                              overflow:
-                              TextOverflow.ellipsis,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color:
-                                AppColors.textDark,
-                                fontWeight:
-                                FontWeight.w800,
+                                color: AppColors.textDark,
+                                fontWeight: FontWeight.w800,
                                 fontSize: 11,
                               ),
                             ),
@@ -451,8 +416,7 @@ class _CreateCommunityPostScreenState
 
     if (selectedOption == null) return;
 
-    if (selectedOption.iconKey ==
-        anonymousAvatarIconKey) {
+    if (selectedOption.iconKey == anonymousAvatarIconKey) {
       return;
     }
 
@@ -461,27 +425,21 @@ class _CreateCommunityPostScreenState
     });
 
     try {
-      await CustomerProfileService
-          .updateAnonymousAvatarIcon(
+      await CustomerProfileService.updateAnonymousAvatarIcon(
         selectedOption.iconKey,
       );
 
       if (!mounted) return;
 
       setState(() {
-        anonymousAvatarIconKey =
-            selectedOption.iconKey;
+        anonymousAvatarIconKey = selectedOption.iconKey;
       });
 
-      _showMessage(
-        'Đã cập nhật avatar ẩn danh.',
-      );
+      _showMessage('Đã cập nhật avatar ẩn danh.');
     } catch (error) {
       if (!mounted) return;
 
-      _showMessage(
-        error.toString().replaceFirst('Exception: ', ''),
-      );
+      _showMessage(error.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) {
         setState(() {
@@ -492,23 +450,18 @@ class _CreateCommunityPostScreenState
   }
 
   void _showTagPicker() {
+    if (isUploadingPost) return;
+
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.cream,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (bottomSheetContext) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              18,
-              14,
-              18,
-              22,
-            ),
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 22),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -517,25 +470,20 @@ class _CreateCommunityPostScreenState
                   height: 5,
                   decoration: BoxDecoration(
                     color: AppColors.peach,
-                    borderRadius:
-                    BorderRadius.circular(99),
+                    borderRadius: BorderRadius.circular(99),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Chọn tag bài viết',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 14),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
-                  children:
-                  postCategories.map((category) {
-                    final selected =
-                        selectedCategory == category;
+                  children: postCategories.map((category) {
+                    final selected = selectedCategory == category;
 
                     return ChoiceChip(
                       label: Text('#$category'),
@@ -545,9 +493,7 @@ class _CreateCommunityPostScreenState
                           selectedCategory = category;
                         });
 
-                        Navigator.of(
-                          bottomSheetContext,
-                        ).pop();
+                        Navigator.of(bottomSheetContext).pop();
                       },
                     );
                   }).toList(),
@@ -561,16 +507,10 @@ class _CreateCommunityPostScreenState
                         selectedCategory = '';
                       });
 
-                      Navigator.of(
-                        bottomSheetContext,
-                      ).pop();
+                      Navigator.of(bottomSheetContext).pop();
                     },
-                    icon: const Icon(
-                      Icons.close_rounded,
-                    ),
-                    label: const Text(
-                      'Không gắn tag',
-                    ),
+                    icon: const Icon(Icons.close_rounded),
+                    label: const Text('Không gắn tag'),
                   ),
                 ),
               ],
@@ -581,89 +521,251 @@ class _CreateCommunityPostScreenState
     );
   }
 
-  void _submitPost() {
+  Future<void> _pickImageFromGallery() async {
+    if (isUploadingPost) return;
+
+    try {
+      final image = await CloudinaryUploadService.pickImageFromGallery();
+
+      if (image == null) return;
+
+      setState(() {
+        selectedImageFile = image;
+        removeCurrentImage = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      _showMessage('Không chọn được ảnh: $error');
+    }
+  }
+
+  void _removeSelectedImage() {
+    if (isUploadingPost) return;
+
+    setState(() {
+      selectedImageFile = null;
+      removeCurrentImage = true;
+    });
+  }
+
+  Future<void> _submitPost() async {
     final profile = currentProfile;
 
     if (profile == null) {
-      _showMessage(
-        'Không tìm thấy hồ sơ người dùng.',
-      );
+      _showMessage('Không tìm thấy hồ sơ người dùng.');
       return;
     }
 
     if (isSavingIdentity) {
-      _showMessage(
-        'Đang lưu danh tính, vui lòng đợi.',
-      );
+      _showMessage('Đang lưu danh tính, vui lòng đợi.');
       return;
     }
 
-    final content =
-    contentController.text.trim();
+    if (isUploadingPost) return;
+
+    final content = contentController.text.trim();
 
     if (content.isEmpty) {
-      _showMessage(
-        'Em nhập nội dung bài viết trước nha.',
-      );
+      _showMessage('Em nhập nội dung bài viết trước nha.');
       return;
     }
 
-    final authorName =
-    _currentAuthorName(profile);
+    setState(() {
+      isUploadingPost = true;
+    });
 
-    final avatarIconKey =
-    _currentAvatarIconKey(profile);
+    try {
+      final authorName = _currentAuthorName(profile);
+      final avatarIconKey = _currentAvatarIconKey(profile);
 
-    final authorRole = isAnonymous
-        ? 'Thành viên ẩn danh'
-        : 'Thành viên PetHub';
+      final authorRole = isAnonymous
+          ? 'Thành viên ẩn danh'
+          : 'Thành viên PetHub';
 
-    final colorKey =
-    CommunityPost.colorKeyFromIconKey(
-      avatarIconKey,
-    );
+      final colorKey = CommunityPost.colorKeyFromIconKey(avatarIconKey);
 
-    final oldPost = widget.initialPost;
+      final oldPost = widget.initialPost;
 
-    final CommunityPost resultPost;
+      String? finalImageUrl = currentImageUrl;
+      String? finalImagePublicId = currentImagePublicId;
 
-    if (oldPost == null) {
-      resultPost = CommunityPost(
-        id: DateTime.now().millisecondsSinceEpoch,
-        authorId: profile.uid,
-        authorName: authorName,
-        authorRole: authorRole,
-        isAnonymous: isAnonymous,
-        timeAgo: 'Vừa xong',
-        content: content,
-        category: selectedCategory,
-        likes: 0,
-        likedBy: const [],
-        avatarIconKey: avatarIconKey,
-        colorKey: colorKey,
-        commentList: const [],
-      );
-    } else {
-      resultPost = oldPost.copyWith(
-        authorId: profile.uid,
-        authorName: authorName,
-        authorRole: authorRole,
-        isAnonymous: isAnonymous,
-        content: content,
-        category: selectedCategory,
-        avatarIconKey: avatarIconKey,
-        colorKey: colorKey,
-        timeAgo: 'Vừa chỉnh sửa',
-      );
+      if (removeCurrentImage) {
+        finalImageUrl = null;
+        finalImagePublicId = null;
+      }
+
+      if (selectedImageFile != null) {
+        final uploadResult = await CloudinaryUploadService.uploadImageFile(
+          selectedImageFile!,
+        );
+
+        finalImageUrl = CloudinaryUploadService.optimizedImageUrl(
+          uploadResult.imageUrl,
+        );
+
+        finalImagePublicId = uploadResult.publicId;
+      }
+
+      final CommunityPost resultPost;
+
+      if (oldPost == null) {
+        resultPost = CommunityPost(
+          id: DateTime.now().millisecondsSinceEpoch,
+          authorId: profile.uid,
+          authorName: authorName,
+          authorRole: authorRole,
+          isAnonymous: isAnonymous,
+          timeAgo: 'Vừa xong',
+          content: content,
+          category: selectedCategory,
+          likes: 0,
+          likedBy: const [],
+          avatarIconKey: avatarIconKey,
+          colorKey: colorKey,
+          imageUrl: finalImageUrl,
+          imagePublicId: finalImagePublicId,
+          commentList: const [],
+        );
+      } else {
+        resultPost = oldPost.copyWith(
+          authorId: profile.uid,
+          authorName: authorName,
+          authorRole: authorRole,
+          isAnonymous: isAnonymous,
+          content: content,
+          category: selectedCategory,
+          avatarIconKey: avatarIconKey,
+          colorKey: colorKey,
+          imageUrl: finalImageUrl,
+          imagePublicId: finalImagePublicId,
+          removeCloudinaryImage:
+              finalImageUrl == null && finalImagePublicId == null,
+          timeAgo: 'Vừa chỉnh sửa',
+        );
+      }
+
+      if (!mounted) return;
+
+      context.pop(resultPost);
+    } catch (error) {
+      if (!mounted) return;
+
+      _showMessage('Không đăng được ảnh/bài viết: $error');
+    } finally {
+      if (mounted) {
+        setState(() {
+          isUploadingPost = false;
+        });
+      }
     }
-
-    context.pop(resultPost);
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Widget _buildImagePickerSection() {
+    final hasSelectedImage = selectedImageFile != null;
+    final hasOldImage =
+        currentImageUrl != null &&
+        currentImageUrl!.trim().isNotEmpty &&
+        !removeCurrentImage;
+
+    return SoftCard(
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const CircleAvatar(
+                radius: 24,
+                backgroundColor: AppColors.peach,
+                child: Icon(Icons.image_rounded, color: AppColors.primary),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ảnh bài viết',
+                      style: TextStyle(
+                        color: AppColors.textDark,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Ảnh sẽ được lưu trên Cloudinary.',
+                      style: TextStyle(
+                        color: AppColors.textSoft,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: isUploadingPost ? null : _pickImageFromGallery,
+                icon: const Icon(Icons.add_photo_alternate_rounded),
+                label: Text(
+                  hasSelectedImage || hasOldImage ? 'Đổi ảnh' : 'Chọn ảnh',
+                ),
+              ),
+            ],
+          ),
+          if (hasSelectedImage || hasOldImage) ...[
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: AspectRatio(
+                aspectRatio: 16 / 10,
+                child: hasSelectedImage
+                    ? Image.file(
+                        File(selectedImageFile!.path),
+                        fit: BoxFit.cover,
+                      )
+                    : Image.network(
+                        currentImageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppColors.cream,
+                            alignment: Alignment.center,
+                            child: const Text(
+                              'Không tải được ảnh.',
+                              style: TextStyle(
+                                color: AppColors.textSoft,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: isUploadingPost ? null : _removeSelectedImage,
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.redAccent,
+                ),
+                label: const Text(
+                  'Gỡ ảnh khỏi bài viết',
+                  style: TextStyle(color: Colors.redAccent),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -671,13 +773,10 @@ class _CreateCommunityPostScreenState
   @override
   Widget build(BuildContext context) {
     if (isLoadingProfile) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
-    if (loadingError != null ||
-        currentProfile == null) {
+    if (loadingError != null || currentProfile == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -691,8 +790,7 @@ class _CreateCommunityPostScreenState
               ),
               const SizedBox(height: 14),
               Text(
-                loadingError ??
-                    'Không tìm thấy hồ sơ người dùng.',
+                loadingError ?? 'Không tìm thấy hồ sơ người dùng.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: AppColors.textDark,
@@ -702,9 +800,7 @@ class _CreateCommunityPostScreenState
               const SizedBox(height: 18),
               ElevatedButton.icon(
                 onPressed: _retryLoadProfile,
-                icon: const Icon(
-                  Icons.refresh_rounded,
-                ),
+                icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Thử lại'),
               ),
             ],
@@ -715,177 +811,188 @@ class _CreateCommunityPostScreenState
 
     final profile = currentProfile!;
 
-    final authorName =
-    _currentAuthorName(profile);
+    final authorName = _currentAuthorName(profile);
+    final avatarIconKey = _currentAvatarIconKey(profile);
+    final selectedOption = _findIconOption(avatarIconKey);
 
-    final avatarIconKey =
-    _currentAvatarIconKey(profile);
-
-    final selectedOption =
-    _findIconOption(avatarIconKey);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        18,
-        8,
-        18,
-        26,
-      ),
-      child: Column(
-        crossAxisAlignment:
-        CrossAxisAlignment.start,
-        children: [
-          CreatePostHeader(
-            title: widget.isEditMode
-                ? 'Chỉnh sửa bài viết'
-                : 'Tạo bài viết',
-            subtitle: isAnonymous
-                ? 'Bạn đang đăng bằng danh tính ẩn danh.'
-                : 'Bài viết đang sử dụng tên và avatar trong trang cá nhân.',
-          ),
-
-          const SizedBox(height: 20),
-
-          SoftCard(
-            color: Colors.white,
-            child: SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              value: isAnonymous,
-              onChanged: isSavingIdentity
-                  ? null
-                  : _toggleAnonymous,
-              title: const Text(
-                'Đăng ẩn danh',
-                style: TextStyle(
-                  color: AppColors.textDark,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              subtitle: Text(
-                isAnonymous
-                    ? 'Người khác sẽ thấy tên và avatar ẩn danh.'
-                    : 'Người khác sẽ thấy tên hiển thị trong trang cá nhân.',
-              ),
-              activeColor: AppColors.primary,
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          _AuthorIdentityCard(
-            authorName: authorName,
-            selectedOption: selectedOption,
-            isAnonymous: isAnonymous,
-            isSaving: isSavingIdentity,
-            onAvatarTap: isAnonymous
-                ? _showAnonymousAvatarPicker
-                : null,
-            onNameTap: isAnonymous
-                ? _changeAnonymousName
-                : null,
-          ),
-
-          if (isSavingIdentity) ...[
-            const SizedBox(height: 12),
-            const LinearProgressIndicator(),
-          ],
-
-          const SizedBox(height: 24),
-
-          const SectionTitle(
-            title: 'Nội dung bài viết',
-          ),
-
-          const SizedBox(height: 12),
-
-          SoftCard(
-            color: Colors.white,
-            child: TextField(
-              controller: contentController,
-              maxLines: 6,
-              minLines: 4,
-              onChanged: (_) {
-                setState(() {});
-              },
-              decoration: const InputDecoration(
-                hintText:
-                'Ví dụ: Hôm nay bé mèo nhà mình hơi lười ăn, mọi người có kinh nghiệm gì không?',
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          const SectionTitle(
-            title: 'Tag bài viết',
-          ),
-
-          const SizedBox(height: 12),
-
-          TagPickerCard(
-            selectedCategory: selectedCategory,
-            onTap: _showTagPicker,
-            onClear: () {
-              setState(() {
-                selectedCategory = '';
-              });
-            },
-          ),
-
-          const SizedBox(height: 24),
-
-          const SectionTitle(
-            title: 'Xem trước bài viết',
-          ),
-
-          const SizedBox(height: 12),
-
-          PostPreviewCard(
-            authorName: authorName,
-            content: contentController.text,
-            category: selectedCategory,
-            icon: selectedOption.icon,
-            color: selectedOption.color,
-          ),
-
-          const SizedBox(height: 26),
-
-          Row(
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 26),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: isSavingIdentity
-                      ? null
-                      : () => context.pop(),
-                  icon: const Icon(
-                    Icons.close_rounded,
+              CreatePostHeader(
+                title: widget.isEditMode
+                    ? 'Chỉnh sửa bài viết'
+                    : 'Tạo bài viết',
+                subtitle: isAnonymous
+                    ? 'Bạn đang đăng bằng danh tính ẩn danh.'
+                    : 'Bài viết đang sử dụng tên và avatar trong trang cá nhân.',
+              ),
+
+              const SizedBox(height: 20),
+
+              SoftCard(
+                color: Colors.white,
+                child: SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: isAnonymous,
+                  onChanged: isUploadingPost ? null : _toggleAnonymous,
+                  title: const Text(
+                    'Đăng ẩn danh',
+                    style: TextStyle(
+                      color: AppColors.textDark,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                  label: const Text('Hủy'),
+                  subtitle: Text(
+                    isAnonymous
+                        ? 'Người khác sẽ thấy tên và avatar ẩn danh.'
+                        : 'Người khác sẽ thấy tên hiển thị trong trang cá nhân.',
+                  ),
+                  activeThumbColor: AppColors.primary,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: isSavingIdentity
-                      ? null
-                      : _submitPost,
-                  icon: Icon(
-                    widget.isEditMode
-                        ? Icons.save_rounded
-                        : Icons.send_rounded,
-                  ),
-                  label: Text(
-                    widget.isEditMode
-                        ? 'Lưu'
-                        : 'Đăng bài',
+
+              const SizedBox(height: 20),
+
+              _AuthorIdentityCard(
+                authorName: authorName,
+                selectedOption: selectedOption,
+                isAnonymous: isAnonymous,
+                isSaving: isSavingIdentity || isUploadingPost,
+                onAvatarTap: isAnonymous ? _showAnonymousAvatarPicker : null,
+                onNameTap: isAnonymous ? _changeAnonymousName : null,
+              ),
+
+              if (isSavingIdentity) ...[
+                const SizedBox(height: 12),
+                const LinearProgressIndicator(),
+              ],
+
+              const SizedBox(height: 24),
+
+              const SectionTitle(title: 'Nội dung bài viết'),
+
+              const SizedBox(height: 12),
+
+              SoftCard(
+                color: Colors.white,
+                child: TextField(
+                  controller: contentController,
+                  enabled: !isUploadingPost,
+                  maxLines: 6,
+                  minLines: 4,
+                  onChanged: (_) {
+                    setState(() {});
+                  },
+                  decoration: const InputDecoration(
+                    hintText:
+                        'Ví dụ: Hôm nay bé mèo nhà mình hơi lười ăn, mọi người có kinh nghiệm gì không?',
+                    border: InputBorder.none,
                   ),
                 ),
+              ),
+
+              const SizedBox(height: 24),
+
+              const SectionTitle(title: 'Ảnh minh họa'),
+
+              const SizedBox(height: 12),
+
+              _buildImagePickerSection(),
+
+              const SizedBox(height: 24),
+
+              const SectionTitle(title: 'Tag bài viết'),
+
+              const SizedBox(height: 12),
+
+              TagPickerCard(
+                selectedCategory: selectedCategory,
+                onTap: _showTagPicker,
+                onClear: () {
+                  setState(() {
+                    selectedCategory = '';
+                  });
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              const SectionTitle(title: 'Xem trước bài viết'),
+
+              const SizedBox(height: 12),
+
+              PostPreviewCard(
+                authorName: authorName,
+                content: contentController.text,
+                category: selectedCategory,
+                icon: selectedOption.icon,
+                color: selectedOption.color,
+              ),
+
+              const SizedBox(height: 26),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: isUploadingPost ? null : () => context.pop(),
+                      icon: const Icon(Icons.close_rounded),
+                      label: const Text('Hủy'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: isUploadingPost ? null : _submitPost,
+                      icon: Icon(
+                        widget.isEditMode
+                            ? Icons.save_rounded
+                            : Icons.send_rounded,
+                      ),
+                      label: Text(
+                        isUploadingPost
+                            ? 'Đang đăng...'
+                            : widget.isEditMode
+                            ? 'Lưu'
+                            : 'Đăng bài',
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        ),
+
+        if (isUploadingPost)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.08),
+              child: const Center(
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 14),
+                        Text(
+                          'Đang upload ảnh và lưu bài viết...',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -915,16 +1022,13 @@ class _AuthorIdentityCard extends StatelessWidget {
         children: [
           InkWell(
             borderRadius: BorderRadius.circular(99),
-            onTap: isAnonymous && !isSaving
-                ? onAvatarTap
-                : null,
+            onTap: isAnonymous && !isSaving ? onAvatarTap : null,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 CircleAvatar(
                   radius: 32,
-                  backgroundColor:
-                  selectedOption.color,
+                  backgroundColor: selectedOption.color,
                   child: Icon(
                     selectedOption.icon,
                     color: AppColors.textDark,
@@ -952,22 +1056,15 @@ class _AuthorIdentityCard extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(width: 14),
-
           Expanded(
             child: InkWell(
               borderRadius: BorderRadius.circular(14),
-              onTap: isAnonymous && !isSaving
-                  ? onNameTap
-                  : null,
+              onTap: isAnonymous && !isSaving ? onNameTap : null,
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       authorName,
@@ -992,14 +1089,9 @@ class _AuthorIdentityCard extends StatelessWidget {
               ),
             ),
           ),
-
           Icon(
-            isAnonymous
-                ? Icons.edit_rounded
-                : Icons.lock_outline_rounded,
-            color: isAnonymous
-                ? AppColors.primary
-                : AppColors.textSoft,
+            isAnonymous ? Icons.edit_rounded : Icons.lock_outline_rounded,
+            color: isAnonymous ? AppColors.primary : AppColors.textSoft,
           ),
         ],
       ),

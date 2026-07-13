@@ -15,11 +15,7 @@ class ServiceHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            AppColors.mint,
-            AppColors.peach,
-            AppColors.cream,
-          ],
+          colors: [AppColors.mint, AppColors.peach, AppColors.cream],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -30,7 +26,7 @@ class ServiceHeader extends StatelessWidget {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.82),
+              color: Colors.white.withValues(alpha: 0.82),
               borderRadius: BorderRadius.circular(24),
             ),
             child: const Icon(
@@ -51,9 +47,9 @@ class ServiceHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'Tìm spa, khách sạn thú cưng, phòng khám và dịch vụ chăm sóc gần bạn.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
               ],
             ),
@@ -83,7 +79,7 @@ class CategorySelector extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final category = categories[index];
           final isSelected = selectedCategory == category;
@@ -120,11 +116,7 @@ class ServiceCard extends StatelessWidget {
   final PetService service;
   final VoidCallback onTap;
 
-  const ServiceCard({
-    super.key,
-    required this.service,
-    required this.onTap,
-  });
+  const ServiceCard({super.key, required this.service, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -136,11 +128,7 @@ class ServiceCard extends StatelessWidget {
           CircleAvatar(
             radius: 32,
             backgroundColor: service.color,
-            child: Icon(
-              service.icon,
-              color: AppColors.textDark,
-              size: 30,
-            ),
+            child: Icon(service.icon, color: AppColors.textDark, size: 30),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -149,18 +137,18 @@ class ServiceCard extends StatelessWidget {
               children: [
                 Text(
                   service.name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 16,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontSize: 16),
                 ),
                 const SizedBox(height: 5),
                 Text(
                   service.description,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.35,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.35),
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -226,10 +214,7 @@ class ServiceCard extends StatelessWidget {
 class ServiceDetailSheet extends StatelessWidget {
   final PetService service;
 
-  const ServiceDetailSheet({
-    super.key,
-    required this.service,
-  });
+  const ServiceDetailSheet({super.key, required this.service});
 
   @override
   Widget build(BuildContext context) {
@@ -237,9 +222,7 @@ class ServiceDetailSheet extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 18, 22, 26),
       decoration: const BoxDecoration(
         color: AppColors.cream,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(32),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: SafeArea(
         top: false,
@@ -250,7 +233,7 @@ class ServiceDetailSheet extends StatelessWidget {
               width: 48,
               height: 5,
               decoration: BoxDecoration(
-                color: AppColors.textSoft.withOpacity(0.35),
+                color: AppColors.textSoft.withValues(alpha: 0.35),
                 borderRadius: BorderRadius.circular(99),
               ),
             ),
@@ -258,11 +241,7 @@ class ServiceDetailSheet extends StatelessWidget {
             CircleAvatar(
               radius: 44,
               backgroundColor: service.color,
-              child: Icon(
-                service.icon,
-                color: AppColors.textDark,
-                size: 42,
-              ),
+              child: Icon(service.icon, color: AppColors.textDark, size: 42),
             ),
             const SizedBox(height: 16),
             Text(
@@ -274,9 +253,9 @@ class ServiceDetailSheet extends StatelessWidget {
             Text(
               service.description,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                height: 1.45,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(height: 1.45),
             ),
             const SizedBox(height: 18),
             SoftCard(
@@ -317,9 +296,7 @@ class ServiceDetailSheet extends StatelessWidget {
                   Navigator.pop(context);
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Đã chọn ${service.name}.'),
-                    ),
+                    SnackBar(content: Text('Đã chọn ${service.name}.')),
                   );
                 },
                 icon: const Icon(Icons.calendar_month_rounded),
@@ -348,16 +325,9 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          color: AppColors.primary,
-          size: 20,
-        ),
+        Icon(icon, color: AppColors.primary, size: 20),
         const SizedBox(width: 10),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
         const Spacer(),
         Text(
           value,

@@ -1,27 +1,20 @@
 import 'package:flutter/material.dart';
 
 class BookingPetScreen extends StatefulWidget {
-
   final String petName;
 
-  const BookingPetScreen({
-    super.key,
-    required this.petName,
-  });
+  const BookingPetScreen({super.key, required this.petName});
 
   @override
   State<BookingPetScreen> createState() => _BookingPetScreenState();
 }
 
 class _BookingPetScreenState extends State<BookingPetScreen> {
-
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController tableController =
-  TextEditingController();
+  final TextEditingController tableController = TextEditingController();
 
-  final TextEditingController hourController =
-  TextEditingController();
+  final TextEditingController hourController = TextEditingController();
 
   @override
   void dispose() {
@@ -32,11 +25,8 @@ class _BookingPetScreenState extends State<BookingPetScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Đặt bàn"),
-      ),
+      appBar: AppBar(title: const Text("Đặt bàn")),
       body: Padding(
         padding: const EdgeInsets.all(20),
 
@@ -45,7 +35,6 @@ class _BookingPetScreenState extends State<BookingPetScreen> {
 
           child: Column(
             children: [
-
               Text(
                 "Đặt bàn với ${widget.petName}",
                 style: const TextStyle(
@@ -84,7 +73,6 @@ class _BookingPetScreenState extends State<BookingPetScreen> {
 
               Row(
                 children: [
-
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -102,13 +90,9 @@ class _BookingPetScreenState extends State<BookingPetScreen> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-
                         if (_formKey.currentState!.validate()) {
-
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Đặt bàn thành công"),
-                            ),
+                            const SnackBar(content: Text("Đặt bàn thành công")),
                           );
 
                           Navigator.pop(context);
@@ -118,7 +102,7 @@ class _BookingPetScreenState extends State<BookingPetScreen> {
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),

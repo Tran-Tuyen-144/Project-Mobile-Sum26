@@ -11,7 +11,12 @@ class AdminDashboardScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Tổng quan hôm nay', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            'Tổng quan hôm nay',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -37,13 +42,18 @@ class AdminDashboardScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          Text('Biểu đồ xu hướng', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            'Biểu đồ xu hướng',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 12),
           Container(
             height: 180,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: AppColors.primarySoft.withOpacity(0.5),
+              color: AppColors.primarySoft.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Center(
@@ -58,24 +68,41 @@ class AdminDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(BuildContext context, {required String title, required String value, required IconData icon, required Color color}) {
+  Widget _buildStatCard(
+    BuildContext context, {
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.4),
+        color: color.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            backgroundColor: Colors.white.withOpacity(0.6),
+            backgroundColor: Colors.white.withValues(alpha: 0.6),
             child: Icon(icon, color: AppColors.textDark),
           ),
           const SizedBox(height: 16),
-          Text(title, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSoft)),
+          Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSoft),
+          ),
           const SizedBox(height: 4),
-          Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
         ],
       ),
     );

@@ -23,13 +23,19 @@ class AdminStaffDetailScreen extends StatelessWidget {
             Center(
               child: CircleAvatar(
                 radius: 50,
-                backgroundColor: AppColors.mint.withOpacity(0.3),
+                backgroundColor: AppColors.mint.withValues(alpha: 0.3),
                 child: Icon(Icons.person, size: 50, color: AppColors.mint),
               ),
             ),
             const SizedBox(height: 16),
-            Text(staff['name'], style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            Text(staff['role'], style: const TextStyle(fontSize: 16, color: AppColors.textSoft)),
+            Text(
+              staff['name'],
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              staff['role'],
+              style: const TextStyle(fontSize: 16, color: AppColors.textSoft),
+            ),
             const SizedBox(height: 32),
             _buildDetailRow('Mã nhân viên', staff['id']),
             _buildDetailRow('Ngày sinh', staff['dob']),
@@ -49,10 +55,19 @@ class AdminStaffDetailScreen extends StatelessWidget {
         children: [
           SizedBox(
             width: 120,
-            child: Text(label, style: const TextStyle(color: AppColors.textSoft, fontWeight: FontWeight.bold)),
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.textSoft,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           Expanded(
-            child: Text(value, style: const TextStyle(color: AppColors.textDark)),
+            child: Text(
+              value,
+              style: const TextStyle(color: AppColors.textDark),
+            ),
           ),
         ],
       ),

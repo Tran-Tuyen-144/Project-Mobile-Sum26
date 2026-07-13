@@ -11,9 +11,7 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const PetHubApp());
 }
@@ -39,7 +37,7 @@ class _PetHubAppState extends State<PetHubApp> {
 
   void _listenDeepLinks() {
     _linkSubscription = _appLinks.uriLinkStream.listen(
-          (Uri uri) {
+      (Uri uri) {
         _handleDeepLink(uri);
       },
       onError: (Object error) {

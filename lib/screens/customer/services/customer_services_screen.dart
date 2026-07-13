@@ -23,7 +23,7 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
 
       final matchKeyword =
           service.name.toLowerCase().contains(keyword.toLowerCase()) ||
-              service.description.toLowerCase().contains(keyword.toLowerCase());
+          service.description.toLowerCase().contains(keyword.toLowerCase());
 
       return matchCategory && matchKeyword;
     }).toList();
@@ -48,10 +48,7 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
             },
             decoration: const InputDecoration(
               hintText: 'Tìm spa, khách sạn, thú y...',
-              prefixIcon: Icon(
-                Icons.search_rounded,
-                color: AppColors.primary,
-              ),
+              prefixIcon: Icon(Icons.search_rounded, color: AppColors.primary),
             ),
           ),
 
@@ -84,7 +81,7 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
             itemCount: filteredServices.length,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final service = filteredServices[index];
 
