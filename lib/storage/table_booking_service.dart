@@ -69,9 +69,27 @@ class TableBookingService {
   static Future<void> bookTable(String branch, int tableId) async {
     initializeTables();
     final tables = _tablesByBranch[branch] ?? [];
+    final canBook = tables.any(
+      (table) => table.tableId == tableId && !table.isBooked,
+    );
+    if (!canBook) {
+      throw StateError('Bàn này không còn trống.');
+    }
     _tablesByBranch[branch] = tables.map((table) {
       return table.tableId == tableId
           ? table.copyWith(status: 'booked')
+          : table;
+    }).toList();
+    _emit(branch);
+  }
+
+  /// Opens a table again after its customer cancels the booking.
+  static Future<void> releaseTable(String branch, int tableId) async {
+    initializeTables();
+    final tables = _tablesByBranch[branch] ?? [];
+    _tablesByBranch[branch] = tables.map((table) {
+      return table.tableId == tableId
+          ? table.copyWith(status: 'available')
           : table;
     }).toList();
     _emit(branch);

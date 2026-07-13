@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../storage/service_booking_storage.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
+import '../../../widgets/soft_card.dart';
 import 'pet_service.dart';
+import 'featured_service_screen.dart';
 import 'service_widgets.dart';
 
 class CustomerServicesScreen extends StatefulWidget {
@@ -15,6 +18,21 @@ class CustomerServicesScreen extends StatefulWidget {
 class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
   String selectedCategory = 'Tất cả';
   String keyword = '';
+  List<ServiceBookingRequest> _requests = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRequests();
+  }
+
+  Future<void> _loadRequests() async {
+    final requests = await ServiceBookingStorage.loadRequests();
+    if (!mounted) return;
+    setState(() {
+      _requests = requests;
+    });
+  }
 
   List<PetService> get filteredServices {
     return petServices.where((service) {
@@ -88,20 +106,123 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
               return ServiceCard(
                 service: service,
                 onTap: () {
+                  if (FeaturedServiceScreen.supports(service)) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => FeaturedServiceScreen(service: service),
+                      ),
+                    );
+                    return;
+                  }
                   showModalBottomSheet(
                     context: context,
                     backgroundColor: Colors.transparent,
                     isScrollControlled: true,
                     builder: (_) {
-                      return ServiceDetailSheet(service: service);
+                      return ServiceDetailSheet(
+                        service: service,
+                        onRequestSubmitted: _loadRequests,
+                      );
                     },
                   );
                 },
               );
             },
           ),
+
+          if (_requests.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            SectionTitle(
+              title: 'Lịch dịch vụ của bạn',
+              actionText: '${_requests.length} lịch',
+            ),
+            const SizedBox(height: 12),
+            _ServiceRequestList(requests: _requests.take(4).toList()),
+          ],
         ],
       ),
     );
+  }
+}
+
+class _ServiceRequestList extends StatelessWidget {
+  final List<ServiceBookingRequest> requests;
+
+  const _ServiceRequestList({required this.requests});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: requests.map((request) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: SoftCard(
+            color: Colors.white,
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: _statusColor(request.status),
+                  child: Icon(
+                    _statusIcon(request.status),
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        request.serviceName,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(fontSize: 15),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${request.petName} • ${request.startDay}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _statusColor(request.status),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    request.status.label,
+                    style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Color _statusColor(ServiceBookingStatus status) {
+    return switch (status) {
+      ServiceBookingStatus.sent => AppColors.sky,
+      ServiceBookingStatus.confirmed => AppColors.mint,
+    };
+  }
+
+  IconData _statusIcon(ServiceBookingStatus status) {
+    return switch (status) {
+      ServiceBookingStatus.sent => Icons.notifications_active_rounded,
+      ServiceBookingStatus.confirmed => Icons.check_circle_rounded,
+    };
   }
 }

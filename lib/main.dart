@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_links/app_links.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
@@ -11,7 +12,14 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (error, stackTrace) {
+    // Keep the offline-first interface usable when Firebase is unavailable.
+    debugPrint('Firebase initialization failed: $error\n$stackTrace');
+  }
 
   runApp(const PetHubApp());
 }
@@ -24,19 +32,20 @@ class PetHubApp extends StatefulWidget {
 }
 
 class _PetHubAppState extends State<PetHubApp> {
-  late final AppLinks _appLinks;
+  AppLinks? _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
 
   @override
   void initState() {
     super.initState();
-
-    _appLinks = AppLinks();
-    _listenDeepLinks();
+    if (!kIsWeb) {
+      _appLinks = AppLinks();
+      _listenDeepLinks();
+    }
   }
 
   void _listenDeepLinks() {
-    _linkSubscription = _appLinks.uriLinkStream.listen(
+    _linkSubscription = _appLinks?.uriLinkStream.listen(
       (Uri uri) {
         _handleDeepLink(uri);
       },

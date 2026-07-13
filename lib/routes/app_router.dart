@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/admin/admin_main_screen.dart';
+import '../screens/admin/service_request_admin_screen.dart';
 import '../screens/customer/profile/customer_profile_screen.dart';
 import '../screens/role_select_screen.dart';
 import '../screens/customer/customer_shell_screen.dart';
@@ -190,6 +191,41 @@ final GoRouter appRouter = GoRouter(
         final department = staffDepartmentFromKey(departmentKey);
 
         return StaffMainScreen(department: department);
+      },
+    ),
+
+    GoRoute(
+      path: '/admin-service-requests',
+      name: 'admin-service-requests',
+      builder: (context, state) {
+        return const ServiceRequestAdminScreen();
+      },
+    ),
+
+    GoRoute(
+      path: '/admin',
+      name: 'admin',
+      builder: (context, state) {
+        return const AdminMainScreen();
+      },
+    ),
+
+    GoRoute(
+      path: '/staff',
+      name: 'staff',
+      builder: (context, state) {
+        final departmentKey = state.uri.queryParameters['department'];
+        final department = staffDepartmentFromKey(departmentKey);
+
+        return StaffMainScreen(department: department);
+      },
+    ),
+
+    GoRoute(
+      path: '/admin-service-requests',
+      name: 'admin-service-requests',
+      builder: (context, state) {
+        return const ServiceRequestAdminScreen();
       },
     ),
 
