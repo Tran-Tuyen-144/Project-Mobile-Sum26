@@ -129,7 +129,8 @@ final GoRouter appRouter = GoRouter(
                 data ??
                 const BookingConfirmData(
                   petStatus: 'Kh?e m?nh',
-                  petName: 'Thú cưng của bạn',
+                  customerName: 'Khách vãng lai',
+                  petNames: const ['Thú cưng của bạn'],
                   branch: 'PetHub Quận 1',
                   day: 'Hôm nay',
                   time: '18:00',

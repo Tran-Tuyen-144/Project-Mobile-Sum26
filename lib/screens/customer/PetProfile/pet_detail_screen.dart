@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../booking/customer_booking_screen.dart';
 import 'booking_pet_screen.dart';
 
 class PetDetailScreen extends StatelessWidget {

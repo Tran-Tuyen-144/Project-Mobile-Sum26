@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../services/pet_booking_store.dart';
 import '../../../theme/app_colors.dart';
+import '../booking_history_screen.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
 import 'booking_confirm_data.dart';
@@ -146,12 +147,7 @@ class BookingConfirmScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    if (data.petName.isNotEmpty) {
-                      PetBookingStore.instance.markPetBooked(data.petName);
-                    }
-                    _showSuccessDialog(context);
-                  },
+                  onPressed: () => _confirm(context),
                   icon: const Icon(Icons.check_circle_rounded),
                   label: const Text('Xác nhận'),
                 ),
@@ -163,30 +159,56 @@ class BookingConfirmScreen extends StatelessWidget {
     );
   }
 
-  void _showSuccessDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: const Text('Đặt bàn thành công'),
+  Future<void> _confirm(BuildContext context) async {
+    try {
+      await PetBookingStore.instance.createOnlineTableBooking(
+        customerId: data.customerId,
+        customerName: data.customerName,
+        petNames: data.petNames,
+        branch: data.branch,
+        day: data.day,
+        time: data.time,
+        guests: data.guests,
+        tableName: data.tableName,
+      );
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Đặt pet thành công'),
           content: Text(
-            'PetHub đã giữ ${data.tableName} tại ${data.branch} cho ${data.petName} vào ${data.day} lúc ${data.time}.',
+            'Đã giữ ${data.tableName} cho ${data.petName}. Bạn có thể xem, sửa hoặc hủy booking trong lịch sử.',
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                context.pop();
-                context.go('/pet-profile');
-              },
-              child: const Text('Đóng'),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Xem lịch sử'),
             ),
           ],
+        ),
+      );
+      if (!context.mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => BookingHistoryScreen(customerId: data.customerId),
+        ),
+        (route) => route.isFirst,
+      );
+    } on BookingPetLimitException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Mỗi booking chỉ được chọn tối đa 3 pet.'),
+          ),
         );
-      },
-    );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể lưu booking: $error')),
+        );
+      }
+    }
   }
 }
 

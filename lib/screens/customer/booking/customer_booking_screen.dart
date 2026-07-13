@@ -24,6 +24,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
   int? selectedTable;
   bool _tableBooked = false;
   String? _tableBookingId;
+  final TextEditingController _customerController = TextEditingController();
 
   final branches = const [
     'PetHub Quận 1',
@@ -45,6 +46,12 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
   ];
 
   @override
+  void dispose() {
+    _customerController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(18, 8, 18, 26),
@@ -52,6 +59,16 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _BookingHeader(petName: widget.petName),
+
+          const SizedBox(height: 24),
+
+          TextField(
+            controller: _customerController,
+            decoration: const InputDecoration(
+              labelText: 'Tên khách hoặc SĐT',
+              border: OutlineInputBorder(),
+            ),
+          ),
 
           const SizedBox(height: 24),
 
@@ -172,6 +189,13 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () {
+                if (_customerController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Vui lòng nhập tên khách hoặc SĐT.')),
+                  );
+                  return;
+                }
+
                 if (selectedTable == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -188,8 +212,9 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
                   MaterialPageRoute(
                     builder: (_) => PetListScreen(
                       bookingData: BookingConfirmData(
-                        petName: '',
+                        petNames: const [],
                         petStatus: '',
+                        customerName: _customerController.text.trim(),
                         branch: branches[selectedBranch],
                         day: days[selectedDay],
                         time: times[selectedTime],
