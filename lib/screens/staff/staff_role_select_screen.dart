@@ -73,8 +73,7 @@ class StaffRoleSelectScreen extends StatelessWidget {
                   color: department.color,
                   padding: const EdgeInsets.all(18),
                   onTap: () {
-                    context.push('/staff?department=${department.key}');
-                  },
+                    context.push('/staff-${department.key}');                  },
                   child: Row(
                     children: [
                       CircleAvatar(

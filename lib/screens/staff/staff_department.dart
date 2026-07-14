@@ -5,16 +5,14 @@ import '../../theme/app_colors.dart';
 enum StaffDepartment {
   cafe,
   spa,
+  hotel,
   hospital,
-
-  // Giữ tạm để các file cũ không lỗi, nhưng không hiển thị nữa.
-  petCare,
-  reception,
 }
 
 const List<StaffDepartment> selectableStaffDepartments = [
   StaffDepartment.cafe,
   StaffDepartment.spa,
+  StaffDepartment.hotel,
   StaffDepartment.hospital,
 ];
 
@@ -24,13 +22,11 @@ extension StaffDepartmentExtension on StaffDepartment {
       case StaffDepartment.cafe:
         return 'cafe';
       case StaffDepartment.spa:
-        return 'spa-hotel';
+        return 'spa';
+      case StaffDepartment.hotel:
+        return 'hotel';
       case StaffDepartment.hospital:
         return 'hospital';
-      case StaffDepartment.petCare:
-        return 'pet-care';
-      case StaffDepartment.reception:
-        return 'reception';
     }
   }
 
@@ -39,13 +35,11 @@ extension StaffDepartmentExtension on StaffDepartment {
       case StaffDepartment.cafe:
         return 'Nhân viên Café';
       case StaffDepartment.spa:
-        return 'Nhân viên Spa / Khách sạn';
+        return 'Nhân viên Spa';
+      case StaffDepartment.hotel:
+        return 'Nhân viên Khách sạn';
       case StaffDepartment.hospital:
         return 'Nhân viên Bệnh viện';
-      case StaffDepartment.petCare:
-        return 'Nhân viên chăm sóc Pet';
-      case StaffDepartment.reception:
-        return 'Lễ tân';
     }
   }
 
@@ -54,13 +48,11 @@ extension StaffDepartmentExtension on StaffDepartment {
       case StaffDepartment.cafe:
         return 'Café';
       case StaffDepartment.spa:
-        return 'Spa / Khách sạn';
+        return 'Spa';
+      case StaffDepartment.hotel:
+        return 'Khách sạn';
       case StaffDepartment.hospital:
         return 'Bệnh viện';
-      case StaffDepartment.petCare:
-        return 'Chăm sóc Pet';
-      case StaffDepartment.reception:
-        return 'Lễ tân';
     }
   }
 
@@ -69,13 +61,11 @@ extension StaffDepartmentExtension on StaffDepartment {
       case StaffDepartment.cafe:
         return 'Tra cứu đặt bàn, chọn món, tính tiền và xuất Bill.';
       case StaffDepartment.spa:
-        return 'Quản lý Spa, khách sạn Pet, thời gian gửi nhận và chi phí.';
+        return 'Quản lý lịch tắm sấy, cắt tỉa lông và chăm sóc Pet.';
+      case StaffDepartment.hotel:
+        return 'Theo dõi phòng lưu trú, ăn uống và sức khỏe Pet.';
       case StaffDepartment.hospital:
         return 'Quản lý lịch khám, bệnh án, chi phí và xuất PDF.';
-      case StaffDepartment.petCare:
-        return 'Chức vụ cũ, tạm thời không sử dụng.';
-      case StaffDepartment.reception:
-        return 'Chức vụ cũ, tạm thời không sử dụng.';
     }
   }
 
@@ -84,13 +74,11 @@ extension StaffDepartmentExtension on StaffDepartment {
       case StaffDepartment.cafe:
         return Icons.local_cafe_rounded;
       case StaffDepartment.spa:
-        return Icons.pets_rounded;
+        return Icons.spa_rounded;
+      case StaffDepartment.hotel:
+        return Icons.hotel_rounded;
       case StaffDepartment.hospital:
         return Icons.medical_services_rounded;
-      case StaffDepartment.petCare:
-        return Icons.health_and_safety_rounded;
-      case StaffDepartment.reception:
-        return Icons.badge_rounded;
     }
   }
 
@@ -99,13 +87,11 @@ extension StaffDepartmentExtension on StaffDepartment {
       case StaffDepartment.cafe:
         return AppColors.peach;
       case StaffDepartment.spa:
+        return AppColors.mint;
+      case StaffDepartment.hotel:
         return AppColors.lavender;
       case StaffDepartment.hospital:
         return AppColors.sky;
-      case StaffDepartment.petCare:
-        return AppColors.mint;
-      case StaffDepartment.reception:
-        return AppColors.primarySoft;
     }
   }
 }
@@ -113,15 +99,11 @@ extension StaffDepartmentExtension on StaffDepartment {
 StaffDepartment staffDepartmentFromKey(String? key) {
   switch (key) {
     case 'spa':
-    case 'hotel':
-    case 'spa-hotel':
       return StaffDepartment.spa;
+    case 'hotel':
+      return StaffDepartment.hotel;
     case 'hospital':
       return StaffDepartment.hospital;
-    case 'pet-care':
-      return StaffDepartment.petCare;
-    case 'reception':
-      return StaffDepartment.reception;
     case 'cafe':
     default:
       return StaffDepartment.cafe;

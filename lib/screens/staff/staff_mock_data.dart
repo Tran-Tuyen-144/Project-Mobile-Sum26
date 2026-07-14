@@ -33,24 +33,31 @@ class StaffMockData {
           workDate: DateTime.now(),
         );
 
-      case StaffDepartment.hospital:
+      case StaffDepartment.hotel:
         return StaffProfile(
-          id: 'NV-BV-003',
+          id: 'NV-HT-003',
           fullName: 'Lê Hoàng Nam',
           phoneNumber: '0987654321',
           email: 'hoangnam@pethub.vn',
+          department: StaffDepartment.hotel,
+          branchName: 'PetHub Quận 1',
+          shiftName: 'Ca hành chính',
+          shiftTime: '08:00 - 17:00',
+          workDate: DateTime.now(),
+        );
+
+      case StaffDepartment.hospital:
+        return StaffProfile(
+          id: 'NV-BV-004',
+          fullName: 'Phạm Thị Thúy',
+          phoneNumber: '0966666888',
+          email: 'thuypham@pethub.vn',
           department: StaffDepartment.hospital,
           branchName: 'PetHub Veterinary',
           shiftName: 'Ca sáng',
           shiftTime: '08:00 - 16:00',
           workDate: DateTime.now(),
         );
-
-      case StaffDepartment.petCare:
-        return profileFor(StaffDepartment.spa);
-
-      case StaffDepartment.reception:
-        return profileFor(StaffDepartment.cafe);
     }
   }
 
@@ -69,8 +76,7 @@ class StaffMockData {
             id: 'CF-T02',
             department: StaffDepartment.cafe,
             title: 'Kiểm tra đơn đặt bàn',
-            description:
-                'Kiểm tra các đơn đặt bàn và khách dự kiến đến trong ca.',
+            description: 'Kiểm tra các đơn đặt bàn và khách dự kiến đến trong ca.',
             timeSlot: '08:00 - 08:30',
           ),
           StaffTask(
@@ -95,29 +101,33 @@ class StaffMockData {
             id: 'SP-T01',
             department: StaffDepartment.spa,
             title: 'Chuẩn bị khu vực Spa',
-            description: 'Kiểm tra dụng cụ, khăn, phòng Spa và khu lưu trú.',
+            description: 'Kiểm tra dụng cụ, khăn và phòng Spa.',
             timeSlot: '08:00 - 08:30',
           ),
           StaffTask(
             id: 'SP-T02',
             department: StaffDepartment.spa,
             title: 'Kiểm tra lịch dịch vụ',
-            description: 'Kiểm tra khách Spa và Pet gửi khách sạn trong ngày.',
+            description: 'Kiểm tra khách Spa trong ngày.',
+            timeSlot: '08:30 - 09:00',
+          ),
+        ];
+
+      case StaffDepartment.hotel:
+        return const [
+          StaffTask(
+            id: 'HT-T01',
+            department: StaffDepartment.hotel,
+            title: 'Kiểm tra phòng lưu trú',
+            description: 'Dọn dẹp phòng, kiểm tra nước uống và vệ sinh khu vực.',
             timeSlot: '08:30 - 09:00',
           ),
           StaffTask(
-            id: 'SP-T03',
-            department: StaffDepartment.spa,
-            title: 'Kiểm tra Pet lưu trú',
-            description: 'Theo dõi ăn uống, sức khỏe và thời gian trả Pet.',
+            id: 'HT-T02',
+            department: StaffDepartment.hotel,
+            title: 'Theo dõi sức khỏe Pet',
+            description: 'Kiểm tra ăn uống và tình trạng Pet nội trú.',
             timeSlot: '11:00 - 11:30',
-          ),
-          StaffTask(
-            id: 'SP-T04',
-            department: StaffDepartment.spa,
-            title: 'Cập nhật hồ sơ dịch vụ',
-            description: 'Ghi chú kết quả Spa và tình trạng Pet cuối ca.',
-            timeSlot: '16:30 - 17:00',
           ),
         ];
 
@@ -137,27 +147,7 @@ class StaffMockData {
             description: 'Kiểm tra dụng cụ, thuốc và thiết bị khám bệnh.',
             timeSlot: '08:30 - 09:00',
           ),
-          StaffTask(
-            id: 'BV-T03',
-            department: StaffDepartment.hospital,
-            title: 'Cập nhật bệnh án',
-            description: 'Hoàn thiện hồ sơ bệnh án sau mỗi lượt khám.',
-            timeSlot: 'Trong ca',
-          ),
-          StaffTask(
-            id: 'BV-T04',
-            department: StaffDepartment.hospital,
-            title: 'Kiểm tra lịch tái khám',
-            description: 'Kiểm tra và xác nhận các lịch tái khám sắp tới.',
-            timeSlot: '15:30 - 16:00',
-          ),
         ];
-
-      case StaffDepartment.petCare:
-        return tasksFor(StaffDepartment.spa);
-
-      case StaffDepartment.reception:
-        return tasksFor(StaffDepartment.cafe);
     }
   }
 }

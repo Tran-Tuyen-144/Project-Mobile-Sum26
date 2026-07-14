@@ -14,7 +14,7 @@ import '../screens/customer/petprofile/pet_list_screen.dart';
 import '../screens/customer/community/community_post.dart';
 import '../screens/auth/customer_auth_screen.dart';
 import '../screens/staff/staff_department.dart';
-import '../screens/staff/staff_main_screen.dart';
+import '../screens/staff/cafe/staff_cafe_screen.dart';
 import '../screens/staff/staff_role_select_screen.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -181,16 +181,38 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
+    // 1. Tuyến đường dành riêng cho Nhân viên Café
     GoRoute(
-      path: '/staff',
-      name: 'staff',
-      builder: (context, state) {
-        final departmentKey = state.uri.queryParameters['department'];
+      path: '/staff-cafe',
+      name: 'staff-cafe',
+      builder: (context, state) => const StaffCafeScreen(),
+    ),
 
-        final department = staffDepartmentFromKey(departmentKey);
+// 2. Tuyến đường cho Spa (hiện tại hiển thị trang tạm)
+    GoRoute(
+      path: '/staff-spa',
+      name: 'staff-spa',
+      builder: (context, state) => const Scaffold(
+        body: Center(child: Text('Đang xây dựng màn hình Spa')),
+      ),
+    ),
 
-        return StaffMainScreen(department: department);
-      },
+// 3. Tuyến đường cho Khách sạn (hiện tại hiển thị trang tạm)
+    GoRoute(
+      path: '/staff-hotel',
+      name: 'staff-hotel',
+      builder: (context, state) => const Scaffold(
+        body: Center(child: Text('Đang xây dựng màn hình Khách sạn')),
+      ),
+    ),
+
+// 4. Tuyến đường cho Bệnh viện (hiện tại hiển thị trang tạm)
+    GoRoute(
+      path: '/staff-hospital',
+      name: 'staff-hospital',
+      builder: (context, state) => const Scaffold(
+        body: Center(child: Text('Đang xây dựng màn hình Bệnh viện')),
+      ),
     ),
 
     GoRoute(
