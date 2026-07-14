@@ -28,7 +28,7 @@
             <!-- Deep link PetHub -->
             <!-- Cho phép mở app bằng link dạng:
                  pethub://booking
-                 pethub://order
+                 pethub://orders
                  pethub://services
                  pethub://map
                  pethub://community

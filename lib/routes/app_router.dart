@@ -13,9 +13,6 @@ import '../screens/customer/community/create_community_post_screen.dart';
 import '../screens/customer/petprofile/pet_list_screen.dart';
 import '../screens/customer/community/community_post.dart';
 import '../screens/auth/customer_auth_screen.dart';
-import '../screens/staff/staff_department.dart';
-import '../screens/staff/cafe/staff_cafe_screen.dart';
-import '../screens/staff/staff_role_select_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -162,58 +159,6 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
-    GoRoute(
-      path: '/order',
-      name: 'order',
-      builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(title: const Text('Gọi nước trước')),
-          body: const CustomerDrinkOrderScreen(),
-        );
-      },
-    ),
-
-    GoRoute(
-      path: '/staff-role',
-      name: 'staff-role',
-      builder: (context, state) {
-        return const StaffRoleSelectScreen();
-      },
-    ),
-
-    // 1. Tuyến đường dành riêng cho Nhân viên Café
-    GoRoute(
-      path: '/staff-cafe',
-      name: 'staff-cafe',
-      builder: (context, state) => const StaffCafeScreen(),
-    ),
-
-// 2. Tuyến đường cho Spa (hiện tại hiển thị trang tạm)
-    GoRoute(
-      path: '/staff-spa',
-      name: 'staff-spa',
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Đang xây dựng màn hình Spa')),
-      ),
-    ),
-
-// 3. Tuyến đường cho Khách sạn (hiện tại hiển thị trang tạm)
-    GoRoute(
-      path: '/staff-hotel',
-      name: 'staff-hotel',
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Đang xây dựng màn hình Khách sạn')),
-      ),
-    ),
-
-// 4. Tuyến đường cho Bệnh viện (hiện tại hiển thị trang tạm)
-    GoRoute(
-      path: '/staff-hospital',
-      name: 'staff-hospital',
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Đang xây dựng màn hình Bệnh viện')),
-      ),
-    ),
 
     GoRoute(
       path: '/admin',
