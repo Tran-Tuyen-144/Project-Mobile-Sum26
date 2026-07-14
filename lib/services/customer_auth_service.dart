@@ -112,12 +112,47 @@ class CustomerAuthService {
     await _auth.sendPasswordResetEmail(email: cleanEmail);
   }
 
-  static Future<void> logout() async {
-    try {
-      await GoogleSignIn.instance.signOut();
-    } catch (_) {}
+  /// Changes an email/password account password after verifying the old one.
+  /// Google-only accounts should use the password-reset flow instead.
+  static Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    final email = user?.email;
 
-    await FirebaseAuth.instance.signOut();
+    if (user == null || email == null || email.isEmpty) {
+      throw Exception(
+        'Tài khoản này không dùng mật khẩu. Hãy đặt lại mật khẩu qua email.',
+      );
+    }
+
+    if (currentPassword.isEmpty) {
+      throw Exception('Vui lòng nhập mật khẩu hiện tại.');
+    }
+
+    if (newPassword.length < 6) {
+      throw Exception('Mật khẩu mới phải có ít nhất 6 ký tự.');
+    }
+
+    final credential = EmailAuthProvider.credential(
+      email: email,
+      password: currentPassword,
+    );
+
+    await user.reauthenticateWithCredential(credential);
+    await user.updatePassword(newPassword);
+  }
+
+  static Future<void> logout() async {
+    // Firebase Authentication is the app's source of truth. Sign it out
+    // first: Google Sign-In on web can take a long time or be unavailable,
+    // and must never prevent the user from leaving their account.
+    await _auth.signOut().timeout(const Duration(seconds: 8));
+
+    try {
+      await GoogleSignIn.instance.signOut().timeout(const Duration(seconds: 3));
+    } catch (_) {}
   }
 
   static Future<void> _ensureGoogleInitialized() async {

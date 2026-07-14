@@ -56,7 +56,10 @@ class CloudinaryUploadService {
     );
   }
 
-  static Future<CloudinaryUploadResult> uploadImageFile(XFile imageFile) async {
+  static Future<CloudinaryUploadResult> uploadImageFile(
+    XFile imageFile, {
+    String folder = uploadFolder,
+  }) async {
     final uploadUrl = Uri.parse(
       'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
     );
@@ -64,10 +67,17 @@ class CloudinaryUploadService {
     final request = http.MultipartRequest('POST', uploadUrl);
 
     request.fields['upload_preset'] = uploadPreset;
-    request.fields['folder'] = uploadFolder;
+    request.fields['folder'] = folder;
 
+    // `fromPath` does not work in browsers. Using bytes keeps avatar and
+    // community uploads available on Android, iOS, desktop, and Flutter web.
+    final imageBytes = await imageFile.readAsBytes();
     request.files.add(
-      await http.MultipartFile.fromPath('file', imageFile.path),
+      http.MultipartFile.fromBytes(
+        'file',
+        imageBytes,
+        filename: imageFile.name.isEmpty ? 'upload.jpg' : imageFile.name,
+      ),
     );
 
     final streamedResponse = await request.send();

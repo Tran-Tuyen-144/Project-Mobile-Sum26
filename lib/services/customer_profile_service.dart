@@ -56,6 +56,8 @@ class CustomerProfileService {
         'email': user.email ?? '',
         'phoneNumber': user.phoneNumber,
         'avatarIconKey': 'default_person',
+        'avatarUrl': null,
+        'avatarPublicId': null,
         'anonymousName': 'Ẩn danh PetHub',
         'anonymousAvatarIconKey': 'anonymous',
         'profileInitialized': true,
@@ -192,6 +194,22 @@ class CustomerProfileService {
       authorName: displayName,
       avatarIconKey: cleanIconKey,
     );
+  }
+
+  /// Lưu link ảnh đại diện trên Cloudinary; Firestore chỉ giữ URL và public id.
+  static Future<void> updateAvatarImage({
+    required String imageUrl,
+    required String publicId,
+  }) async {
+    if (imageUrl.trim().isEmpty || publicId.trim().isEmpty) {
+      throw Exception('Ảnh đại diện không hợp lệ.');
+    }
+
+    await _currentProfileRef.update({
+      'avatarUrl': imageUrl.trim(),
+      'avatarPublicId': publicId.trim(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   static Future<void> updateAnonymousIdentity({

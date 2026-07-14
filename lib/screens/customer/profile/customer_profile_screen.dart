@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../models/customer_profile.dart';
+import '../../../services/cloudinary_upload_service.dart';
 import '../../../services/customer_auth_service.dart';
 import '../../../services/customer_profile_service.dart';
 import '../../../services/customer_saved_post_service.dart';
@@ -110,6 +111,43 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          Navigator.of(bottomSheetContext).pop();
+                          await _uploadProfilePhoto(ImageSourceType.gallery);
+                        },
+                        icon: const Icon(Icons.photo_library_outlined),
+                        label: const Text('Thư viện'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          Navigator.of(bottomSheetContext).pop();
+                          await _uploadProfilePhoto(ImageSourceType.camera);
+                        },
+                        icon: const Icon(Icons.photo_camera_outlined),
+                        label: const Text('Máy ảnh'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Hoặc chọn biểu tượng',
+                    style: TextStyle(
+                      color: AppColors.textSoft,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
                 GridView.builder(
                   itemCount: avatarOptions.length,
                   shrinkWrap: true,
@@ -181,6 +219,41 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
         );
       },
     );
+  }
+
+  Future<void> _uploadProfilePhoto(ImageSourceType source) async {
+    try {
+      final image = source == ImageSourceType.gallery
+          ? await CloudinaryUploadService.pickImageFromGallery()
+          : await CloudinaryUploadService.pickImageFromCamera();
+      if (image == null) return;
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đang tải ảnh đại diện lên Cloudinary...'),
+        ),
+      );
+
+      final upload = await CloudinaryUploadService.uploadImageFile(
+        image,
+        folder: 'pethub_profiles',
+      );
+      await CustomerProfileService.updateAvatarImage(
+        imageUrl: upload.imageUrl,
+        publicId: upload.publicId,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đã cập nhật ảnh đại diện.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Không tải được ảnh: $error')));
+    }
   }
 
   Future<void> _editProfile(CustomerProfile profile) async {
@@ -520,16 +593,10 @@ ${post.content}
 
     try {
       await CustomerAuthService.logout();
-
-      if (!mounted) return;
-
-      context.go('/customer-auth');
-    } catch (error) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Không đăng xuất được: $error')));
+    } finally {
+      // Logout must still take the user to the login screen if an optional
+      // provider sign-out fails on web.
+      if (mounted) context.go('/customer-auth');
     }
   }
 
@@ -572,46 +639,58 @@ ${post.content}
 
             final avatar = _avatarFromKey(profile.avatarIconKey);
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 8, 18, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _ProfileHeader(
-                    profile: profile,
-                    avatar: avatar,
-                    onAvatarTap: () => _showAvatarPicker(profile),
-                    onEditTap: () => _editProfile(profile),
-                  ),
-                  const SizedBox(height: 22),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _createPost(profile),
-                      icon: const Icon(Icons.add_rounded),
-                      label: const Text('Đăng bài mới'),
+            return DecoratedBox(
+              decoration: const BoxDecoration(color: Color(0xFFF5F7FC)),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 36),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 980),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _ProfileHeader(
+                          profile: profile,
+                          avatar: avatar,
+                          onAvatarTap: () => _showAvatarPicker(profile),
+                          onEditTap: () => _editProfile(profile),
+                        ),
+                        const SizedBox(height: 18),
+                        _ProfileQuickActions(
+                          onCreatePost: () => _createPost(profile),
+                          onBooking: () => context.go('/booking'),
+                          onCommunity: () => context.go('/community'),
+                          onAccount: () => context.push('/profile/account'),
+                        ),
+                        const SizedBox(height: 30),
+                        const Text(
+                          'Hoạt động của bạn',
+                          style: TextStyle(
+                            color: AppColors.textDark,
+                            fontSize: 21,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Chia sẻ điều dễ thương về bé pet của bạn.',
+                          style: TextStyle(color: AppColors.textSoft),
+                        ),
+                        const SizedBox(height: 16),
+                        _ProfileCommunitySections(
+                          profile: profile,
+                          onLike: (post) => _toggleLike(post, profile.uid),
+                          onSave: (post) => _toggleSave(post, profile.uid),
+                          onShare: _sharePost,
+                          onOpenDetail: (post, savedPostIds) =>
+                              _openPostDetail(post, profile.uid, savedPostIds),
+                          onEdit: _editPost,
+                          onDelete: _deletePost,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 26),
-                  const SectionTitle(title: 'Thông tin cá nhân'),
-                  const SizedBox(height: 12),
-                  _PersonalInformationCard(profile: profile),
-                  const SizedBox(height: 26),
-                  _ProfileCommunitySections(
-                    profile: profile,
-                    onLike: (post) => _toggleLike(post, profile.uid),
-                    onSave: (post) => _toggleSave(post, profile.uid),
-                    onShare: _sharePost,
-                    onOpenDetail: (post, savedPostIds) =>
-                        _openPostDetail(post, profile.uid, savedPostIds),
-                    onEdit: _editPost,
-                    onDelete: _deletePost,
-                  ),
-                  const SizedBox(height: 30),
-                  const SectionTitle(title: 'Tài khoản'),
-                  const SizedBox(height: 12),
-                  _LogoutCard(onLogout: _logout),
-                ],
+                ),
               ),
             );
           },
@@ -669,10 +748,6 @@ class _ProfileCommunitySections extends StatelessWidget {
                 .where((post) => post.authorId == profile.uid)
                 .toList();
 
-            final savedPosts = allPosts
-                .where((post) => savedPostIds.contains(post.id))
-                .toList();
-
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -683,21 +758,6 @@ class _ProfileCommunitySections extends StatelessWidget {
                   savedPostIds: savedPostIds,
                   profile: profile,
                   allowManageOwnPost: true,
-                  onLike: onLike,
-                  onSave: onSave,
-                  onShare: onShare,
-                  onOpenDetail: onOpenDetail,
-                  onEdit: onEdit,
-                  onDelete: onDelete,
-                ),
-                const SizedBox(height: 28),
-                _ProfilePostSection(
-                  title: 'Bài viết đã lưu',
-                  emptyText: 'Bạn chưa lưu bài viết nào.',
-                  posts: savedPosts,
-                  savedPostIds: savedPostIds,
-                  profile: profile,
-                  allowManageOwnPost: false,
                   onLike: onLike,
                   onSave: onSave,
                   onShare: onShare,
@@ -812,208 +872,256 @@ class _ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.fromLTRB(24, 26, 24, 22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [AppColors.primarySoft, AppColors.peach, AppColors.cream],
+          colors: [Color(0xFF172B4D), Color(0xFF315F93), Color(0xFF4D8BB9)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
-      child: Row(
-        children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(99),
-            onTap: onAvatarTap,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                CircleAvatar(
-                  radius: 42,
-                  backgroundColor: avatar.color,
-                  child: Icon(avatar.icon, size: 44, color: AppColors.textDark),
-                ),
-                Positioned(
-                  right: -2,
-                  bottom: -2,
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.edit_rounded,
-                      size: 15,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  profile.displayName,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontSize: 21),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  profile.fullName,
-                  style: const TextStyle(
-                    color: AppColors.textDark,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  profile.email,
-                  style: const TextStyle(
-                    color: AppColors.textSoft,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: onEditTap,
-            icon: const Icon(Icons.edit_note_rounded, color: AppColors.primary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PersonalInformationCard extends StatelessWidget {
-  final CustomerProfile profile;
-
-  const _PersonalInformationCard({required this.profile});
-
-  @override
-  Widget build(BuildContext context) {
-    return SoftCard(
-      color: Colors.white,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _InformationRow(
-            icon: Icons.badge_rounded,
-            label: 'Họ tên',
-            value: profile.fullName,
-          ),
-          const Divider(height: 24),
-          _InformationRow(
-            icon: Icons.alternate_email_rounded,
-            label: 'Tên hiển thị',
-            value: profile.displayName,
-          ),
-          const Divider(height: 24),
-          _InformationRow(
-            icon: Icons.email_rounded,
-            label: 'Email',
-            value: profile.email,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InformationRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _InformationRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 21,
-          backgroundColor: AppColors.primarySoft,
-          child: Icon(icon, size: 20, color: AppColors.primary),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.textSoft,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              InkWell(
+                borderRadius: BorderRadius.circular(99),
+                onTap: onAvatarTap,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    CircleAvatar(
+                      radius: 42,
+                      backgroundColor: avatar.color,
+                      backgroundImage:
+                          profile.avatarUrl?.trim().isNotEmpty == true
+                          ? NetworkImage(
+                              CloudinaryUploadService.optimizedImageUrl(
+                                profile.avatarUrl!,
+                              ),
+                            )
+                          : null,
+                      child: profile.avatarUrl?.trim().isNotEmpty == true
+                          ? null
+                          : Icon(
+                              avatar.icon,
+                              size: 44,
+                              color: AppColors.textDark,
+                            ),
+                    ),
+                    Positioned(
+                      right: -2,
+                      bottom: -2,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.edit_rounded,
+                          size: 15,
+                          color: Color(0xFF31517D),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 3),
-              Text(
-                value.isEmpty ? 'Chưa cập nhật' : value,
-                style: const TextStyle(
-                  color: AppColors.textDark,
-                  fontWeight: FontWeight.w800,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.displayName,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontSize: 21,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      profile.fullName,
+                      style: const TextStyle(
+                        color: Color(0xFFE9F2FF),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      profile.email,
+                      style: const TextStyle(
+                        color: Color(0xFFD4E5F8),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              IconButton(
+                tooltip: 'Chỉnh sửa hồ sơ',
+                onPressed: onEditTap,
+                icon: const Icon(Icons.edit_note_rounded, color: Colors.white),
               ),
             ],
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _LogoutCard extends StatelessWidget {
-  final VoidCallback onLogout;
-
-  const _LogoutCard({required this.onLogout});
-
-  @override
-  Widget build(BuildContext context) {
-    return SoftCard(
-      color: Colors.white,
-      onTap: onLogout,
-      child: const Row(
-        children: [
-          CircleAvatar(
-            radius: 23,
-            backgroundColor: Color(0xFFFFE2E2),
-            child: Icon(Icons.logout_rounded, color: Colors.redAccent),
-          ),
-          SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              'Đăng xuất tài khoản',
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontWeight: FontWeight.w900,
-                fontSize: 15,
+          const SizedBox(height: 22),
+          Container(height: 1, color: const Color(0x40FFFFFF)),
+          const SizedBox(height: 16),
+          const Wrap(
+            spacing: 22,
+            runSpacing: 8,
+            children: [
+              _HeroMetric(icon: Icons.auto_awesome_rounded, label: 'Pet lover'),
+              _HeroMetric(
+                icon: Icons.verified_rounded,
+                label: 'Hồ sơ đã xác minh',
               ),
-            ),
-          ),
-          Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 17,
-            color: Colors.redAccent,
+              _HeroMetric(
+                icon: Icons.public_rounded,
+                label: 'Cộng đồng PetHub',
+              ),
+            ],
           ),
         ],
       ),
     );
   }
+}
+
+class _HeroMetric extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _HeroMetric({required this.icon, required this.label});
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 15, color: const Color(0xFFE1F0FF)),
+      const SizedBox(width: 6),
+      Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFFE1F0FF),
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    ],
+  );
+}
+
+class _ProfileQuickActions extends StatelessWidget {
+  final VoidCallback onCreatePost;
+  final VoidCallback onBooking;
+  final VoidCallback onCommunity;
+  final VoidCallback onAccount;
+  const _ProfileQuickActions({
+    required this.onCreatePost,
+    required this.onBooking,
+    required this.onCommunity,
+    required this.onAccount,
+  });
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final isWide = constraints.maxWidth >= 680;
+      final actions = [
+        _QuickAction(
+          icon: Icons.edit_note_rounded,
+          title: 'Tạo bài viết',
+          subtitle: 'Chia sẻ cùng cộng đồng',
+          color: const Color(0xFFE2EDFF),
+          onTap: onCreatePost,
+        ),
+        _QuickAction(
+          icon: Icons.event_available_rounded,
+          title: 'Đặt bàn',
+          subtitle: 'Lên lịch gặp gỡ',
+          color: const Color(0xFFFFE6CF),
+          onTap: onBooking,
+        ),
+        _QuickAction(
+          icon: Icons.forum_rounded,
+          title: 'Cộng đồng',
+          subtitle: 'Khám phá bài mới',
+          color: const Color(0xFFE5F7EF),
+          onTap: onCommunity,
+        ),
+        _QuickAction(
+          icon: Icons.shield_outlined,
+          title: 'Tài khoản',
+          subtitle: 'Bảo mật & mật khẩu',
+          color: const Color(0xFFF0E9FF),
+          onTap: onAccount,
+        ),
+      ];
+      return Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: actions
+            .map(
+              (action) => SizedBox(
+                width: isWide
+                    ? (constraints.maxWidth - 36) / 4
+                    : (constraints.maxWidth - 12) / 2,
+                child: action,
+              ),
+            )
+            .toList(),
+      );
+    },
+  );
+}
+
+class _QuickAction extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+  const _QuickAction({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(20),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: color,
+              child: Icon(icon, color: const Color(0xFF304664), size: 20),
+            ),
+            const SizedBox(height: 13),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+            const SizedBox(height: 3),
+            Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11, color: AppColors.textSoft),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _ProfileAvatarOption {
@@ -1029,3 +1137,5 @@ class _ProfileAvatarOption {
     required this.color,
   });
 }
+
+enum ImageSourceType { gallery, camera }
