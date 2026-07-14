@@ -161,8 +161,8 @@ final GoRouter appRouter = GoRouter(
     ),
 
     GoRoute(
-      path: '/order',
-      name: 'order',
+      path: '/orders',
+      name: 'orders',
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(title: const Text('Gọi nước trước')),

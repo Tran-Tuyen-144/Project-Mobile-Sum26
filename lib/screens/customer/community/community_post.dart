@@ -11,6 +11,7 @@ class PostComment {
   final String colorKey;
   final String content;
   final String timeAgo;
+  final DateTime? createdAt;
 
   const PostComment({
     required this.id,
@@ -21,6 +22,7 @@ class PostComment {
     this.colorKey = 'peach',
     required this.content,
     required this.timeAgo,
+    this.createdAt,
   });
 
   IconData get petIcon {
@@ -29,6 +31,41 @@ class PostComment {
 
   Color get color {
     return CommunityPost.colorFromKey(colorKey);
+  }
+  String get displayTimeAgo {
+    final commentTime = createdAt;
+
+    if (commentTime == null) {
+      return timeAgo;
+    }
+
+    final difference = DateTime.now().difference(commentTime.toLocal());
+
+    if (difference.isNegative || difference.inSeconds < 60) {
+      return 'Vừa xong';
+    }
+
+    if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} phút trước';
+    }
+
+    if (difference.inHours < 24) {
+      return '${difference.inHours} giờ trước';
+    }
+
+    if (difference.inDays < 7) {
+      return '${difference.inDays} ngày trước';
+    }
+
+    if (difference.inDays < 30) {
+      return '${difference.inDays ~/ 7} tuần trước';
+    }
+
+    if (difference.inDays < 365) {
+      return '${difference.inDays ~/ 30} tháng trước';
+    }
+
+    return '${difference.inDays ~/ 365} năm trước';
   }
 
   Map<String, dynamic> toJson() {
@@ -41,6 +78,7 @@ class PostComment {
       'colorKey': colorKey,
       'content': content,
       'timeAgo': timeAgo,
+      'createdAt': createdAt?.toIso8601String(),
     };
   }
 
@@ -68,7 +106,38 @@ class PostComment {
       colorKey: colorKey,
       content: json['content'] as String? ?? '',
       timeAgo: json['timeAgo'] as String? ?? 'Vừa xong',
+      createdAt: _dateTimeFromJson(json['createdAt']),
     );
+  }
+  static DateTime? _dateTimeFromJson(Object? value) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is DateTime) {
+      return value;
+    }
+
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+
+    if (value is num) {
+      return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+    }
+
+    try {
+      final dynamic dynamicValue = value;
+      final result = dynamicValue.toDate();
+
+      if (result is DateTime) {
+        return result;
+      }
+    } catch (_) {
+      return null;
+    }
+
+    return null;
   }
 }
 
@@ -81,6 +150,7 @@ class CommunityPost {
   final String colorKey;
   final bool isAnonymous;
   final String timeAgo;
+  final DateTime? createdAt;
   final String content;
   final String category;
   final int likes;
@@ -103,6 +173,7 @@ class CommunityPost {
     this.authorRole = 'Thành viên ẩn danh',
     bool? isAnonymous,
     required this.timeAgo,
+    this.createdAt,
     required this.content,
     this.category = '',
     this.likes = 0,
@@ -123,6 +194,41 @@ class CommunityPost {
   bool get hasImage {
     return imageUrl != null && imageUrl!.trim().isNotEmpty;
   }
+  String get displayTimeAgo {
+    final createdTime = createdAt;
+
+    if (createdTime == null) {
+      return timeAgo;
+    }
+
+    final difference = DateTime.now().difference(createdTime.toLocal());
+
+    if (difference.isNegative || difference.inSeconds < 60) {
+      return 'Vừa xong';
+    }
+
+    if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} phút trước';
+    }
+
+    if (difference.inHours < 24) {
+      return '${difference.inHours} giờ trước';
+    }
+
+    if (difference.inDays < 7) {
+      return '${difference.inDays} ngày trước';
+    }
+
+    if (difference.inDays < 30) {
+      return '${difference.inDays ~/ 7} tuần trước';
+    }
+
+    if (difference.inDays < 365) {
+      return '${difference.inDays ~/ 30} tháng trước';
+    }
+
+    return '${difference.inDays ~/ 365} năm trước';
+  }
 
   IconData get petIcon => iconFromKey(avatarIconKey);
 
@@ -135,6 +241,7 @@ class CommunityPost {
     String? authorRole,
     bool? isAnonymous,
     String? timeAgo,
+    DateTime? createdAt,
     String? content,
     String? category,
     int? likes,
@@ -159,6 +266,7 @@ class CommunityPost {
       authorRole: authorRole ?? this.authorRole,
       isAnonymous: isAnonymous ?? this.isAnonymous,
       timeAgo: timeAgo ?? this.timeAgo,
+      createdAt: createdAt ?? this.createdAt,
       content: content ?? this.content,
       category: category ?? this.category,
       likes: likes ?? this.likes,
@@ -189,6 +297,7 @@ class CommunityPost {
       'authorRole': authorRole,
       'isAnonymous': isAnonymous,
       'timeAgo': timeAgo,
+      'createdAt': createdAt?.toIso8601String(),
       'content': content,
       'category': category,
       'likes': likes,
@@ -235,6 +344,7 @@ class CommunityPost {
       authorRole: authorRole,
       isAnonymous: isAnonymous,
       timeAgo: json['timeAgo'] as String? ?? 'Vừa xong',
+      createdAt: _dateTimeFromJson(json['createdAt']),
       content: json['content'] as String? ?? '',
       category: json['category'] as String? ?? '',
       likes: (json['likes'] as num?)?.toInt() ?? 0,
@@ -258,6 +368,37 @@ class CommunityPost {
           : const [],
     );
   }
+  static DateTime? _dateTimeFromJson(Object? value) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is DateTime) {
+      return value;
+    }
+
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+
+    if (value is num) {
+      return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+    }
+
+    try {
+      final dynamic dynamicValue = value;
+      final result = dynamicValue.toDate();
+
+      if (result is DateTime) {
+        return result;
+      }
+    } catch (_) {
+      return null;
+    }
+
+    return null;
+  }
+
 
   static String iconKeyFromIcon(IconData icon) {
     if (icon == Icons.person_rounded) return 'default_person';

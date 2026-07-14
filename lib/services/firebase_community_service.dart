@@ -6,12 +6,13 @@ class FirebaseCommunityService {
   FirebaseCommunityService._();
 
   static final CollectionReference<Map<String, dynamic>> _posts =
-      FirebaseFirestore.instance.collection('community_posts');
+  FirebaseFirestore.instance.collection('community_posts');
 
   static Stream<List<CommunityPost>> watchPosts() {
-    return _posts.orderBy('createdAt', descending: true).snapshots().map((
-      snapshot,
-    ) {
+    return _posts
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs.map((doc) {
         final data = doc.data();
 
@@ -24,9 +25,10 @@ class FirebaseCommunityService {
   }
 
   static Stream<List<CommunityPost>> watchPostsByAuthor(String authorId) {
-    return _posts.where('authorId', isEqualTo: authorId).snapshots().map((
-      snapshot,
-    ) {
+    return _posts
+        .where('authorId', isEqualTo: authorId)
+        .snapshots()
+        .map((snapshot) {
       final posts = snapshot.docs.map((doc) {
         final data = doc.data();
 
@@ -39,6 +41,25 @@ class FirebaseCommunityService {
       posts.sort((first, second) => second.id.compareTo(first.id));
 
       return posts;
+    });
+  }
+
+  static Stream<CommunityPost?> watchPost(int postId) {
+    return _posts.doc(postId.toString()).snapshots().map((snapshot) {
+      if (!snapshot.exists) {
+        return null;
+      }
+
+      final data = snapshot.data();
+
+      if (data == null) {
+        return null;
+      }
+
+      return CommunityPost.fromJson({
+        ...data,
+        'id': data['id'] ?? postId,
+      });
     });
   }
 
@@ -55,7 +76,7 @@ class FirebaseCommunityService {
       'content': post.content,
       'category': post.category,
 
-      // Ảnh lưu trên Cloudinary, Firestore chỉ lưu link.
+      // Ảnh lưu trên Cloudinary, Firestore chỉ lưu đường dẫn ảnh.
       'imageUrl': post.imageUrl,
       'imagePublicId': post.imagePublicId,
 
@@ -64,6 +85,7 @@ class FirebaseCommunityService {
       'commentList': post.commentList
           .map((comment) => comment.toJson())
           .toList(),
+
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -81,13 +103,10 @@ class FirebaseCommunityService {
       'content': post.content,
       'category': post.category,
 
-      // Cập nhật ảnh khi sửa bài viết.
+      // Không cập nhật commentList ở đây để tránh ghi đè bình luận mới.
       'imageUrl': post.imageUrl,
       'imagePublicId': post.imagePublicId,
 
-      'commentList': post.commentList
-          .map((comment) => comment.toJson())
-          .toList(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
@@ -105,11 +124,15 @@ class FirebaseCommunityService {
     await FirebaseFirestore.instance.runTransaction((transaction) async {
       final snapshot = await transaction.get(postRef);
 
-      if (!snapshot.exists) return;
+      if (!snapshot.exists) {
+        throw Exception('Bài viết không còn tồn tại.');
+      }
 
       final data = snapshot.data();
 
-      if (data == null) return;
+      if (data == null) {
+        throw Exception('Không đọc được dữ liệu bài viết.');
+      }
 
       final rawLikedBy = data['likedBy'];
 
@@ -139,13 +162,130 @@ class FirebaseCommunityService {
     });
   }
 
+  static Future<void> addComment({
+    required int postId,
+    required PostComment comment,
+  }) async {
+    final postRef = _posts.doc(postId.toString());
+
+    await _runWithRetry(() async {
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final snapshot = await transaction.get(postRef);
+
+        if (!snapshot.exists) {
+          throw Exception('Bài viết không còn tồn tại.');
+        }
+
+        final data = snapshot.data();
+
+        if (data == null) {
+          throw Exception('Không đọc được dữ liệu bài viết.');
+        }
+
+        final comments = _readComments(data['commentList']);
+
+        final commentAlreadyExists = comments.any(
+              (item) => item.id == comment.id,
+        );
+
+        if (commentAlreadyExists) {
+          return;
+        }
+
+        comments.add(comment);
+
+        transaction.update(postRef, {
+          'commentList': comments
+              .map((item) => item.toJson())
+              .toList(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      });
+    });
+  }
+  static Future<void> updateComment({
+    required int postId,
+    required PostComment comment,
+  }) async {
+    final postRef = _posts.doc(postId.toString());
+
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final snapshot = await transaction.get(postRef);
+
+      if (!snapshot.exists) {
+        throw Exception('Bài viết không còn tồn tại.');
+      }
+
+      final data = snapshot.data();
+
+      if (data == null) {
+        throw Exception('Không đọc được dữ liệu bài viết.');
+      }
+
+      final comments = _readComments(data['commentList']);
+
+      final commentIndex = comments.indexWhere(
+            (item) => item.id == comment.id,
+      );
+
+      if (commentIndex < 0) {
+        throw Exception('Bình luận không còn tồn tại.');
+      }
+
+      comments[commentIndex] = comment;
+
+      transaction.update(postRef, {
+        'commentList': comments.map((item) => item.toJson()).toList(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  static Future<void> deleteComment({
+    required int postId,
+    required int commentId,
+  }) async {
+    final postRef = _posts.doc(postId.toString());
+
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final snapshot = await transaction.get(postRef);
+
+      if (!snapshot.exists) {
+        throw Exception('Bài viết không còn tồn tại.');
+      }
+
+      final data = snapshot.data();
+
+      if (data == null) {
+        throw Exception('Không đọc được dữ liệu bài viết.');
+      }
+
+      final comments = _readComments(data['commentList']);
+
+      final oldLength = comments.length;
+
+      comments.removeWhere((item) => item.id == commentId);
+
+      if (comments.length == oldLength) {
+        throw Exception('Bình luận không còn tồn tại.');
+      }
+
+      transaction.update(postRef, {
+        'commentList': comments.map((item) => item.toJson()).toList(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
   static Future<void> syncAuthorIdentity({
     required String authorId,
     required bool isAnonymous,
     required String authorName,
     required String avatarIconKey,
   }) async {
-    final snapshot = await _posts.where('authorId', isEqualTo: authorId).get();
+    final snapshot = await _posts
+        .where('authorId', isEqualTo: authorId)
+        .get();
 
     final matchingDocuments = snapshot.docs.where((document) {
       final data = document.data();
@@ -154,7 +294,7 @@ class FirebaseCommunityService {
 
       final storedAnonymous =
           data['isAnonymous'] as bool? ??
-          storedRole.toLowerCase().contains('ẩn danh');
+              storedRole.toLowerCase().contains('ẩn danh');
 
       return storedAnonymous == isAnonymous;
     }).toList();
@@ -166,9 +306,9 @@ class FirebaseCommunityService {
     const maximumWritesPerBatch = 450;
 
     for (
-      var start = 0;
-      start < matchingDocuments.length;
-      start += maximumWritesPerBatch
+    var start = 0;
+    start < matchingDocuments.length;
+    start += maximumWritesPerBatch
     ) {
       final end = start + maximumWritesPerBatch < matchingDocuments.length
           ? start + maximumWritesPerBatch
@@ -193,5 +333,56 @@ class FirebaseCommunityService {
 
       await batch.commit();
     }
+  }
+  static Future<void> _runWithRetry(
+      Future<void> Function() operation,
+      ) async {
+    const maximumAttempts = 4;
+
+    var retryDelay = const Duration(
+      milliseconds: 700,
+    );
+
+    for (
+    var attempt = 1;
+    attempt <= maximumAttempts;
+    attempt++
+    ) {
+      try {
+        await operation();
+        return;
+      } on FirebaseException catch (error) {
+        final canRetry =
+            error.code == 'unavailable' ||
+                error.code == 'deadline-exceeded' ||
+                error.code == 'aborted';
+
+        if (!canRetry || attempt == maximumAttempts) {
+          rethrow;
+        }
+
+        await Future.delayed(retryDelay);
+
+        retryDelay = Duration(
+          milliseconds: retryDelay.inMilliseconds * 2,
+        );
+      }
+    }
+  }
+
+
+  static List<PostComment> _readComments(Object? rawComments) {
+    if (rawComments is! List) {
+      return <PostComment>[];
+    }
+
+    return rawComments
+        .whereType<Map>()
+        .map(
+          (item) => PostComment.fromJson(
+        Map<String, dynamic>.from(item),
+      ),
+    )
+        .toList();
   }
 }

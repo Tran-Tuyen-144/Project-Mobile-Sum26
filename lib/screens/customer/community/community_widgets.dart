@@ -197,7 +197,7 @@ class CommunityPostCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${post.authorRole} • ${post.timeAgo}',
+                      '${post.authorRole} • ${post.displayTimeAgo}',
                       style: Theme.of(
                         context,
                       ).textTheme.bodyMedium?.copyWith(fontSize: 12),

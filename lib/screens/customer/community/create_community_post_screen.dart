@@ -522,19 +522,26 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
   }
 
   Future<void> _pickImageFromGallery() async {
-    if (isUploadingPost) return;
+    if (isUploadingPost) {
+      return;
+    }
 
     try {
-      final image = await CloudinaryUploadService.pickImageFromGallery();
+      final image =
+      await CloudinaryUploadService.pickImageFromGallery();
 
-      if (image == null) return;
+      if (!mounted || image == null) {
+        return;
+      }
 
       setState(() {
         selectedImageFile = image;
         removeCurrentImage = false;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       _showMessage('Không chọn được ảnh: $error');
     }
@@ -562,7 +569,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       return;
     }
 
-    if (isUploadingPost) return;
+    if (isUploadingPost) {
+      return;
+    }
 
     final content = contentController.text.trim();
 
@@ -575,6 +584,8 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       isUploadingPost = true;
     });
 
+    CommunityPost? resultPost;
+
     try {
       final authorName = _currentAuthorName(profile);
       final avatarIconKey = _currentAvatarIconKey(profile);
@@ -583,7 +594,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
           ? 'Thành viên ẩn danh'
           : 'Thành viên PetHub';
 
-      final colorKey = CommunityPost.colorKeyFromIconKey(avatarIconKey);
+      final colorKey = CommunityPost.colorKeyFromIconKey(
+        avatarIconKey,
+      );
 
       final oldPost = widget.initialPost;
 
@@ -595,19 +608,25 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
         finalImagePublicId = null;
       }
 
-      if (selectedImageFile != null) {
-        final uploadResult = await CloudinaryUploadService.uploadImageFile(
-          selectedImageFile!,
+      final imageFile = selectedImageFile;
+
+      if (imageFile != null) {
+        final uploadResult =
+        await CloudinaryUploadService.uploadImageFile(
+          imageFile,
         );
 
-        finalImageUrl = CloudinaryUploadService.optimizedImageUrl(
-          uploadResult.imageUrl,
-        );
+        if (!mounted) {
+          return;
+        }
+
+        finalImageUrl =
+            CloudinaryUploadService.optimizedImageUrl(
+              uploadResult.imageUrl,
+            );
 
         finalImagePublicId = uploadResult.publicId;
       }
-
-      final CommunityPost resultPost;
 
       if (oldPost == null) {
         resultPost = CommunityPost(
@@ -617,6 +636,7 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
           authorRole: authorRole,
           isAnonymous: isAnonymous,
           timeAgo: 'Vừa xong',
+          createdAt: DateTime.now(),
           content: content,
           category: selectedCategory,
           likes: 0,
@@ -640,25 +660,36 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
           imageUrl: finalImageUrl,
           imagePublicId: finalImagePublicId,
           removeCloudinaryImage:
-              finalImageUrl == null && finalImagePublicId == null,
+          finalImageUrl == null &&
+              finalImagePublicId == null,
           timeAgo: 'Vừa chỉnh sửa',
         );
       }
-
-      if (!mounted) return;
-
-      context.pop(resultPost);
     } catch (error) {
-      if (!mounted) return;
-
-      _showMessage('Không đăng được ảnh/bài viết: $error');
-    } finally {
-      if (mounted) {
-        setState(() {
-          isUploadingPost = false;
-        });
+      if (!mounted) {
+        return;
       }
+
+      setState(() {
+        isUploadingPost = false;
+      });
+
+      _showMessage(
+        'Không đăng được ảnh/bài viết: $error',
+      );
+
+      return;
     }
+
+    if (!mounted || resultPost == null) {
+      return;
+    }
+
+    setState(() {
+      isUploadingPost = false;
+    });
+
+    context.pop(resultPost);
   }
 
   void _showMessage(String message) {
