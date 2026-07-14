@@ -61,16 +61,7 @@ class RoleSelectScreen extends StatelessWidget {
                 }
               },
             ),
-            const SizedBox(height: 15),
-            _RoleCard(
-              title: 'Nhân viên',
-              subtitle: 'Xử lý công việc, đơn hàng, Pet và Check-in.',
-              icon: Icons.badge_rounded,
-              color: AppColors.mint,
-              onTap: () {
-                context.push('/staff-role');
-              },
-            ),
+
             const SizedBox(height: 15),
             _RoleCard(
               title: 'Quản lý',

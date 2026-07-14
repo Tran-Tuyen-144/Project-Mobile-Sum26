@@ -3,8 +3,8 @@ import '../../theme/app_colors.dart';
 
 // --- Import các màn hình con đã được tách file ---
 import 'dashboard/admin_dashboard_screen.dart';
-import 'reservations/admin_reservations_screen.dart';
-import 'staff/admin_staff_screen.dart';
+import 'orders/admin_orders_screen.dart';
+import 'profile/admin_profile_screen.dart';
 import 'manage/admin_manage_screen.dart';
 
 class AdminMainScreen extends StatefulWidget {
@@ -20,9 +20,9 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
   // Gọi trực tiếp các màn hình từ thư mục con
   final List<Widget> _screens = [
     const AdminDashboardScreen(),
-    const AdminReservationsScreen(),
-    const AdminStaffScreen(),
     const AdminManageScreen(),
+    const AdminOrdersScreen(),
+    const AdminProfileScreen(),
   ];
 
   @override
@@ -100,23 +100,19 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.analytics_rounded),
-              activeIcon: Icon(Icons.analytics),
-              label: 'Doanh thu',
+              label: 'Trang chủ',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.table_restaurant_rounded),
-              activeIcon: Icon(Icons.table_restaurant),
-              label: 'Đặt bàn',
+              icon: Icon(Icons.dashboard_customize_rounded),
+              label: 'Quản lý',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.badge_rounded),
-              activeIcon: Icon(Icons.badge),
-              label: 'Nhân viên',
+              icon: Icon(Icons.receipt_long_rounded),
+              label: 'Đơn hàng',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.category_outlined),
-              activeIcon: Icon(Icons.category_rounded),
-              label: 'Danh mục',
+              icon: Icon(Icons.person_rounded),
+              label: 'Tôi',
             ),
           ],
         ),

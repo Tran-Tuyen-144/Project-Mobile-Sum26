@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import '../screens/admin/admin_main_screen.dart';
 import '../screens/admin/service_request_admin_screen.dart';
-import '../screens/auth/customer_auth_screen.dart';
-import '../screens/customer/booking/customer_drink_order_screen.dart';
-import '../screens/customer/booking_confirm/booking_confirm_data.dart';
-import '../screens/customer/booking_confirm/booking_confirm_screen.dart';
-import '../screens/customer/community/community_post.dart';
-import '../screens/customer/community/community_post_detail_screen.dart';
-import '../screens/customer/community/create_community_post_screen.dart';
-import '../screens/customer/customer_shell_screen.dart';
-import '../screens/customer/notifications/customer_notification_screen.dart';
-import '../screens/customer/petprofile/pet_list_screen.dart';
 import '../screens/customer/profile/customer_profile_screen.dart';
 import '../screens/role_select_screen.dart';
-import '../screens/staff/staff_department.dart';
-import '../screens/staff/staff_main_screen.dart';
-import '../screens/staff/staff_role_select_screen.dart';
+import '../screens/customer/customer_shell_screen.dart';
+import '../screens/customer/booking/customer_drink_order_screen.dart';
+import '../screens/customer/notifications/customer_notification_screen.dart';
+import '../screens/customer/booking_confirm/booking_confirm_data.dart';
+import '../screens/customer/booking_confirm/booking_confirm_screen.dart';
+import '../screens/customer/community/community_post_detail_screen.dart';
+import '../screens/customer/community/create_community_post_screen.dart';
+import '../screens/customer/petprofile/pet_list_screen.dart';
+import '../screens/customer/community/community_post.dart';
+import '../screens/auth/customer_auth_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -31,6 +27,7 @@ final GoRouter appRouter = GoRouter(
         return const RoleSelectScreen();
       },
     ),
+
     GoRoute(
       path: '/customer-auth',
       name: 'customer-auth',
@@ -38,6 +35,7 @@ final GoRouter appRouter = GoRouter(
         return const CustomerAuthScreen();
       },
     ),
+
     GoRoute(
       path: '/notifications',
       name: 'notifications',
@@ -48,6 +46,7 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
     GoRoute(
       path: '/customer',
       name: 'customer',
@@ -55,6 +54,7 @@ final GoRouter appRouter = GoRouter(
         return const CustomerShellScreen(initialIndex: 0);
       },
     ),
+
     GoRoute(
       path: '/community/create-post',
       name: 'community-create-post',
@@ -73,6 +73,7 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
     GoRoute(
       path: '/booking',
       name: 'booking',
@@ -80,6 +81,7 @@ final GoRouter appRouter = GoRouter(
         return const CustomerShellScreen(initialIndex: 1);
       },
     ),
+
     GoRoute(
       path: '/services',
       name: 'services',
@@ -87,6 +89,7 @@ final GoRouter appRouter = GoRouter(
         return const CustomerShellScreen(initialIndex: 2);
       },
     ),
+
     GoRoute(
       path: '/map',
       name: 'map',
@@ -94,6 +97,7 @@ final GoRouter appRouter = GoRouter(
         return const CustomerShellScreen(initialIndex: 3);
       },
     ),
+
     GoRoute(
       path: '/community',
       name: 'community',
@@ -101,6 +105,7 @@ final GoRouter appRouter = GoRouter(
         return const CustomerShellScreen(initialIndex: 4);
       },
     ),
+
     GoRoute(
       path: '/profile',
       name: 'profile',
@@ -111,6 +116,7 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
     GoRoute(
       path: '/pet-profile',
       name: 'pet-profile',
@@ -118,6 +124,7 @@ final GoRouter appRouter = GoRouter(
         return PetListScreen();
       },
     ),
+
     GoRoute(
       path: '/community/post-detail',
       name: 'community-post-detail',
@@ -129,6 +136,7 @@ final GoRouter appRouter = GoRouter(
         return CommunityPostDetailScreen(args: args);
       },
     ),
+
     GoRoute(
       path: '/booking-confirm',
       name: 'booking-confirm',
@@ -151,6 +159,7 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
     GoRoute(
       path: '/order',
       name: 'order',
@@ -159,23 +168,6 @@ final GoRouter appRouter = GoRouter(
           appBar: AppBar(title: const Text('Gọi nước trước')),
           body: const CustomerDrinkOrderScreen(),
         );
-      },
-    ),
-    GoRoute(
-      path: '/staff-role',
-      name: 'staff-role',
-      builder: (context, state) {
-        return const StaffRoleSelectScreen();
-      },
-    ),
-    GoRoute(
-      path: '/staff',
-      name: 'staff',
-      builder: (context, state) {
-        final departmentKey = state.uri.queryParameters['department'];
-        final department = staffDepartmentFromKey(departmentKey);
-
-        return StaffMainScreen(department: department);
       },
     ),
     GoRoute(
