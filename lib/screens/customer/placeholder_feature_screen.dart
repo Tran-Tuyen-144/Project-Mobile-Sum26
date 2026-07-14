@@ -27,12 +27,8 @@ class PlaceholderFeatureScreen extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 42,
-                backgroundColor: Colors.white.withOpacity(0.8),
-                child: Icon(
-                  icon,
-                  size: 42,
-                  color: AppColors.primary,
-                ),
+                backgroundColor: Colors.white.withValues(alpha: 0.8),
+                child: Icon(icon, size: 42, color: AppColors.primary),
               ),
 
               const SizedBox(height: 20),
@@ -48,9 +44,9 @@ class PlaceholderFeatureScreen extends StatelessWidget {
               Text(
                 subtitle,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  height: 1.45,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(height: 1.45),
               ),
             ],
           ),

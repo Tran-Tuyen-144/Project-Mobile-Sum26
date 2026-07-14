@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../../services/pet_booking_store.dart' as booking_store;
@@ -6,38 +8,76 @@ import '../../../widgets/soft_card.dart';
 import 'profile_models.dart' as profile_models;
 
 class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({super.key});
+  final String displayName;
+  final String? avatarPath;
+  final VoidCallback onChangeAvatar;
+  final VoidCallback onEditName;
+
+  const ProfileHeader({
+    super.key,
+    required this.displayName,
+    required this.avatarPath,
+    required this.onChangeAvatar,
+    required this.onEditName,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final hasAvatar =
+        avatarPath != null &&
+        avatarPath!.isNotEmpty &&
+        File(avatarPath!).existsSync();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            AppColors.primarySoft,
-            AppColors.peach,
-            AppColors.cream,
-          ],
+          colors: [AppColors.primarySoft, AppColors.peach, AppColors.cream],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
       child: Row(
         children: [
-          Container(
-            width: 78,
-            height: 78,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.person_rounded,
-              color: AppColors.primary,
-              size: 42,
+          InkWell(
+            borderRadius: BorderRadius.circular(99),
+            onTap: onChangeAvatar,
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 42,
+                  backgroundColor: Colors.white.withValues(alpha: 0.85),
+                  backgroundImage: hasAvatar
+                      ? FileImage(File(avatarPath!))
+                      : null,
+                  child: hasAvatar
+                      ? null
+                      : const Icon(
+                          Icons.person_rounded,
+                          color: AppColors.primary,
+                          size: 42,
+                        ),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt_rounded,
+                      color: Colors.white,
+                      size: 17,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -47,13 +87,30 @@ class ProfileHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Trần Mộng Tuyền',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    height: 1.15,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleLarge?.copyWith(height: 1.15),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Chỉnh sửa tên',
+                      onPressed: onEditName,
+                      icon: const Icon(
+                        Icons.edit_rounded,
+                        color: AppColors.primary,
+                        size: 21,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 2),
                 Text(
                   'Khách hàng thân thiết của PetHub',
                   style: Theme.of(context).textTheme.bodyMedium,
@@ -65,7 +122,7 @@ class ProfileHeader extends StatelessWidget {
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.78),
+                    color: Colors.white.withValues(alpha: 0.78),
                     borderRadius: BorderRadius.circular(99),
                   ),
                   child: const Text(
@@ -144,11 +201,7 @@ class _ProfileStatCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       child: Column(
         children: [
-          Icon(
-            icon,
-            color: AppColors.textDark,
-            size: 24,
-          ),
+          Icon(icon, color: AppColors.textDark, size: 24),
           const SizedBox(height: 8),
           Text(
             value,
@@ -177,10 +230,7 @@ class _ProfileStatCard extends StatelessWidget {
 class PetProfileCard extends StatelessWidget {
   final profile_models.PetProfile pet;
 
-  const PetProfileCard({
-    super.key,
-    required this.pet,
-  });
+  const PetProfileCard({super.key, required this.pet});
 
   @override
   Widget build(BuildContext context) {
@@ -192,11 +242,8 @@ class PetProfileCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 26,
-              backgroundColor: Colors.white.withOpacity(0.8),
-              child: Icon(
-                pet.icon,
-                color: AppColors.textDark,
-              ),
+              backgroundColor: Colors.white.withValues(alpha: 0.8),
+              child: Icon(pet.icon, color: AppColors.textDark),
             ),
 
             const SizedBox(width: 12),
@@ -209,18 +256,18 @@ class PetProfileCard extends StatelessWidget {
                     pet.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: 16,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(fontSize: 16),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     pet.type,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 12,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(fontSize: 12),
                   ),
                   const SizedBox(height: 3),
                   Text(
@@ -244,10 +291,7 @@ class PetProfileCard extends StatelessWidget {
 class ProfilePetProfileCard extends StatelessWidget {
   final booking_store.PetProfile pet;
 
-  const ProfilePetProfileCard({
-    super.key,
-    required this.pet,
-  });
+  const ProfilePetProfileCard({super.key, required this.pet});
 
   @override
   Widget build(BuildContext context) {
@@ -260,11 +304,8 @@ class ProfilePetProfileCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 26,
-              backgroundColor: Colors.white.withOpacity(0.8),
-              child: Icon(
-                Icons.pets_rounded,
-                color: AppColors.textDark,
-              ),
+              backgroundColor: Colors.white.withValues(alpha: 0.8),
+              child: Icon(Icons.pets_rounded, color: AppColors.textDark),
             ),
 
             const SizedBox(width: 12),
@@ -277,22 +318,24 @@ class ProfilePetProfileCard extends StatelessWidget {
                     pet.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: 16,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(fontSize: 16),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     pet.age,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 12,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(fontSize: 12),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     isBooked ? 'Đã được đặt' : 'Có sẵn',
                     style: TextStyle(
-                      color: isBooked ? Colors.red.shade700 : Colors.green.shade700,
+                      color: isBooked
+                          ? Colors.red.shade700
+                          : Colors.green.shade700,
                       fontWeight: FontWeight.w700,
                       fontSize: 12,
                     ),
@@ -311,11 +354,7 @@ class ProfileMenuTile extends StatelessWidget {
   final profile_models.ProfileMenuItem item;
   final VoidCallback onTap;
 
-  const ProfileMenuTile({
-    super.key,
-    required this.item,
-    required this.onTap,
-  });
+  const ProfileMenuTile({super.key, required this.item, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -327,10 +366,7 @@ class ProfileMenuTile extends StatelessWidget {
           CircleAvatar(
             radius: 28,
             backgroundColor: item.color,
-            child: Icon(
-              item.icon,
-              color: AppColors.textDark,
-            ),
+            child: Icon(item.icon, color: AppColors.textDark),
           ),
 
           const SizedBox(width: 14),
@@ -341,9 +377,9 @@ class ProfileMenuTile extends StatelessWidget {
               children: [
                 Text(
                   item.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 16,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontSize: 16),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -368,10 +404,7 @@ class ProfileMenuTile extends StatelessWidget {
 class LogoutCard extends StatelessWidget {
   final VoidCallback onLogout;
 
-  const LogoutCard({
-    super.key,
-    required this.onLogout,
-  });
+  const LogoutCard({super.key, required this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -383,10 +416,7 @@ class LogoutCard extends StatelessWidget {
           CircleAvatar(
             radius: 26,
             backgroundColor: Colors.white,
-            child: Icon(
-              Icons.logout_rounded,
-              color: Color(0xFFD45A5A),
-            ),
+            child: Icon(Icons.logout_rounded, color: Color(0xFFD45A5A)),
           ),
           SizedBox(width: 14),
           Expanded(

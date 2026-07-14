@@ -6,14 +6,15 @@ class AppTheme {
     useMaterial3: true,
     scaffoldBackgroundColor: AppColors.background,
 
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      brightness: Brightness.light,
-    ).copyWith(
-      primary: AppColors.primary,
-      secondary: AppColors.mint,
-      surface: AppColors.surface,
-    ),
+    colorScheme:
+        ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: AppColors.primary,
+          secondary: AppColors.mint,
+          surface: AppColors.surface,
+        ),
 
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.background,
@@ -38,23 +39,14 @@ class AppTheme {
         fontWeight: FontWeight.w700,
         color: AppColors.textDark,
       ),
-      bodyLarge: TextStyle(
-        fontSize: 16,
-        color: AppColors.textDark,
-      ),
-      bodyMedium: TextStyle(
-        fontSize: 14,
-        color: AppColors.textSoft,
-      ),
+      bodyLarge: TextStyle(fontSize: 16, color: AppColors.textDark),
+      bodyMedium: TextStyle(fontSize: 14, color: AppColors.textSoft),
     ),
 
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 18,
-        vertical: 14,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide.none,
@@ -66,17 +58,9 @@ class AppTheme {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 22,
-          vertical: 14,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
-        textStyle: const TextStyle(
-          fontWeight: FontWeight.w700,
-          fontSize: 15,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
       ),
     ),
 
@@ -84,16 +68,16 @@ class AppTheme {
       backgroundColor: Colors.white,
       indicatorColor: AppColors.cream,
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      iconTheme: MaterialStateProperty.resolveWith((states) {
+      iconTheme: WidgetStateProperty.resolveWith((states) {
         return IconThemeData(
-          color: states.contains(MaterialState.selected)
+          color: states.contains(WidgetState.selected)
               ? AppColors.textDark
               : AppColors.textSoft,
         );
       }),
-      labelTextStyle: MaterialStateProperty.resolveWith((states) {
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
         return TextStyle(
-          color: states.contains(MaterialState.selected)
+          color: states.contains(WidgetState.selected)
               ? AppColors.textDark
               : AppColors.textSoft,
         );

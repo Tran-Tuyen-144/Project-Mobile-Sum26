@@ -12,7 +12,20 @@
           "package_name": "com.example.pethub_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "137756708809-5o6iducjiocoi00pq46k6cbbfcteq1b6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pethub_app",
+            "certificate_hash": "ba1788204ac7177eac6da4fae0d4e9083fdd4740"
+          }
+        },
+        {
+          "client_id": "137756708809-14ktcfu3uejg4vdo69au6igpdsuo5iq4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCf4nJZFA_FSSKwnWG_7Qnx1YLKujLsKq4"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "137756708809-14ktcfu3uejg4vdo69au6igpdsuo5iq4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "137756708809-rpkms496o1i5ekrv4dgahq11a3lh78jd.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pethubApp"
+              }
+            }
+          ]
         }
       }
     }

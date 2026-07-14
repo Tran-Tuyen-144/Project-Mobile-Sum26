@@ -60,7 +60,9 @@ class PetBooking {
     final data = doc.data() ?? {};
     final legacyPet = data['petName'] as String?;
     final rawPets = (data['pets'] as List<dynamic>?)
-        ?.map((pet) => pet is Map ? (pet['name'] ?? '').toString() : pet.toString())
+        ?.map(
+          (pet) => pet is Map ? (pet['name'] ?? '').toString() : pet.toString(),
+        )
         .where((name) => name.isNotEmpty)
         .toList();
     return PetBooking(
@@ -85,24 +87,24 @@ class PetBooking {
   }
 
   Map<String, dynamic> toMap() => {
-        'customerId': customerId,
-        'customerName': customerName,
-        'bookingType': bookingType.value,
-        'pets': pets.map((name) => {'name': name}).toList(),
-        'bookingDate': Timestamp.fromDate(bookingDate),
-        'startTime': startTime,
-        'address': address,
-        'tableNumber': tableNumber,
-        'note': note,
-        'status': status.value,
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
+    'customerId': customerId,
+    'customerName': customerName,
+    'bookingType': bookingType.value,
+    'pets': pets.map((name) => {'name': name}).toList(),
+    'bookingDate': Timestamp.fromDate(bookingDate),
+    'startTime': startTime,
+    'address': address,
+    'tableNumber': tableNumber,
+    'note': note,
+    'status': status.value,
+    'updatedAt': FieldValue.serverTimestamp(),
+  };
 
   static DateTime? _date(dynamic value) => value is Timestamp
       ? value.toDate()
       : value is DateTime
-          ? value
-          : null;
+      ? value
+      : null;
 
   static BookingStatus _status(String value) {
     switch (value) {

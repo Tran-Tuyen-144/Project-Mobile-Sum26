@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <application
         android:label="pethub_app"
         android:name="${applicationName}"
@@ -14,21 +16,21 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
 
-            <!-- Theme hiển thị trong lúc Flutter đang khởi động -->
+            <!-- Theme hiá»ƒn thá»‹ trong lĂºc Flutter Ä‘ang khá»Ÿi Ä‘á»™ng -->
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme" />
 
-            <!-- Intent chính để mở app từ icon ngoài màn hình -->
+            <!-- Intent chĂ­nh Ä‘á»ƒ má»Ÿ app tá»« icon ngoĂ i mĂ n hĂ¬nh -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
             <!-- Deep link PetHub -->
-            <!-- Cho phép mở app bằng link dạng:
+            <!-- Cho phĂ©p má»Ÿ app báº±ng link dáº¡ng:
                  pethub://booking
-                 pethub://order
+                 pethub://orders
                  pethub://services
                  pethub://map
                  pethub://community
@@ -44,7 +46,7 @@
 
         </activity>
 
-        <!-- Không xóa meta-data này -->
+        <!-- KhĂ´ng xĂ³a meta-data nĂ y -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

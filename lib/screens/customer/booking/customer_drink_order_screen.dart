@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../../../storage/offline_drink_order_storage.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
+import 'cat_saved_data_button.dart';
 
-const Color _blueMain = Color(0xFF8ECAE6);
 const Color _blueSoft = Color(0xFFDDF6FF);
 const Color _bluePale = Color(0xFFEFFBFF);
 const Color _blueDeep = Color(0xFF2D6A8D);
-const Color _blueCard = Color(0xFFF4FCFF);
+const String _zaloPayMethodLabel = 'ZaloPay';
 
 const List<String> _categories = [
   'Tất cả',
@@ -16,6 +17,20 @@ const List<String> _categories = [
   'Trà',
   'Sinh tố',
   'Bánh ngọt',
+  'combo chạy thận',
+];
+
+const List<_PaymentMethod> _paymentMethods = [
+  _PaymentMethod(
+    label: _zaloPayMethodLabel,
+    description: 'Quét mã QR demo và tự xác nhận đã thanh toán.',
+    icon: Icons.wallet_rounded,
+  ),
+  _PaymentMethod(
+    label: 'Thanh toán tại quầy',
+    description: 'Trả tiền khi nhận nước tại PetHub.',
+    icon: Icons.storefront_rounded,
+  ),
 ];
 
 const List<_DrinkItem> _drinks = [
@@ -69,7 +84,7 @@ const List<_DrinkItem> _drinks = [
     name: 'Sinh Tố Bơ Sữa',
     description: 'Bơ béo nhẹ, thơm sữa, no bụng.',
     category: 'Sinh tố',
-    price: 52000,
+    price: 500000000,
     icon: Icons.eco_rounded,
     color: Color(0xFFE0F7E9),
   ),
@@ -91,6 +106,24 @@ const List<_DrinkItem> _drinks = [
     icon: Icons.cookie_rounded,
     color: Color(0xFFFFE8D6),
   ),
+  _DrinkItem(
+    id: 9,
+    name: 'Nước Suối',
+    description: 'Nước suối tinh khiết, giải khát.',
+    category: 'Khác',
+    price: 15000,
+    icon: Icons.water_drop_rounded,
+    color: Color(0xFFE8F7FF),
+  ),
+  _DrinkItem(
+    id: 10,
+    name: 'Tài lộc',
+    description: 'Giúp nhanh chạy thận .',
+    category: 'combo chạy thận',
+    price: 15000,
+    icon: Icons.local_drink_rounded,
+    color: Color(0xFFFFF0D9),
+  ),
 ];
 
 class CustomerDrinkOrderScreen extends StatefulWidget {
@@ -104,19 +137,35 @@ class CustomerDrinkOrderScreen extends StatefulWidget {
 class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
   String _selectedCategory = 'Tất cả';
   String _keyword = '';
+  String _selectedPaymentMethod = _paymentMethods.first.label;
   final Map<int, int> _cart = {};
+  List<OfflineDrinkOrder> _orderHistory = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCart();
+  }
+
+  Future<void> _loadCart() async {
+    final storedCart = await OfflineDrinkOrderStorage.loadCart();
+    final history = await OfflineDrinkOrderStorage.loadOrderHistory();
+    if (!mounted) return;
+    setState(() {
+      _cart.clear();
+      _cart.addAll(storedCart);
+      _orderHistory = history.reversed.take(10).toList();
+    });
+  }
 
   List<_DrinkItem> get _filteredDrinks {
     return _drinks.where((drink) {
       final matchCategory =
           _selectedCategory == 'Tất cả' || drink.category == _selectedCategory;
 
-      final matchKeyword = drink.name.toLowerCase().contains(
-        _keyword.toLowerCase(),
-      ) ||
-          drink.description.toLowerCase().contains(
-            _keyword.toLowerCase(),
-          );
+      final matchKeyword =
+          drink.name.toLowerCase().contains(_keyword.toLowerCase()) ||
+          drink.description.toLowerCase().contains(_keyword.toLowerCase());
 
       return matchCategory && matchKeyword;
     }).toList();
@@ -141,16 +190,31 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
   }
 
   String _money(int value) {
-    return '${value.toString().replaceAllMapped(
-      RegExp(r'\B(?=(\d{3})+(?!\d))'),
-          (match) => '.',
-    )}đ';
+    return '${value.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => '.')}đ';
+  }
+
+  String _drinkName(int id) {
+    return _drinks
+        .firstWhere(
+          (drink) => drink.id == id,
+          orElse: () => _DrinkItem(
+            id: id,
+            name: 'Món #$id',
+            description: '',
+            category: 'Khác',
+            price: 0,
+            icon: Icons.local_cafe_rounded,
+            color: Colors.white,
+          ),
+        )
+        .name;
   }
 
   void _addDrink(_DrinkItem drink) {
     setState(() {
       _cart[drink.id] = _quantityOf(drink.id) + 1;
     });
+    OfflineDrinkOrderStorage.saveCart(_cart);
   }
 
   void _removeDrink(_DrinkItem drink) {
@@ -165,18 +229,105 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
         _cart[drink.id] = currentQuantity - 1;
       });
     }
+    OfflineDrinkOrderStorage.saveCart(_cart);
   }
 
-  void _submitOrder() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Đã thêm $_totalItems món vào đơn gọi nước.',
-        ),
-      ),
+  Future<void> _submitOrder() async {
+    final submittedItems = _totalItems;
+    final paymentMethod = _selectedPaymentMethod;
+
+    if (paymentMethod == _zaloPayMethodLabel) {
+      final paid = await _showZaloPayQrAndAutoConfirm();
+      if (!paid) return;
+    }
+
+    final order = OfflineDrinkOrder(
+      createdAt: DateTime.now(),
+      items: Map.from(_cart),
+      totalPrice: _totalPrice,
+      paymentMethod: paymentMethod,
     );
 
-    Navigator.pop(context);
+    await OfflineDrinkOrderStorage.saveOfflineOrder(order);
+    await OfflineDrinkOrderStorage.clearCart();
+
+    if (!mounted) return;
+    setState(() {
+      _cart.clear();
+      _orderHistory = [order, ..._orderHistory].take(3).toList();
+    });
+
+    final message = paymentMethod == _zaloPayMethodLabel
+        ? 'Đã thanh toán thành công và lưu vào biểu tượng mèo.'
+        : 'Đã lưu đơn gọi nước với $submittedItems món vào biểu tượng mèo.';
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<bool> _showZaloPayQrAndAutoConfirm() async {
+    final paymentCode = 'ZLP-${DateTime.now().millisecondsSinceEpoch}';
+
+    Future<void>.delayed(const Duration(seconds: 15), () {
+      if (!mounted) return;
+      final navigator = Navigator.of(context);
+      if (navigator.canPop()) {
+        navigator.pop(true);
+      }
+    });
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Quét mã ZaloPay'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _DemoQrCode(data: paymentCode),
+              const SizedBox(height: 14),
+              Text(
+                _money(_totalPrice),
+                style: const TextStyle(
+                  color: _blueDeep,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                paymentCode,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSoft,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Demo sẽ tự chuyển sang đã thanh toán sau vài giây.',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton.icon(
+              onPressed: null,
+              icon: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              label: Text('Đang xác nhận'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed ?? false;
   }
 
   @override
@@ -184,9 +335,15 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
     return Scaffold(
       backgroundColor: _bluePale,
       appBar: AppBar(
-        title: const Text('Gọi nước trước'),
+        title: const Text('Gọi nước đi mà'),
         backgroundColor: _bluePale,
         foregroundColor: AppColors.textDark,
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: CatSavedDataButton(),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -200,6 +357,20 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
                     const _DrinkHeader(),
 
                     const SizedBox(height: 20),
+
+                    if (_orderHistory.isNotEmpty) ...[
+                      SectionTitle(
+                        title: 'Lịch sử đặt nước',
+                        actionText: '${_orderHistory.length} đơn',
+                      ),
+                      const SizedBox(height: 12),
+                      _DrinkOrderHistory(
+                        orders: _orderHistory,
+                        money: _money,
+                        drinkName: _drinkName,
+                      ),
+                      const SizedBox(height: 22),
+                    ],
 
                     TextField(
                       onChanged: (value) {
@@ -245,12 +416,12 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisExtent: 238,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisExtent: 238,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
                       itemBuilder: (context, index) {
                         final drink = _filteredDrinks[index];
 
@@ -263,6 +434,22 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
                         );
                       },
                     ),
+
+                    const SizedBox(height: 24),
+
+                    const SectionTitle(title: 'Thanh toán'),
+
+                    const SizedBox(height: 12),
+
+                    _PaymentSelector(
+                      methods: _paymentMethods,
+                      selectedMethod: _selectedPaymentMethod,
+                      onSelected: (method) {
+                        setState(() {
+                          _selectedPaymentMethod = method;
+                        });
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -271,12 +458,74 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
             _CartBottomBar(
               totalItems: _totalItems,
               totalPrice: _money(_totalPrice),
+              paymentMethod: _selectedPaymentMethod,
               onSubmit: _totalItems == 0 ? null : _submitOrder,
             ),
           ],
         ),
       ),
     );
+  }
+}
+
+class _DemoQrCode extends StatelessWidget {
+  final String data;
+
+  const _DemoQrCode({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 17;
+
+    return Container(
+      width: 196,
+      height: 196,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: _blueSoft, width: 2),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: size * size,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: size,
+        ),
+        itemBuilder: (context, index) {
+          final row = index ~/ size;
+          final col = index % size;
+          final isDark = _isDarkCell(row, col, size);
+
+          return Container(
+            margin: const EdgeInsets.all(1),
+            decoration: BoxDecoration(
+              color: isDark ? _blueDeep : Colors.white,
+              borderRadius: BorderRadius.circular(1.5),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  bool _isDarkCell(int row, int col, int size) {
+    final inTopLeft = row < 5 && col < 5;
+    final inTopRight = row < 5 && col >= size - 5;
+    final inBottomLeft = row >= size - 5 && col < 5;
+
+    if (inTopLeft || inTopRight || inBottomLeft) {
+      final localRow = row % (size - 5);
+      final localCol = col % (size - 5);
+      return localRow == 0 ||
+          localRow == 4 ||
+          localCol == 0 ||
+          localCol == 4 ||
+          (localRow == 2 && localCol == 2);
+    }
+
+    final seed = data.codeUnitAt((row + col) % data.length);
+    return (row * 31 + col * 17 + seed) % 5 < 2;
   }
 }
 
@@ -291,11 +540,7 @@ class _DrinkHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            _blueSoft,
-            Color(0xFFE9FAFF),
-            Colors.white,
-          ],
+          colors: [_blueSoft, Color(0xFFE9FAFF), Colors.white],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -306,7 +551,7 @@ class _DrinkHeader extends StatelessWidget {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(24),
             ),
             child: const Icon(
@@ -323,10 +568,10 @@ class _DrinkHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Đặt nước trước',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: _blueDeep,
-                  ),
+                  'Chọn nước lẹ lên ',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(color: _blueDeep),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -361,7 +606,7 @@ class _CategorySelector extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final category = _categories[index];
           final isSelected = category == selectedCategory;
@@ -375,9 +620,7 @@ class _CategorySelector extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isSelected ? _blueDeep : Colors.white,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: isSelected ? _blueDeep : _blueSoft,
-                ),
+                border: Border.all(color: isSelected ? _blueDeep : _blueSoft),
               ),
               child: Text(
                 category,
@@ -390,6 +633,165 @@ class _CategorySelector extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _DrinkOrderHistory extends StatelessWidget {
+  final List<OfflineDrinkOrder> orders;
+  final String Function(int value) money;
+  final String Function(int id) drinkName;
+
+  const _DrinkOrderHistory({
+    required this.orders,
+    required this.money,
+    required this.drinkName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: orders.map((order) {
+        final totalItems = order.items.values.fold<int>(
+          0,
+          (sum, quantity) => sum + quantity,
+        );
+        final itemText = order.items.entries
+            .map((entry) => '${drinkName(entry.key)} x${entry.value}')
+            .join(', ');
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: SoftCard(
+            color: Colors.white,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const CircleAvatar(
+                  backgroundColor: _blueSoft,
+                  child: Icon(Icons.receipt_long_rounded, color: _blueDeep),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$totalItems món • ${money(order.totalPrice)}',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(fontSize: 15),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        itemText,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        order.paymentMethod,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: _blueDeep,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _bluePale,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: const Text(
+                    'Đã lưu',
+                    style: TextStyle(
+                      color: _blueDeep,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _PaymentSelector extends StatelessWidget {
+  final List<_PaymentMethod> methods;
+  final String selectedMethod;
+  final ValueChanged<String> onSelected;
+
+  const _PaymentSelector({
+    required this.methods,
+    required this.selectedMethod,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: methods.map((method) {
+        final isSelected = method.label == selectedMethod;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: SoftCard(
+            color: isSelected ? _blueSoft : Colors.white,
+            padding: const EdgeInsets.all(14),
+            onTap: () => onSelected(method.label),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: isSelected ? Colors.white : _bluePale,
+                  child: Icon(method.icon, color: _blueDeep),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        method.label,
+                        style: const TextStyle(
+                          color: AppColors.textDark,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        method.description,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSoft,
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Icon(
+                  isSelected
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_off_rounded,
+                  color: isSelected ? _blueDeep : AppColors.textSoft,
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -421,20 +823,14 @@ class _DrinkCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundColor: Colors.white.withOpacity(0.85),
-                child: Icon(
-                  drink.icon,
-                  color: _blueDeep,
-                ),
+                backgroundColor: Colors.white.withValues(alpha: 0.85),
+                child: Icon(drink.icon, color: _blueDeep),
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 9,
-                  vertical: 5,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.85),
+                  color: Colors.white.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text(
@@ -467,10 +863,9 @@ class _DrinkCard extends StatelessWidget {
             drink.description,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 12,
-              height: 1.3,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontSize: 12, height: 1.3),
           ),
 
           const Spacer(),
@@ -507,7 +902,7 @@ class _DrinkCard extends StatelessWidget {
             Container(
               height: 38,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -551,11 +946,13 @@ class _DrinkCard extends StatelessWidget {
 class _CartBottomBar extends StatelessWidget {
   final int totalItems;
   final String totalPrice;
+  final String paymentMethod;
   final VoidCallback? onSubmit;
 
   const _CartBottomBar({
     required this.totalItems,
     required this.totalPrice,
+    required this.paymentMethod,
     required this.onSubmit,
   });
 
@@ -565,18 +962,15 @@ class _CartBottomBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: totalItems == 0 ? const Color(0xFFE5E0DC) : _blueSoft,
-            child: const Icon(
-              Icons.shopping_bag_rounded,
-              color: _blueDeep,
-            ),
+            backgroundColor: totalItems == 0
+                ? const Color(0xFFE5E0DC)
+                : _blueSoft,
+            child: const Icon(Icons.shopping_bag_rounded, color: _blueDeep),
           ),
 
           const SizedBox(width: 12),
@@ -598,6 +992,16 @@ class _CartBottomBar extends StatelessWidget {
                   style: const TextStyle(
                     color: _blueDeep,
                     fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  paymentMethod,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSoft,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -640,5 +1044,17 @@ class _DrinkItem {
     required this.price,
     required this.icon,
     required this.color,
+  });
+}
+
+class _PaymentMethod {
+  final String label;
+  final String description;
+  final IconData icon;
+
+  const _PaymentMethod({
+    required this.label,
+    required this.description,
+    required this.icon,
   });
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../screens/admin/admin_main_screen.dart';
+import '../screens/admin/service_request_admin_screen.dart';
 import '../screens/customer/profile/customer_profile_screen.dart';
 import '../screens/role_select_screen.dart';
 import '../screens/customer/customer_shell_screen.dart';
@@ -9,7 +11,9 @@ import '../screens/customer/booking_confirm/booking_confirm_data.dart';
 import '../screens/customer/booking_confirm/booking_confirm_screen.dart';
 import '../screens/customer/community/community_post_detail_screen.dart';
 import '../screens/customer/community/create_community_post_screen.dart';
-import '../screens/customer/PetProfile/pet_list_screen.dart';
+import '../screens/customer/petprofile/pet_list_screen.dart';
+import '../screens/customer/community/community_post.dart';
+import '../screens/auth/customer_auth_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -21,6 +25,14 @@ final GoRouter appRouter = GoRouter(
       name: 'role',
       builder: (context, state) {
         return const RoleSelectScreen();
+      },
+    ),
+
+    GoRoute(
+      path: '/customer-auth',
+      name: 'customer-auth',
+      builder: (context, state) {
+        return const CustomerAuthScreen();
       },
     ),
 
@@ -47,9 +59,17 @@ final GoRouter appRouter = GoRouter(
       path: '/community/create-post',
       name: 'community-create-post',
       builder: (context, state) {
+        final initialPost = state.extra is CommunityPost
+            ? state.extra as CommunityPost
+            : null;
+
         return Scaffold(
-          appBar: AppBar(title: const Text('Tạo bài viết')),
-          body: const CreateCommunityPostScreen(),
+          appBar: AppBar(
+            title: Text(
+              initialPost == null ? 'Tạo bài viết' : 'Chỉnh sửa bài viết',
+            ),
+          ),
+          body: CreateCommunityPostScreen(initialPost: initialPost),
         );
       },
     ),
@@ -85,13 +105,6 @@ final GoRouter appRouter = GoRouter(
         return const CustomerShellScreen(initialIndex: 4);
       },
     ),
-    GoRoute(
-      path: '/pet-profile',
-      name: 'pet-profile',
-      builder: (context, state) {
-        return PetListScreen();
-      },
-    ),
 
     GoRoute(
       path: '/profile',
@@ -101,6 +114,14 @@ final GoRouter appRouter = GoRouter(
           appBar: AppBar(title: const Text('Hồ sơ cá nhân')),
           body: const CustomerProfileScreen(),
         );
+      },
+    ),
+
+    GoRoute(
+      path: '/pet-profile',
+      name: 'pet-profile',
+      builder: (context, state) {
+        return PetListScreen();
       },
     ),
 
@@ -128,9 +149,6 @@ final GoRouter appRouter = GoRouter(
             data:
                 data ??
                 const BookingConfirmData(
-                  petStatus: 'Kh?e m?nh',
-                  customerName: 'Khách vãng lai',
-                  petNames: const ['Thú cưng của bạn'],
                   branch: 'PetHub Quận 1',
                   day: 'Hôm nay',
                   time: '18:00',
@@ -150,6 +168,20 @@ final GoRouter appRouter = GoRouter(
           appBar: AppBar(title: const Text('Gọi nước trước')),
           body: const CustomerDrinkOrderScreen(),
         );
+      },
+    ),
+    GoRoute(
+      path: '/admin-service-requests',
+      name: 'admin-service-requests',
+      builder: (context, state) {
+        return const ServiceRequestAdminScreen();
+      },
+    ),
+    GoRoute(
+      path: '/admin',
+      name: 'admin',
+      builder: (context, state) {
+        return const AdminMainScreen();
       },
     ),
   ],

@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import '../../theme/app_colors.dart';
-
 class BookingsListScreen extends StatelessWidget {
   const BookingsListScreen({super.key});
 
@@ -14,9 +12,7 @@ class BookingsListScreen extends StatelessWidget {
         .snapshots();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Danh sách booking'),
-      ),
+      appBar: AppBar(title: const Text('Danh sách booking')),
       body: StreamBuilder<QuerySnapshot>(
         stream: stream,
         builder: (context, snapshot) {
@@ -35,7 +31,7 @@ class BookingsListScreen extends StatelessWidget {
           return ListView.separated(
             padding: const EdgeInsets.all(12),
             itemCount: docs.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               final doc = docs[index];
               final data = doc.data() as Map<String, dynamic>;
@@ -55,7 +51,9 @@ class BookingsListScreen extends StatelessWidget {
               } catch (_) {}
 
               return Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: ListTile(
                   title: Text('$customer — $pet'),
                   subtitle: Column(
@@ -66,7 +64,9 @@ class BookingsListScreen extends StatelessWidget {
                       Text('Trạng thái: $status'),
                     ],
                   ),
-                  trailing: Text(created.isNotEmpty ? created.split('.').first : ''),
+                  trailing: Text(
+                    created.isNotEmpty ? created.split('.').first : '',
+                  ),
                 ),
               );
             },

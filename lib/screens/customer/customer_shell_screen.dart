@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'map/customer_map_screen.dart';
+
 import '../../theme/app_colors.dart';
 import 'customer_home_screen.dart';
-import 'placeholder_feature_screen.dart';
-
 import 'booking/customer_booking_screen.dart';
 import 'services/customer_services_screen.dart';
+import 'map/customer_map_screen.dart';
 import 'community/customer_community_screen.dart';
+
 class CustomerShellScreen extends StatefulWidget {
   final int initialIndex;
 
-  const CustomerShellScreen({
-    super.key,
-    this.initialIndex = 0,
-  });
+  const CustomerShellScreen({super.key, this.initialIndex = 0});
 
   @override
   State<CustomerShellScreen> createState() => _CustomerShellScreenState();
@@ -44,7 +41,6 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
   }
 
   void _handleBack() {
-    // Nếu đang ở tab khác Home thì quay về Home trước
     if (_currentIndex != 0) {
       setState(() {
         _currentIndex = 0;
@@ -52,7 +48,6 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
       return;
     }
 
-    // Nếu đang ở Home thì mới quay về màn chọn chức vụ
     if (context.canPop()) {
       context.pop();
     } else {
@@ -65,14 +60,11 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
     final List<Widget> screens = [
       CustomerHomeScreen(
         onOpenBooking: () => _goToTab(1),
-        onOpenOrder: () => context.push('/order'),
+        onOpenOrder: () => context.push('/orders'),
         onOpenServices: () => _goToTab(2),
         onOpenMap: () => _goToTab(3),
         onOpenCommunity: () => _goToTab(4),
-
-        onOpenPetProfile: () {
-          context.push('/pet-profile');
-        },
+        onOpenPetProfile: () => context.push('/pet-profile'),
       ),
 
       const CustomerBookingScreen(),
@@ -113,10 +105,7 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
           ],
         ),
 
-        body: IndexedStack(
-          index: _currentIndex,
-          children: screens,
-        ),
+        body: IndexedStack(index: _currentIndex, children: screens),
 
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,
@@ -128,27 +117,30 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home_rounded),
+              selectedIcon: Icon(Icons.home_rounded, color: AppColors.primary),
               label: 'Home',
             ),
             NavigationDestination(
               icon: Icon(Icons.event_seat_outlined),
-              selectedIcon: Icon(Icons.event_seat_rounded),
+              selectedIcon: Icon(
+                Icons.event_seat_rounded,
+                color: AppColors.primary,
+              ),
               label: 'Đặt bàn',
             ),
             NavigationDestination(
               icon: Icon(Icons.spa_outlined),
-              selectedIcon: Icon(Icons.spa_rounded),
+              selectedIcon: Icon(Icons.spa_rounded, color: AppColors.primary),
               label: 'Dịch vụ',
             ),
             NavigationDestination(
               icon: Icon(Icons.map_outlined),
-              selectedIcon: Icon(Icons.map_rounded),
+              selectedIcon: Icon(Icons.map_rounded, color: AppColors.primary),
               label: 'Map',
             ),
             NavigationDestination(
               icon: Icon(Icons.forum_outlined),
-              selectedIcon: Icon(Icons.forum_rounded),
+              selectedIcon: Icon(Icons.forum_rounded, color: AppColors.primary),
               label: 'Forum',
             ),
           ],

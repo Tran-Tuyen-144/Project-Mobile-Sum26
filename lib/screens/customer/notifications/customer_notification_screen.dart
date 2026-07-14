@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../booking_history_screen.dart';
 import '../../../widgets/section_title.dart';
 import 'notification_item.dart';
 import 'notification_widgets.dart';
@@ -71,14 +70,6 @@ class _CustomerNotificationScreenState
         children: [
           NotificationHeader(unreadCount: unreadCount),
 
-          const SizedBox(height: 16),
-
-          _BookingHistoryShortcut(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const BookingHistoryScreen()),
-            ),
-          ),
-
           const SizedBox(height: 24),
 
           SectionTitle(
@@ -112,7 +103,7 @@ class _CustomerNotificationScreenState
             itemCount: filteredNotifications.length,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final notification = filteredNotifications[index];
 
@@ -127,26 +118,4 @@ class _CustomerNotificationScreenState
       ),
     );
   }
-}
-
-class _BookingHistoryShortcut extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _BookingHistoryShortcut({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) => Material(
-    color: Theme.of(context).colorScheme.primaryContainer,
-    borderRadius: BorderRadius.circular(18),
-    child: ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      leading: const Icon(Icons.history_rounded),
-      title: const Text('L\u1ecbch s\u1eed \u0111\u1eb7t pet'),
-      subtitle: const Text(
-        'Tra c\u1ee9u nhanh l\u1ecbch s\u1eed \u0111\u1eb7t online v\u00e0 t\u1ea1i ch\u1ed7.',
-      ),
-      trailing: const Icon(Icons.chevron_right_rounded),
-      onTap: onTap,
-    ),
-  );
 }

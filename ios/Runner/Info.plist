@@ -66,5 +66,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>PetHub c?n v? tr� c?a b?n d? t�m c�c d?ch v? v� d?a di?m th�n thi?n v?i th� cung g?n nh?t.</string>
 </dict>
 </plist>

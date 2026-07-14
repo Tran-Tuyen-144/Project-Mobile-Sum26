@@ -7,10 +7,7 @@ import 'notification_item.dart';
 class NotificationHeader extends StatelessWidget {
   final int unreadCount;
 
-  const NotificationHeader({
-    super.key,
-    required this.unreadCount,
-  });
+  const NotificationHeader({super.key, required this.unreadCount});
 
   @override
   Widget build(BuildContext context) {
@@ -20,11 +17,7 @@ class NotificationHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            AppColors.sky,
-            AppColors.primarySoft,
-            AppColors.cream,
-          ],
+          colors: [AppColors.sky, AppColors.primarySoft, AppColors.cream],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -35,7 +28,7 @@ class NotificationHeader extends StatelessWidget {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.82),
+              color: Colors.white.withValues(alpha: 0.82),
               borderRadius: BorderRadius.circular(24),
             ),
             child: const Icon(
@@ -60,9 +53,9 @@ class NotificationHeader extends StatelessWidget {
                   unreadCount == 0
                       ? 'Bạn đã xem hết thông báo mới.'
                       : 'Bạn có $unreadCount thông báo chưa đọc.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
               ],
             ),
@@ -92,7 +85,7 @@ class NotificationCategorySelector extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final category = categories[index];
           final isSelected = selectedCategory == category;
@@ -148,10 +141,7 @@ class NotificationCard extends StatelessWidget {
           CircleAvatar(
             radius: 30,
             backgroundColor: notification.color,
-            child: Icon(
-              notification.icon,
-              color: AppColors.textDark,
-            ),
+            child: Icon(notification.icon, color: AppColors.textDark),
           ),
 
           const SizedBox(width: 14),
@@ -165,9 +155,9 @@ class NotificationCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         notification.title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 16,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(fontSize: 16),
                       ),
                     ),
                     if (!isRead)
@@ -186,9 +176,9 @@ class NotificationCard extends StatelessWidget {
 
                 Text(
                   notification.message,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.35,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.35),
                 ),
 
                 const SizedBox(height: 10),
@@ -201,7 +191,7 @@ class NotificationCard extends StatelessWidget {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(99),
                       ),
                       child: Text(
@@ -236,10 +226,7 @@ class NotificationCard extends StatelessWidget {
 class NotificationDetailSheet extends StatelessWidget {
   final PetNotification notification;
 
-  const NotificationDetailSheet({
-    super.key,
-    required this.notification,
-  });
+  const NotificationDetailSheet({super.key, required this.notification});
 
   @override
   Widget build(BuildContext context) {
@@ -247,9 +234,7 @@ class NotificationDetailSheet extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 18, 22, 26),
       decoration: const BoxDecoration(
         color: AppColors.cream,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(32),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: SafeArea(
         top: false,
@@ -260,7 +245,7 @@ class NotificationDetailSheet extends StatelessWidget {
               width: 48,
               height: 5,
               decoration: BoxDecoration(
-                color: AppColors.textSoft.withOpacity(0.35),
+                color: AppColors.textSoft.withValues(alpha: 0.35),
                 borderRadius: BorderRadius.circular(99),
               ),
             ),
@@ -290,9 +275,9 @@ class NotificationDetailSheet extends StatelessWidget {
             Text(
               notification.message,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                height: 1.45,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(height: 1.45),
             ),
 
             const SizedBox(height: 18),
@@ -356,16 +341,9 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          color: AppColors.primary,
-          size: 20,
-        ),
+        Icon(icon, color: AppColors.primary, size: 20),
         const SizedBox(width: 10),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
         const Spacer(),
         Text(
           value,

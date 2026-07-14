@@ -71,10 +71,12 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
           : StreamBuilder<List<PetBooking>>(
               stream: PetBookingStore.instance.bookingHistory(_customerId!),
               builder: (context, snapshot) {
-                if (snapshot.hasError)
+                if (snapshot.hasError) {
                   return Center(child: Text('Lỗi: ${snapshot.error}'));
-                if (!snapshot.hasData)
+                }
+                if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
+                }
                 final bookings = snapshot.data!;
                 return TabBarView(
                   children: [
@@ -158,10 +160,11 @@ class BookingDetailScreen extends StatelessWidget {
     );
     if (confirmed == true) {
       await PetBookingStore.instance.cancelBooking(booking.bookingId);
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Đã hủy booking.')));
+      }
     }
   }
 
@@ -169,13 +172,15 @@ class BookingDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) => StreamBuilder<PetBooking?>(
     stream: FirebaseBookingStream(bookingId).stream,
     builder: (context, snapshot) {
-      if (!snapshot.hasData)
+      if (!snapshot.hasData) {
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
       final booking = snapshot.data;
-      if (booking == null)
+      if (booking == null) {
         return const Scaffold(
           body: Center(child: Text('Không tìm thấy booking.')),
         );
+      }
       return Scaffold(
         appBar: AppBar(title: const Text('Chi tiết booking')),
         body: ListView(
@@ -303,10 +308,11 @@ class _EditBookingScreenState extends State<EditBookingScreen> {
       return;
     }
     setState(() {
-      if (replaceIndex != null)
+      if (replaceIndex != null) {
         _pets[replaceIndex] = selected;
-      else if (_pets.length < 3 && !_pets.contains(selected))
+      } else if (_pets.length < 3 && !_pets.contains(selected)) {
         _pets.add(selected);
+      }
     });
   }
 
@@ -336,12 +342,13 @@ class _EditBookingScreenState extends State<EditBookingScreen> {
       await PetBookingStore.instance.updateModernBooking(updated);
       if (mounted) Navigator.pop(context);
     } on BookingPetLimitException {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Mỗi booking chỉ được đặt tối đa 3 pet.'),
           ),
         );
+      }
     }
   }
 

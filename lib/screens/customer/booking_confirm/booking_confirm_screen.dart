@@ -1,17 +1,156 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../services/firebase_booking_service.dart';
 import '../../../services/pet_booking_store.dart';
 import '../../../theme/app_colors.dart';
-import '../booking_history_screen.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
+import '../booking_history_screen.dart';
 import 'booking_confirm_data.dart';
 
-class BookingConfirmScreen extends StatelessWidget {
+class BookingConfirmScreen extends StatefulWidget {
   final BookingConfirmData data;
 
   const BookingConfirmScreen({super.key, required this.data});
+
+  @override
+  State<BookingConfirmScreen> createState() => _BookingConfirmScreenState();
+}
+
+class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
+  bool _isSaving = false;
+
+  BookingConfirmData get data => widget.data;
+
+  bool get _isPetBooking => data.petNames.isNotEmpty;
+
+  Future<void> _confirmBooking() async {
+    if (_isSaving) return;
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      if (_isPetBooking) {
+        await PetBookingStore.instance.createOnlineTableBooking(
+          customerId: data.customerId,
+          customerName: data.customerName,
+          petNames: data.petNames,
+          branch: data.branch,
+          day: data.day,
+          time: data.time,
+          guests: data.guests,
+          tableName: data.tableName,
+        );
+      } else {
+        await FirebaseBookingService.createBooking(data);
+      }
+
+      if (!mounted) return;
+
+      if (_isPetBooking) {
+        await _showPetBookingSuccessDialog();
+      } else {
+        _showTableBookingSuccessDialog();
+      }
+    } on BookingPetLimitException {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mỗi booking chỉ được chọn tối đa 3 pet.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isPetBooking
+                ? 'Không lưu được lịch đặt pet: $error'
+                : 'Không lưu được lịch đặt bàn: $error',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _showPetBookingSuccessDialog() async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Text('Đặt pet thành công'),
+          content: Text(
+            'Đã giữ ${data.tableName} cho ${data.petName} tại '
+            '${data.branch} vào ${data.day} lúc ${data.time}.',
+          ),
+          actions: [
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              icon: const Icon(Icons.history_rounded),
+              label: const Text('Xem lịch sử'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) {
+          return BookingHistoryScreen(customerId: data.customerId);
+        },
+      ),
+      (route) => route.isFirst,
+    );
+  }
+
+  void _showTableBookingSuccessDialog() {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Text('Đặt bàn thành công'),
+          content: Text(
+            'PetHub đã giữ ${data.tableName} tại ${data.branch} '
+            'cho bạn vào ${data.day} lúc ${data.time}. '
+            'Lịch đặt bàn đã được lưu.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                context.go('/customer');
+              },
+              child: const Text('Về trang chính'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,30 +159,38 @@ class BookingConfirmScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _ConfirmHeader(),
-
+          _ConfirmHeader(isPetBooking: _isPetBooking),
           const SizedBox(height: 24),
-
-          const SectionTitle(title: 'Thông tin đặt bàn'),
-
+          SectionTitle(
+            title: _isPetBooking ? 'Thông tin đặt pet' : 'Thông tin đặt bàn',
+          ),
           const SizedBox(height: 12),
-
           SoftCard(
             color: Colors.white,
             child: Column(
               children: [
-                _ConfirmRow(
-                  icon: Icons.pets_rounded,
-                  label: 'Thú cưng',
-                  value: data.petName,
-                ),
-                const SizedBox(height: 14),
-                _ConfirmRow(
-                  icon: Icons.health_and_safety_rounded,
-                  label: 'Tình trạng',
-                  value: data.petStatus,
-                ),
-                const SizedBox(height: 14),
+                if (_isPetBooking) ...[
+                  _ConfirmRow(
+                    icon: Icons.person_rounded,
+                    label: 'Khách hàng',
+                    value: data.customerName,
+                  ),
+                  const SizedBox(height: 14),
+                  _ConfirmRow(
+                    icon: Icons.pets_rounded,
+                    label: 'Thú cưng',
+                    value: data.petName,
+                  ),
+                  const SizedBox(height: 14),
+                  _ConfirmRow(
+                    icon: Icons.health_and_safety_rounded,
+                    label: 'Tình trạng',
+                    value: data.petStatus.trim().isEmpty
+                        ? 'Đã chọn'
+                        : data.petStatus,
+                  ),
+                  const SizedBox(height: 14),
+                ],
                 _ConfirmRow(
                   icon: Icons.storefront_rounded,
                   label: 'Chi nhánh',
@@ -76,13 +223,9 @@ class BookingConfirmScreen extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
           const SectionTitle(title: 'Ghi chú'),
-
           const SizedBox(height: 12),
-
           SoftCard(
             color: AppColors.peach,
             child: Row(
@@ -97,7 +240,11 @@ class BookingConfirmScreen extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    'Vui lòng đến trước giờ hẹn khoảng 10 phút. Nếu cần đổi giờ, bạn có thể liên hệ nhân viên PetHub.',
+                    _isPetBooking
+                        ? 'Pet sẽ được giữ theo lịch đã chọn. '
+                              'Mỗi booking được chọn tối đa 3 pet.'
+                        : 'Vui lòng đến trước giờ hẹn khoảng 10 phút. '
+                              'Nếu cần đổi giờ, bạn có thể liên hệ nhân viên PetHub.',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(height: 1.4),
@@ -106,23 +253,22 @@ class BookingConfirmScreen extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
           const SectionTitle(title: 'Tạm tính'),
-
           const SizedBox(height: 12),
-
           SoftCard(
             color: AppColors.lavender,
             child: Column(
-              children: const [
-                _PriceRow(label: 'Phí giữ bàn', value: '20.000đ'),
-                SizedBox(height: 10),
-                _PriceRow(label: 'Nước gọi trước', value: 'Chưa chọn'),
-                SizedBox(height: 10),
-                Divider(height: 18),
+              children: [
                 _PriceRow(
+                  label: _isPetBooking ? 'Phí đặt pet' : 'Phí giữ bàn',
+                  value: '20.000đ',
+                ),
+                const SizedBox(height: 10),
+                const _PriceRow(label: 'Nước gọi trước', value: 'Chưa chọn'),
+                const SizedBox(height: 10),
+                const Divider(height: 18),
+                const _PriceRow(
                   label: 'Tổng tạm tính',
                   value: '20.000đ',
                   isTotal: true,
@@ -130,16 +276,16 @@ class BookingConfirmScreen extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(height: 26),
-
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    context.pop();
-                  },
+                  onPressed: _isSaving
+                      ? null
+                      : () {
+                          context.pop();
+                        },
                   icon: const Icon(Icons.edit_rounded),
                   label: const Text('Chỉnh sửa'),
                 ),
@@ -147,9 +293,15 @@ class BookingConfirmScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _confirm(context),
-                  icon: const Icon(Icons.check_circle_rounded),
-                  label: const Text('Xác nhận'),
+                  onPressed: _isSaving ? null : _confirmBooking,
+                  icon: _isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.check_circle_rounded),
+                  label: Text(_isSaving ? 'Đang lưu...' : 'Xác nhận'),
                 ),
               ),
             ],
@@ -158,62 +310,12 @@ class BookingConfirmScreen extends StatelessWidget {
       ),
     );
   }
-
-  Future<void> _confirm(BuildContext context) async {
-    try {
-      await PetBookingStore.instance.createOnlineTableBooking(
-        customerId: data.customerId,
-        customerName: data.customerName,
-        petNames: data.petNames,
-        branch: data.branch,
-        day: data.day,
-        time: data.time,
-        guests: data.guests,
-        tableName: data.tableName,
-      );
-      if (!context.mounted) return;
-      await showDialog<void>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Đặt pet thành công'),
-          content: Text(
-            'Đã giữ ${data.tableName} cho ${data.petName}. Bạn có thể xem, sửa hoặc hủy booking trong lịch sử.',
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Xem lịch sử'),
-            ),
-          ],
-        ),
-      );
-      if (!context.mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => BookingHistoryScreen(customerId: data.customerId),
-        ),
-        (route) => route.isFirst,
-      );
-    } on BookingPetLimitException {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Mỗi booking chỉ được chọn tối đa 3 pet.'),
-          ),
-        );
-      }
-    } catch (error) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không thể lưu booking: $error')),
-        );
-      }
-    }
-  }
 }
 
 class _ConfirmHeader extends StatelessWidget {
-  const _ConfirmHeader();
+  final bool isPetBooking;
+
+  const _ConfirmHeader({required this.isPetBooking});
 
   @override
   Widget build(BuildContext context) {
@@ -234,11 +336,11 @@ class _ConfirmHeader extends StatelessWidget {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.82),
+              color: Colors.white.withValues(alpha: 0.82),
               borderRadius: BorderRadius.circular(24),
             ),
-            child: const Icon(
-              Icons.fact_check_rounded,
+            child: Icon(
+              isPetBooking ? Icons.pets_rounded : Icons.fact_check_rounded,
               color: AppColors.primary,
               size: 38,
             ),
@@ -249,12 +351,16 @@ class _ConfirmHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Xác nhận đặt bàn',
+                  isPetBooking ? 'Xác nhận đặt pet' : 'Xác nhận đặt bàn',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Kiểm tra lại thông tin trước khi hoàn tất lịch ghé PetHub.',
+                  isPetBooking
+                      ? 'Kiểm tra thú cưng và thông tin booking '
+                            'trước khi xác nhận.'
+                      : 'Kiểm tra lại thông tin trước khi '
+                            'hoàn tất lịch ghé PetHub.',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(height: 1.4),

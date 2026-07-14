@@ -15,11 +15,7 @@ class MapHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            AppColors.sky,
-            AppColors.peach,
-            AppColors.cream,
-          ],
+          colors: [AppColors.sky, AppColors.peach, AppColors.cream],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -30,7 +26,7 @@ class MapHeader extends StatelessWidget {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.82),
+              color: Colors.white.withValues(alpha: 0.82),
               borderRadius: BorderRadius.circular(24),
             ),
             child: const Icon(
@@ -51,9 +47,9 @@ class MapHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'Xem chi nhánh, khoảng cách, giờ mở cửa và chọn nơi muốn ghé.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
               ],
             ),
@@ -67,10 +63,7 @@ class MapHeader extends StatelessWidget {
 class FakeMapPanel extends StatelessWidget {
   final BranchLocation? selectedLocation;
 
-  const FakeMapPanel({
-    super.key,
-    required this.selectedLocation,
-  });
+  const FakeMapPanel({super.key, required this.selectedLocation});
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +82,7 @@ class FakeMapPanel extends StatelessWidget {
             top: 20,
             child: _MapBubble(
               label: 'Cafe',
-              color: Colors.white.withOpacity(0.75),
+              color: Colors.white.withValues(alpha: 0.75),
             ),
           ),
           Positioned(
@@ -97,7 +90,7 @@ class FakeMapPanel extends StatelessWidget {
             top: 26,
             child: _MapBubble(
               label: 'Spa',
-              color: Colors.white.withOpacity(0.75),
+              color: Colors.white.withValues(alpha: 0.75),
             ),
           ),
           Positioned(
@@ -105,7 +98,7 @@ class FakeMapPanel extends StatelessWidget {
             bottom: 28,
             child: _MapBubble(
               label: 'Park',
-              color: Colors.white.withOpacity(0.65),
+              color: Colors.white.withValues(alpha: 0.65),
             ),
           ),
           Positioned(
@@ -113,7 +106,7 @@ class FakeMapPanel extends StatelessWidget {
             bottom: 34,
             child: _MapBubble(
               label: 'Pet',
-              color: Colors.white.withOpacity(0.75),
+              color: Colors.white.withValues(alpha: 0.75),
             ),
           ),
 
@@ -122,7 +115,7 @@ class FakeMapPanel extends StatelessWidget {
               width: 86,
               height: 86,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.18),
+                color: AppColors.primary.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -147,11 +140,8 @@ class FakeMapPanel extends StatelessWidget {
             right: 0,
             bottom: 0,
             child: SoftCard(
-              color: Colors.white.withOpacity(0.88),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 12,
-              ),
+              color: Colors.white.withValues(alpha: 0.88),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Row(
                 children: [
                   const Icon(
@@ -184,18 +174,12 @@ class _MapBubble extends StatelessWidget {
   final String label;
   final Color color;
 
-  const _MapBubble({
-    required this.label,
-    required this.color,
-  });
+  const _MapBubble({required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(99),
@@ -231,7 +215,7 @@ class BranchCategorySelector extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final category = categories[index];
           final isSelected = selectedCategory == category;
@@ -286,11 +270,7 @@ class BranchLocationCard extends StatelessWidget {
           CircleAvatar(
             radius: 32,
             backgroundColor: location.color,
-            child: Icon(
-              location.icon,
-              color: AppColors.textDark,
-              size: 30,
-            ),
+            child: Icon(location.icon, color: AppColors.textDark, size: 30),
           ),
 
           const SizedBox(width: 14),
@@ -301,9 +281,9 @@ class BranchLocationCard extends StatelessWidget {
               children: [
                 Text(
                   location.name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 16,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontSize: 16),
                 ),
                 const SizedBox(height: 5),
                 Text(
@@ -364,10 +344,7 @@ class BranchLocationCard extends StatelessWidget {
 class BranchDetailSheet extends StatelessWidget {
   final BranchLocation location;
 
-  const BranchDetailSheet({
-    super.key,
-    required this.location,
-  });
+  const BranchDetailSheet({super.key, required this.location});
 
   @override
   Widget build(BuildContext context) {
@@ -375,9 +352,7 @@ class BranchDetailSheet extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 18, 22, 26),
       decoration: const BoxDecoration(
         color: AppColors.cream,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(32),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: SafeArea(
         top: false,
@@ -388,7 +363,7 @@ class BranchDetailSheet extends StatelessWidget {
               width: 48,
               height: 5,
               decoration: BoxDecoration(
-                color: AppColors.textSoft.withOpacity(0.35),
+                color: AppColors.textSoft.withValues(alpha: 0.35),
                 borderRadius: BorderRadius.circular(99),
               ),
             ),
@@ -396,11 +371,7 @@ class BranchDetailSheet extends StatelessWidget {
             CircleAvatar(
               radius: 44,
               backgroundColor: location.color,
-              child: Icon(
-                location.icon,
-                color: AppColors.textDark,
-                size: 42,
-              ),
+              child: Icon(location.icon, color: AppColors.textDark, size: 42),
             ),
             const SizedBox(height: 16),
             Text(
@@ -412,9 +383,9 @@ class BranchDetailSheet extends StatelessWidget {
             Text(
               location.address,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                height: 1.4,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(height: 1.4),
             ),
             const SizedBox(height: 18),
             SoftCard(
@@ -465,9 +436,7 @@ class BranchDetailSheet extends StatelessWidget {
                     onPressed: () {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Đã chọn ${location.name}.'),
-                        ),
+                        SnackBar(content: Text('Đã chọn ${location.name}.')),
                       );
                     },
                     icon: const Icon(Icons.event_seat_rounded),
@@ -498,16 +467,9 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          color: AppColors.primary,
-          size: 20,
-        ),
+        Icon(icon, color: AppColors.primary, size: 20),
         const SizedBox(width: 10),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
         const Spacer(),
         Text(
           value,

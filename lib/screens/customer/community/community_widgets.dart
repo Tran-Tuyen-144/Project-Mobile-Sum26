@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import '../../../theme/app_colors.dart';
@@ -17,11 +15,7 @@ class CommunityHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [
-            AppColors.lavender,
-            AppColors.peach,
-            AppColors.cream,
-          ],
+          colors: [AppColors.lavender, AppColors.peach, AppColors.cream],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -32,7 +26,7 @@ class CommunityHeader extends StatelessWidget {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.82),
+              color: Colors.white.withValues(alpha: 0.82),
               borderRadius: BorderRadius.circular(24),
             ),
             child: const Icon(
@@ -53,9 +47,9 @@ class CommunityHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'Chia sẻ khoảnh khắc, hỏi đáp chăm sóc và kết nối với những người yêu pet.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
               ],
             ),
@@ -85,7 +79,7 @@ class CommunityCategorySelector extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final category = categories[index];
           final isSelected = selectedCategory == category;
@@ -121,10 +115,7 @@ class CommunityCategorySelector extends StatelessWidget {
 class CreatePostCard extends StatelessWidget {
   final VoidCallback onTap;
 
-  const CreatePostCard({
-    super.key,
-    required this.onTap,
-  });
+  const CreatePostCard({super.key, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -136,10 +127,7 @@ class CreatePostCard extends StatelessWidget {
           const CircleAvatar(
             radius: 26,
             backgroundColor: AppColors.peach,
-            child: Icon(
-              Icons.person_rounded,
-              color: AppColors.primary,
-            ),
+            child: Icon(Icons.face_rounded, color: AppColors.primary),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -148,10 +136,7 @@ class CreatePostCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
-          const Icon(
-            Icons.edit_rounded,
-            color: AppColors.primary,
-          ),
+          const Icon(Icons.edit_rounded, color: AppColors.primary),
         ],
       ),
     );
@@ -167,6 +152,10 @@ class CommunityPostCard extends StatelessWidget {
   final VoidCallback onShare;
   final VoidCallback onOpenDetail;
 
+  final bool canManage;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
   const CommunityPostCard({
     super.key,
     required this.post,
@@ -176,48 +165,47 @@ class CommunityPostCard extends StatelessWidget {
     required this.onSave,
     required this.onShare,
     required this.onOpenDetail,
+    required this.canManage,
+    required this.onEdit,
+    required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    final totalLikes = isLiked ? post.likes + 1 : post.likes;
+    final totalLikes = post.likes;
 
     return SoftCard(
       color: Colors.white,
+      onTap: onOpenDetail,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 26,
-                backgroundColor: post.color,
-                child: Icon(
-                  post.petIcon,
-                  color: AppColors.textDark,
-                ),
-              ),
+              _PostAvatar(post: post),
               const SizedBox(width: 12),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       post.authorName,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 16,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(fontSize: 16),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       '${post.authorRole} • ${post.timeAgo}',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: 12,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontSize: 12),
                     ),
                   ],
                 ),
               ),
+
               IconButton(
                 onPressed: onSave,
                 icon: Icon(
@@ -227,18 +215,77 @@ class CommunityPostCard extends StatelessWidget {
                   color: isSaved ? AppColors.primary : AppColors.textSoft,
                 ),
               ),
+
+              if (canManage)
+                PopupMenuButton<String>(
+                  icon: const Icon(
+                    Icons.more_horiz_rounded,
+                    color: AppColors.textSoft,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      onEdit();
+                    }
+
+                    if (value == 'delete') {
+                      onDelete();
+                    }
+                  },
+                  itemBuilder: (context) {
+                    return const [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_rounded, color: AppColors.primary),
+                            SizedBox(width: 10),
+                            Text('Chỉnh sửa'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.redAccent,
+                            ),
+                            SizedBox(width: 10),
+                            Text('Xóa bài viết'),
+                          ],
+                        ),
+                      ),
+                    ];
+                  },
+                ),
             ],
           ),
+
+          if (post.hasTag) ...[
+            const SizedBox(height: 12),
+            _TagChip(post: post),
+          ],
+
           const SizedBox(height: 14),
+
           Text(
             post.content,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              height: 1.45,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(height: 1.45),
           ),
+
+          if (post.hasImage) ...[
+            const SizedBox(height: 14),
+            _PostImage(post: post),
+          ],
+
           const SizedBox(height: 14),
-          _PostMedia(post: post),
-          const SizedBox(height: 14),
+
           Wrap(
             spacing: 10,
             runSpacing: 8,
@@ -263,12 +310,6 @@ class CommunityPostCard extends StatelessWidget {
                 active: false,
                 onTap: onShare,
               ),
-              _PostAction(
-                icon: Icons.open_in_full_rounded,
-                label: 'Chi tiết',
-                active: false,
-                onTap: onOpenDetail,
-              ),
             ],
           ),
         ],
@@ -277,43 +318,86 @@ class CommunityPostCard extends StatelessWidget {
   }
 }
 
-class _PostMedia extends StatelessWidget {
+class _PostAvatar extends StatelessWidget {
   final CommunityPost post;
 
-  const _PostMedia({
-    required this.post,
-  });
+  const _PostAvatar({required this.post});
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = post.imagePath != null &&
-        post.imagePath!.isNotEmpty &&
-        File(post.imagePath!).existsSync();
+    return CircleAvatar(
+      radius: 26,
+      backgroundColor: post.color,
+      child: Icon(post.petIcon, color: AppColors.textDark),
+    );
+  }
+}
 
-    if (hasImage) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Image.file(
-          File(post.imagePath!),
-          height: 190,
-          width: double.infinity,
-          fit: BoxFit.cover,
-        ),
-      );
-    }
+class _TagChip extends StatelessWidget {
+  final CommunityPost post;
 
+  const _TagChip({required this.post});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      height: 160,
-      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: post.color.withOpacity(0.85),
-        borderRadius: BorderRadius.circular(24),
+        color: post.color.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(99),
       ),
-      child: Center(
-        child: Icon(
-          post.petIcon,
-          size: 74,
-          color: AppColors.textDark.withOpacity(0.72),
+      child: Text(
+        '#${post.category}',
+        style: const TextStyle(
+          color: AppColors.textDark,
+          fontWeight: FontWeight.w900,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+class _PostImage extends StatelessWidget {
+  final CommunityPost post;
+
+  const _PostImage({required this.post});
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = post.imageUrl ?? '';
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: AspectRatio(
+        aspectRatio: 16 / 10,
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+
+            return Container(
+              color: AppColors.cream,
+              alignment: Alignment.center,
+              child: const CircularProgressIndicator(),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: AppColors.cream,
+              alignment: Alignment.center,
+              child: const Text(
+                'Không tải được ảnh.',
+                style: TextStyle(
+                  color: AppColors.textSoft,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
