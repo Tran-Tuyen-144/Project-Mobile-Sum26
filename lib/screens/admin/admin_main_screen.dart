@@ -100,7 +100,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.analytics_rounded), label: 'Trang chủ'),
             BottomNavigationBarItem(icon: Icon(Icons.dashboard_customize_rounded), label: 'Quản lý'),
-            BottomNavigationBarItem(icon: Icon(Icons.receipt_long_rounded), label: 'Đơn hàng'),
+            BottomNavigationBarItem(icon: Icon(Icons.category_rounded), label: 'Dịch Vụ'),
             BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Tôi'),
           ],
         ),
