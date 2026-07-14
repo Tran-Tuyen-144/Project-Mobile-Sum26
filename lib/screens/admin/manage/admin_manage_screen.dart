@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 
-// Các import này chuẩn bị cho việc bạn tạo các file trống trong thư mục con tương ứng
-// import 'cafe/admin_cafe_screen.dart';
-// import 'spa/admin_spa_screen.dart';
-// import 'hotel/admin_hotel_screen.dart';
-// import 'hospital/admin_hospital_screen.dart';
+import 'cafe/admin_cafe_screen.dart';
+import 'spa/admin_spa_screen.dart';
+import 'hotel/admin_hotel_screen.dart';
+import 'hospital/admin_hospital_screen.dart';
 
 class AdminManageScreen extends StatelessWidget {
   const AdminManageScreen({super.key});
@@ -50,9 +49,10 @@ class AdminManageScreen extends StatelessWidget {
                 Icons.local_cafe_rounded,
                 AppColors.peach,
                 () {
-                  // Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminCafeScreen()));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đang mở trạm Café')),
+                  // Đã kích hoạt chuyển trang sang Café
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminCafeScreen()),
                   );
                 },
               ),
@@ -63,7 +63,11 @@ class AdminManageScreen extends StatelessWidget {
                 Icons.shower_rounded,
                 AppColors.mint,
                 () {
-                  // Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminSpaScreen()));
+                  // Đã kích hoạt chuyển trang sang Spa
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminSpaScreen()),
+                  );
                 },
               ),
               _buildManageCard(
@@ -73,7 +77,11 @@ class AdminManageScreen extends StatelessWidget {
                 Icons.pets_rounded,
                 AppColors.lavender,
                 () {
-                  // Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminHotelScreen()));
+                  // Đã kích hoạt chuyển trang sang Khách sạn
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminHotelScreen()),
+                  );
                 },
               ),
               _buildManageCard(
@@ -83,7 +91,13 @@ class AdminManageScreen extends StatelessWidget {
                 Icons.medical_services_rounded,
                 AppColors.sky,
                 () {
-                  // Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminHospitalScreen()));
+                  // Đã kích hoạt chuyển trang sang Bệnh viện
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AdminHospitalScreen(),
+                    ),
+                  );
                 },
               ),
             ],
