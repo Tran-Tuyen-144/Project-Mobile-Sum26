@@ -24,6 +24,13 @@ class _AdminManageSpaScreenState extends State<AdminManageSpaScreen> {
     {"id": "S3", "name": "Cắt móng & Vệ sinh tai", "price": 50000, "category": "Vệ sinh (Tai, Móng)", "image": "", "isFirebase": false},
   ];
 
+  // ĐÃ THÊM: Hàm định dạng tiền tệ có dấu chấm phân cách
+  String formatCurrency(dynamic price) {
+    if (price == null) return '0';
+    String priceStr = price.toString();
+    return priceStr.replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,7 +105,8 @@ class _AdminManageSpaScreenState extends State<AdminManageSpaScreen> {
                               : null,
                         ),
                         title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text("${item['price']}đ • ${item['category']}"),
+                        // ĐÃ SỬA: Hiển thị giá tiền có định dạng
+                        subtitle: Text("${formatCurrency(item['price'])}đ • ${item['category']}"),
                         trailing: IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
                             onPressed: () {
@@ -131,7 +139,8 @@ class _AdminManageSpaScreenState extends State<AdminManageSpaScreen> {
   // 3. FORM THÊM / SỬA DỊCH VỤ
   void _showSpaForm({Map<String, dynamic>? item}) {
     final nameCtrl = TextEditingController(text: item?['name'] ?? '');
-    final priceCtrl = TextEditingController(text: item?['price']?.toString() ?? '');
+    // ĐÃ SỬA: Tự động định dạng giá tiền khi mở form sửa
+    final priceCtrl = TextEditingController(text: item != null ? formatCurrency(item['price']) : '');
 
     bool isCustomCategory = item != null && !_defaultCategories.contains(item['category']);
     final newCatCtrl = TextEditingController(text: isCustomCategory ? item['category'] : '');
@@ -206,9 +215,13 @@ class _AdminManageSpaScreenState extends State<AdminManageSpaScreen> {
                 }
                 if (cat.isEmpty) return;
 
+                // ĐÃ SỬA: Lọc bỏ các dấu chấm, ký tự lạ để lấy lại số nguyên gốc
+                String rawPrice = priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+                int finalPrice = int.tryParse(rawPrice) ?? 0;
+
                 final data = {
                   'name': newName,
-                  'price': int.tryParse(priceCtrl.text) ?? 0,
+                  'price': finalPrice, // Sử dụng giá đã được chuẩn hóa
                   'category': cat,
                   'image': currentImageUrl
                 };

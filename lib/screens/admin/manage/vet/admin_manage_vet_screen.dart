@@ -51,6 +51,15 @@ class _VetServicesTabState extends State<_VetServicesTab> {
     {"id": "VS1", "name": "Khám tổng quát", "description": "Kiểm tra sức khỏe toàn diện cho thú cưng", "price": 150000, "isFirebase": false},
     {"id": "VS2", "name": "Tiêm phòng Vaccine", "description": "Tiêm phòng dại và các bệnh phổ biến", "price": 200000, "isFirebase": false},
   ];
+  String formatCurrency(dynamic price) {
+    if (price == null) return '0';
+    String priceStr = price.toString();
+    // Tự động chèn dấu chấm sau mỗi 3 chữ số
+    return priceStr.replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+            (Match m) => '${m[1]}.'
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,9 +93,14 @@ class _VetServicesTabState extends State<_VetServicesTab> {
                           child: const Icon(Icons.healing, color: Colors.blue),
                         ),
                         title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text("${item['price']}đ\n${item['description']}", maxLines: 2, overflow: TextOverflow.ellipsis),
-                        isThreeLine: true,
-                        trailing: IconButton(
+                          subtitle: Text(
+                              "${formatCurrency(item['price'])}đ\n${item['description']}",
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis
+                          ),
+
+                          isThreeLine: true,
+                          trailing: IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
                             onPressed: () => item['isFirebase'] == true ? _servicesCollection.doc(item['id']).delete() : setState(() => _mockServices.removeWhere((s) => s['id'] == item['id']))
                         ),

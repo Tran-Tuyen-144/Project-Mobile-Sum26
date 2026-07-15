@@ -69,8 +69,8 @@ class _PetHubAppState extends State<PetHubApp> {
       case 'booking':
         return '/booking';
 
-      case 'orders':
-        return '/orders';
+      case 'service':
+        return '/service';
 
       case 'services':
         return '/services';

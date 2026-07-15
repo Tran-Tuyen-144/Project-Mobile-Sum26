@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../../theme/app_colors.dart';
+import '../../../theme/app_colors.dart';
 
 import 'cafe/admin_cafe_screen.dart';
-import 'spa/admin_spa_screen.dart';
-import 'hotel/admin_hotel_screen.dart';
-import 'hospital/admin_hospital_screen.dart';
+import 'spa/admin_manage_spa_screen.dart';
+import 'hotel/admin_manage_hotel_screen.dart';
+import 'vet/admin_manage_vet_screen.dart';
 import 'pets/admin_manage_pet_screen.dart';
 import 'menu/admin_manage_menu_screen.dart';
 import 'table/admin_manage_table_screen.dart';
@@ -42,21 +42,21 @@ class AdminManageScreen extends StatelessWidget {
         'subtitle': 'Lịch trình tắm, sấy, cắt tỉa',
         'icon': Icons.shower_rounded,
         'color': AppColors.lavender,
-        'screen': const AdminSpaScreen(),
+        'screen': const AdminManageSpaScreen(),
       },
       {
         'title': 'Khách sạn',
         'subtitle': 'Quản lý phòng lưu trú',
         'icon': Icons.hotel_rounded,
         'color': AppColors.peach,
-        'screen': const AdminHotelScreen(),
+        'screen': const AdminManageHotelScreen(),
       },
       {
         'title': 'Bệnh viện thú y',
         'subtitle': 'Khám chữa bệnh & hồ sơ y tế',
         'icon': Icons.medical_services_rounded,
         'color': AppColors.mint,
-        'screen': const AdminHospitalScreen(),
+        'screen': const AdminManageVetScreen(),
       },
     ];
 

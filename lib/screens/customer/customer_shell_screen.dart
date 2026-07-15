@@ -60,7 +60,7 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
     final List<Widget> screens = [
       CustomerHomeScreen(
         onOpenBooking: () => _goToTab(1),
-        onOpenOrder: () => context.push('/orders'),
+        onOpenOrder: () => context.push('/service'),
         onOpenServices: () => _goToTab(2),
         onOpenMap: () => _goToTab(3),
         onOpenCommunity: () => _goToTab(4),
