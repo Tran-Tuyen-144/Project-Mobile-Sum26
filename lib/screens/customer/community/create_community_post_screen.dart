@@ -598,6 +598,7 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       if (selectedImageFile != null) {
         final uploadResult = await CloudinaryUploadService.uploadImageFile(
           selectedImageFile!,
+          folder: CloudinaryUploadService.communityFolder(profile.uid),
         );
 
         finalImageUrl = CloudinaryUploadService.optimizedImageUrl(

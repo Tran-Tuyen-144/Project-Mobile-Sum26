@@ -366,7 +366,9 @@ class _PersonalInformationFormState extends State<_PersonalInformationForm> {
       if (image == null) return;
       final upload = await CloudinaryUploadService.uploadImageFile(
         image,
-        folder: 'pethub_profiles',
+        folder: CloudinaryUploadService.profileFolder(
+          CustomerAuthService.currentUser?.uid ?? 'anonymous',
+        ),
       );
       await CustomerProfileService.updateAvatarImage(
         imageUrl: upload.imageUrl,

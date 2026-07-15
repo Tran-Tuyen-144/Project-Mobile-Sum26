@@ -4,6 +4,7 @@ import '../../../theme/app_colors.dart';
 import '../pet/admin_pet_list_screen.dart';
 import '../menu/admin_menu_list_screen.dart';
 import '../table/admin_table_list_screen.dart';
+import '../customer/admin_customer_list_screen.dart';
 
 class AdminManageScreen extends StatelessWidget {
   final Function(int)? onNavigateToTab;
@@ -34,6 +35,19 @@ class AdminManageScreen extends StatelessWidget {
             crossAxisSpacing: 16,
             childAspectRatio: 0.9,
             children: [
+              _buildManageCard(
+                context,
+                'Khách hàng',
+                'CRM & thú cưng',
+                Icons.people_alt_rounded,
+                AppColors.sky,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdminCustomerListScreen(),
+                  ),
+                ),
+              ),
               _buildManageCard(
                 context,
                 'Nhân viên',

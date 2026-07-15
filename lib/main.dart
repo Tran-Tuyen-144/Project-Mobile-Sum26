@@ -4,8 +4,10 @@ import 'package:app_links/app_links.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'firebase_options.dart';
+import 'l10n/app_localizations.dart';
 import 'routes/app_router.dart';
 import 'theme/app_theme.dart';
 
@@ -20,6 +22,8 @@ void main() async {
     // Keep the offline-first interface usable when Firebase is unavailable.
     debugPrint('Firebase initialization failed: $error\n$stackTrace');
   }
+
+  await AppLocaleController.load();
 
   runApp(const PetHubApp());
 }
@@ -91,7 +95,7 @@ class _PetHubAppState extends State<PetHubApp> {
         return '/community';
 
       default:
-        return '/';
+        return '/role';
     }
   }
 
@@ -103,11 +107,22 @@ class _PetHubAppState extends State<PetHubApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'PetHub',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      routerConfig: appRouter,
+    return ValueListenableBuilder<Locale>(
+      valueListenable: AppLocaleController.locale,
+      builder: (context, locale, _) => MaterialApp.router(
+        title: 'PetHub',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        locale: locale,
+        supportedLocales: const [Locale('vi'), Locale('en')],
+        localizationsDelegates: const [
+          AppLocalizationsDelegate(),
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        routerConfig: appRouter,
+      ),
     );
   }
 }

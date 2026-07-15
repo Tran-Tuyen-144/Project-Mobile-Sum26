@@ -56,6 +56,19 @@ class CloudinaryUploadService {
     );
   }
 
+  /// Keep files organised and avoid mixing two customers' uploads.  The URL
+  /// returned by Cloudinary is what we store in Firestore, never image bytes.
+  static String profileFolder(String uid) =>
+      'pethub/profiles/${_safeFolderSegment(uid)}';
+
+  static String communityFolder(String uid) =>
+      'pethub/community/${_safeFolderSegment(uid)}';
+
+  static String _safeFolderSegment(String value) {
+    final safe = value.trim().replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
+    return safe.isEmpty ? 'anonymous' : safe;
+  }
+
   static Future<CloudinaryUploadResult> uploadImageFile(
     XFile imageFile, {
     String folder = uploadFolder,

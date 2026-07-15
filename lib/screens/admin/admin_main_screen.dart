@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../services/admin_notification_service.dart';
+import 'admin_notifications_screen.dart';
 
 // --- Import các màn hình con đã được tách file ---
 import 'dashboard/admin_dashboard_screen.dart';
@@ -59,12 +61,58 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.notifications_none_rounded,
-              color: AppColors.textDark,
-            ),
-            onPressed: () {},
+          StreamBuilder<List<AdminNotification>>(
+            stream: AdminNotificationService.watch(),
+            builder: (context, snapshot) {
+              final unread = (snapshot.data ?? const <AdminNotification>[])
+                  .where((item) => !item.isRead)
+                  .length;
+              return IconButton(
+                tooltip: unread == 0
+                    ? 'Thông báo'
+                    : '$unread thông báo chưa đọc',
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(
+                      Icons.notifications_none_rounded,
+                      color: AppColors.textDark,
+                    ),
+                    if (unread > 0)
+                      Positioned(
+                        right: -8,
+                        top: -7,
+                        child: Container(
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          alignment: Alignment.center,
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            unread > 99 ? '99+' : '$unread',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdminNotificationsScreen(),
+                  ),
+                ),
+              );
+            },
           ),
           const SizedBox(width: 8),
         ],

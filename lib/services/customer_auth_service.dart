@@ -34,12 +34,16 @@ class CustomerAuthService {
 
     await user.updateDisplayName(displayName.trim());
 
-    await _createCustomerProfileIfNeeded(
-      uid: user.uid,
-      displayName: displayName.trim(),
-      email: user.email ?? email.trim(),
-      phoneNumber: user.phoneNumber,
-    );
+    try {
+      await _createCustomerProfileIfNeeded(
+        uid: user.uid,
+        displayName: displayName.trim(),
+        email: user.email ?? email.trim(),
+        phoneNumber: user.phoneNumber,
+      );
+    } on FirebaseException {
+      // The Firebase Auth account is valid even when Firestore is not ready.
+    }
 
     return credential;
   }
@@ -56,12 +60,18 @@ class CustomerAuthService {
     final user = credential.user;
 
     if (user != null) {
-      await _createCustomerProfileIfNeeded(
-        uid: user.uid,
-        displayName: user.displayName ?? 'Bạn PetHub',
-        email: user.email ?? email.trim(),
-        phoneNumber: user.phoneNumber,
-      );
+      // Authentication has already succeeded at this point.  A Firestore
+      // rules/network failure must not turn a valid sign-in into a failed one.
+      try {
+        await _createCustomerProfileIfNeeded(
+          uid: user.uid,
+          displayName: user.displayName ?? 'Bạn PetHub',
+          email: user.email ?? email.trim(),
+          phoneNumber: user.phoneNumber,
+        );
+      } on FirebaseException {
+        // The profile will be created/synchronised on a later app session.
+      }
     }
 
     return credential;
@@ -91,12 +101,17 @@ class CustomerAuthService {
     final user = userCredential.user;
 
     if (user != null) {
-      await _createCustomerProfileIfNeeded(
-        uid: user.uid,
-        displayName: user.displayName ?? googleUser.displayName ?? 'Bạn PetHub',
-        email: user.email ?? googleUser.email,
-        phoneNumber: user.phoneNumber,
-      );
+      try {
+        await _createCustomerProfileIfNeeded(
+          uid: user.uid,
+          displayName:
+              user.displayName ?? googleUser.displayName ?? 'Bạn PetHub',
+          email: user.email ?? googleUser.email,
+          phoneNumber: user.phoneNumber,
+        );
+      } on FirebaseException {
+        // Do not reject a valid Google sign-in because Firestore is unavailable.
+      }
     }
 
     return userCredential;

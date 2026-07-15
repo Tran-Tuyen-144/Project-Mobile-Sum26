@@ -2,8 +2,10 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/customer_profile.dart';
+import 'crm_service.dart';
 import 'firebase_community_service.dart';
 
 class CustomerProfileService {
@@ -21,6 +23,23 @@ class CustomerProfileService {
     }
 
     return user;
+  }
+
+  /// Minimal profile used by the UI when Firestore is temporarily unavailable.
+  /// It keeps the profile route usable for an authenticated customer.
+  static CustomerProfile? get localFallbackProfile {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+    return CustomerProfile(
+      uid: user.uid,
+      role: 'customer',
+      fullName: user.displayName ?? 'Khách hàng PetHub',
+      displayName: user.displayName ?? 'PetHub User',
+      email: user.email ?? '',
+      avatarIconKey: 'default_person',
+      anonymousName: 'Ẩn danh PetHub',
+      anonymousAvatarIconKey: 'anonymous',
+    );
   }
 
   static DocumentReference<Map<String, dynamic>> get _currentProfileRef {
@@ -64,8 +83,6 @@ class CustomerProfileService {
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-
-      return;
     }
 
     final data = snapshot.data() ?? {};
@@ -93,6 +110,24 @@ class CustomerProfileService {
         'profileInitialized': true,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+    }
+
+    // The CRM uses a dedicated collection so staff can query customers without
+    // exposing the complete authentication profile.  The Firebase UID is the
+    // stable customer id in both collections.
+    // CRM is an admin enhancement.  A missing Firestore rule for `customers`
+    // must never prevent a customer from opening their own profile.
+    try {
+      await CrmService.syncCustomer(
+        id: user.uid,
+        name:
+            (data['fullName'] as String?) ??
+            user.displayName ??
+            'Khách hàng PetHub',
+        phone: (data['phoneNumber'] as String?) ?? user.phoneNumber ?? '',
+      );
+    } catch (error, stackTrace) {
+      debugPrint('CRM customer sync skipped: $error\n$stackTrace');
     }
   }
 
@@ -154,6 +189,17 @@ class CustomerProfileService {
      */
     await _currentUser.updateDisplayName(cleanDisplayName);
 
+    try {
+      await CrmService.syncCustomer(
+        id: _currentUser.uid,
+        name: cleanFullName,
+        phone:
+            (data['phoneNumber'] as String?) ?? _currentUser.phoneNumber ?? '',
+      );
+    } catch (error, stackTrace) {
+      debugPrint('CRM customer sync skipped: $error\n$stackTrace');
+    }
+
     /*
      * Đồng bộ tên mới sang tất cả bài
      * không ẩn danh của người dùng.
@@ -205,11 +251,15 @@ class CustomerProfileService {
       throw Exception('Ảnh đại diện không hợp lệ.');
     }
 
-    await _currentProfileRef.update({
+    // set + merge also works for an account whose profile document has not
+    // reached Firestore yet.  Other devices receive this URL from the same
+    // `users/{uid}` document through watchCurrentProfile().
+    await _currentProfileRef.set({
+      'uid': _currentUser.uid,
       'avatarUrl': imageUrl.trim(),
       'avatarPublicId': publicId.trim(),
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
   }
 
   static Future<void> updateAnonymousIdentity({

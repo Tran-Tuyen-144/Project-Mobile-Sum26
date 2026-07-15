@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // A customer can only access their own profile.
+    match /users/{userId} {
+      allow read, create, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // These shared operational collections are used by the current client
+    // application.  Admin access should later be restricted with custom claims.
+    match /{collection}/{document} {
+      allow read, write: if request.auth != null && collection in [
+        'bookings', 'admin_notifications', 'service_bookings',
+        'community_posts', 'customers', 'pets'
+      ];
+    }
+  }
+}

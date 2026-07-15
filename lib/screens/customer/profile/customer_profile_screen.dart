@@ -237,7 +237,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
       final upload = await CloudinaryUploadService.uploadImageFile(
         image,
-        folder: 'pethub_profiles',
+        folder: CloudinaryUploadService.profileFolder(
+          CustomerAuthService.currentUser?.uid ?? 'anonymous',
+        ),
       );
       await CustomerProfileService.updateAvatarImage(
         imageUrl: upload.imageUrl,
@@ -610,15 +612,12 @@ ${post.content}
         }
 
         if (initializationSnapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Text(
-                'Không khởi tạo được hồ sơ:\n'
-                '${initializationSnapshot.error}',
-                textAlign: TextAlign.center,
-              ),
-            ),
+          final fallback = CustomerProfileService.localFallbackProfile;
+          if (fallback != null) {
+            return _OfflineProfileView(profile: fallback);
+          }
+          return const Center(
+            child: Text('Bạn cần đăng nhập để xem trang cá nhân.'),
           );
         }
 
@@ -627,6 +626,12 @@ ${post.content}
           builder: (context, profileSnapshot) {
             if (profileSnapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
+            }
+
+            if (profileSnapshot.hasError) {
+              final fallback = CustomerProfileService.localFallbackProfile;
+              if (fallback != null)
+                return _OfflineProfileView(profile: fallback);
             }
 
             final profile = profileSnapshot.data;
@@ -696,6 +701,68 @@ ${post.content}
           },
         );
       },
+    );
+  }
+}
+
+class _OfflineProfileView extends StatelessWidget {
+  final CustomerProfile profile;
+
+  const _OfflineProfileView({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 36),
+      children: [
+        const CircleAvatar(
+          radius: 46,
+          backgroundColor: AppColors.peach,
+          child: Icon(Icons.person_rounded, size: 52, color: AppColors.primary),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          profile.fullName,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+        ),
+        if (profile.email.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(
+            profile.email,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.textSoft),
+          ),
+        ],
+        const SizedBox(height: 28),
+        const SoftCard(
+          color: AppColors.primarySoft,
+          child: Column(
+            children: [
+              Icon(Icons.cloud_off_rounded, color: AppColors.primary, size: 32),
+              SizedBox(height: 10),
+              Text(
+                'Bạn đang xem hồ sơ cơ bản',
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
+              SizedBox(height: 6),
+              Text(
+                'Không thể kết nối hồ sơ Firestore lúc này. Thử lại khi mạng và quyền Firebase đã sẵn sàng.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSoft, height: 1.4),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: () => Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const CustomerProfileScreen()),
+          ),
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('Thử tải lại hồ sơ'),
+        ),
+      ],
     );
   }
 }

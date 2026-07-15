@@ -82,18 +82,6 @@ class RoleSelectScreen extends StatelessWidget {
               },
             ),
 
-            const SizedBox(height: 15),
-            _RoleCard(
-              title: 'Quản lý dịch vụ',
-              subtitle:
-                  'Tiếp nhận và xác nhận các yêu cầu dịch vụ từ khách hàng.',
-              icon: Icons.receipt_long_rounded,
-              color: AppColors.lavender,
-              onTap: () {
-                context.push('/admin-service-requests');
-              },
-            ),
-
             const SizedBox(height: 30),
             Center(
               child: Text(

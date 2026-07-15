@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../storage/offline_drink_order_storage.dart';
+import '../../../services/crm_service.dart';
+import '../../../services/admin_notification_service.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
@@ -250,6 +253,27 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
 
     await OfflineDrinkOrderStorage.saveOfflineOrder(order);
     await OfflineDrinkOrderStorage.clearCart();
+
+    await AdminNotificationService.create(
+      title: 'Đơn gọi nước mới',
+      body:
+          '$submittedItems món • ${_money(order.totalPrice)} • $paymentMethod',
+      type: 'drink_order',
+    );
+
+    // The order is now recorded successfully.  Other completed service
+    // checkouts can call the same CRM method with their total amount.
+    final customerId = FirebaseAuth.instance.currentUser?.uid;
+    if (customerId != null) {
+      try {
+        await CrmService.addPoints(
+          customerId: customerId,
+          totalAmount: order.totalPrice,
+        );
+      } catch (_) {
+        // Offline orders remain usable; points will not block the checkout.
+      }
+    }
 
     if (!mounted) return;
     setState(() {

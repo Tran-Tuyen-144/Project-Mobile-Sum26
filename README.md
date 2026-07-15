@@ -110,6 +110,17 @@ android/app/google-services.json
 
 Không tự tạo Firebase project mới và không thay package Android.
 
+## Ảnh Cloudinary → Firebase
+
+Ứng dụng không lưu file ảnh vào Firebase Storage. Khi người dùng chọn ảnh từ
+thư viện hoặc camera, app upload file lên Cloudinary rồi chỉ lưu `secure_url`
+và `public_id` vào Firestore. Vì vậy tất cả máy đang đăng nhập cùng tài khoản
+(hoặc đang xem cùng bài cộng đồng) sẽ hiển thị đúng một ảnh từ URL Firestore.
+
+Cloudinary đang dùng unsigned upload preset `pethub_unsigned` của cloud
+`kxkbvskv`. Preset phải cho phép upload unsigned và giới hạn định dạng/kích
+thước ảnh trong Cloudinary Console. Không đưa API secret vào app Flutter.
+
 Package Android hiện tại:
 
 ```text
@@ -171,7 +182,24 @@ Nguyên nhân thường là SHA-1 của máy chưa được thêm vào Firebase.
 
 ### Firestore báo PERMISSION_DENIED
 
-Kiểm tra Firestore Security Rules và trạng thái đăng nhập.
+Đây là lỗi quyền Firestore, không phải lỗi sai mật khẩu. Bản app hiện tại vẫn
+lưu đặt bàn, sơ đồ bàn, thực đơn và thông báo trên máy để dùng được khi lỗi
+này xuất hiện. Để bật đồng bộ Firebase cho toàn nhóm, một thành viên có quyền
+với project chạy ở thư mục dự án:
+
+```powershell
+firebase login
+firebase use pethub-e6a26
+firebase deploy --only firestore:rules
+```
+
+File rules cần deploy là `firestore.rules`. Sau đó đăng xuất/đăng nhập lại và
+khởi động lại ứng dụng. Nếu vẫn lỗi, kiểm tra trong Firebase Console rằng
+Authentication đã bật Email/Password và project đang là `pethub-e6a26`.
+
+Không chuyển Firestore sang test mode cho ứng dụng thật; rules hiện tại yêu
+cầu người dùng phải đăng nhập. Khi chuẩn bị phát hành, nên giới hạn các quyền
+admin bằng Firebase custom claims thay vì cấp quyền chung cho mọi tài khoản.
 
 ### No matching client found for package name
 

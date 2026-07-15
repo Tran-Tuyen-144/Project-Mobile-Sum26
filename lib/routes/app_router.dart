@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../screens/admin/admin_main_screen.dart';
+import '../screens/app_intro_screen.dart';
 import '../screens/admin/service_request_admin_screen.dart';
 import '../screens/auth/customer_auth_screen.dart';
 import '../screens/customer/booking/customer_drink_order_screen.dart';
@@ -22,12 +23,17 @@ import '../screens/staff/staff_main_screen.dart';
 import '../screens/staff/staff_role_select_screen.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/intro',
   overridePlatformDefaultLocation: true,
   debugLogDiagnostics: true,
   routes: [
     GoRoute(
-      path: '/',
+      path: '/intro',
+      name: 'intro',
+      builder: (context, state) => const AppIntroScreen(),
+    ),
+    GoRoute(
+      path: '/role',
       name: 'role',
       builder: (context, state) {
         return const RoleSelectScreen();

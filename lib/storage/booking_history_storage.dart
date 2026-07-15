@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/admin_notification_service.dart';
+import '../services/crm_service.dart';
+
 enum BookingStatus {
   confirmed('Đã xác nhận'),
   pendingSync('Chờ đồng bộ'),
@@ -132,7 +135,20 @@ class BookingHistoryStorage {
     bookings.insert(0, booking);
     await _saveBookings(bookings);
 
-    return _uploadBooking(booking);
+    final uploaded = await _uploadBooking(booking);
+    try {
+      await CrmService.upsertByPhone(
+        name: booking.customerName,
+        phone: booking.phone,
+      );
+    } catch (_) {}
+    await AdminNotificationService.create(
+      title: 'Đặt bàn mới',
+      body:
+          '${booking.customerName} • ${booking.tableName} • ${booking.branch}',
+      type: 'booking',
+    );
+    return uploaded;
   }
 
   /// Uploads bookings that were created before Firestore sync was enabled.

@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../services/admin_notification_service.dart';
+import '../services/crm_service.dart';
+
 enum ServiceBookingStatus {
   sent('Đã gửi admin'),
   confirmed('Đã xác nhận');
@@ -132,6 +135,18 @@ class ServiceBookingStorage {
 
   static Future<void> saveRequest(ServiceBookingRequest request) async {
     await _bookings.doc(request.id).set(request.toJson());
+    try {
+      await CrmService.upsertByPhone(
+        name: request.customerName,
+        phone: request.phone,
+      );
+    } catch (_) {}
+    await AdminNotificationService.create(
+      title: 'Yêu cầu dịch vụ mới',
+      body:
+          '${request.customerName} • ${request.serviceName} • ${request.phone}',
+      type: 'service',
+    );
   }
 
   static Future<void> confirmRequest(String id) async {
