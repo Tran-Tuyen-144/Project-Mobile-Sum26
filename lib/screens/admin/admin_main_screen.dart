@@ -120,6 +120,10 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
               label: 'Dịch vụ',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.pets_rounded),
+              label: 'Khách hàng',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.person_rounded),
               label: 'Tôi',
             ),

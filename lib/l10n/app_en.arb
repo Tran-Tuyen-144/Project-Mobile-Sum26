@@ -1,0 +1,16 @@
+{
+  "@@locale": "en",
+  "loginTitle": "Login",
+  "registerNow": "Register",
+  "loginSubtitle": "Welcome back to PetHub.",
+  "registerSubtitle": "Create an account to save your profile and posts.",
+  "fullName": "Full Name",
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "confirmPassword": "Confirm Password",
+  "forgotPassword": "Forgot password?",
+  "loginGoogle": "Continue with Google",
+  "orText": "or",
+  "noAccount": "Don't have an account? ",
+  "alreadyHaveAccount": "Already have an account? "
+}

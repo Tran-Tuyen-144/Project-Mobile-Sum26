@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 import 'firebase_options.dart';
 import 'routes/app_router.dart';
 import 'theme/app_theme.dart';
@@ -19,6 +20,11 @@ void main() async {
 class PetHubApp extends StatefulWidget {
   const PetHubApp({super.key});
 
+  static void setLocale(BuildContext context, Locale newLocale) {
+    _PetHubAppState? state = context.findAncestorStateOfType<_PetHubAppState>();
+    state?.setLocale(newLocale);
+  }
+
   @override
   State<PetHubApp> createState() => _PetHubAppState();
 }
@@ -26,6 +32,14 @@ class PetHubApp extends StatefulWidget {
 class _PetHubAppState extends State<PetHubApp> {
   late final AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
+
+  Locale _locale = const Locale('vi', '');
+
+  void setLocale(Locale locale) {
+    setState(() {
+      _locale = locale;
+    });
+  }
 
   @override
   void initState() {
@@ -37,7 +51,7 @@ class _PetHubAppState extends State<PetHubApp> {
 
   void _listenDeepLinks() {
     _linkSubscription = _appLinks.uriLinkStream.listen(
-      (Uri uri) {
+          (Uri uri) {
         _handleDeepLink(uri);
       },
       onError: (Object error) {
@@ -65,22 +79,16 @@ class _PetHubAppState extends State<PetHubApp> {
     switch (target) {
       case 'customer':
         return '/customer';
-
       case 'booking':
         return '/booking';
-
       case 'service':
         return '/service';
-
       case 'services':
         return '/services';
-
       case 'map':
         return '/map';
-
       case 'community':
         return '/community';
-
       default:
         return '/';
     }
@@ -99,6 +107,18 @@ class _PetHubAppState extends State<PetHubApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: appRouter,
+
+      locale: _locale,
+      localizationsDelegates: [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('vi', ''),
+        Locale('en', ''),
+      ],
     );
   }
 }

@@ -1,0 +1,16 @@
+{
+  "@@locale": "vi",
+  "loginTitle": "Đăng nhập",
+  "registerNow": "Đăng ký",
+  "loginSubtitle": "Chào mừng bạn quay lại PetHub.",
+  "registerSubtitle": "Tạo tài khoản khách hàng để lưu hồ sơ và bài viết.",
+  "fullName": "Họ tên",
+  "emailLabel": "Email",
+  "passwordLabel": "Mật khẩu",
+  "confirmPassword": "Nhập lại mật khẩu",
+  "forgotPassword": "Quên mật khẩu?",
+  "loginGoogle": "Tiếp tục với Google",
+  "orText": "hoặc",
+  "noAccount": "Chưa có tài khoản? ",
+  "alreadyHaveAccount": "Đã có tài khoản? "
+}
