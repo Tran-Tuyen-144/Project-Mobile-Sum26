@@ -29,7 +29,6 @@ class _CustomerMapScreenState extends State<CustomerMapScreen> {
   void initState() {
     super.initState();
     _loadPlaces();
-    _requestLocation();
   }
 
   Future<void> _loadPlaces() async {
@@ -107,20 +106,6 @@ class _CustomerMapScreenState extends State<CustomerMapScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _HeroCard(
-          onLocate: _locating ? null : _requestLocation,
-          message: _locationMessage,
-          locating: _locating,
-        ),
-        const SizedBox(height: 18),
-        _GoogleNearbyMap(
-          branches: _branches,
-          currentLocation: _currentLocation,
-          locating: _locating,
-          onLocate: _requestLocation,
-          onTap: _showBranch,
-        ),
-        const SizedBox(height: 18),
         TextField(
           onChanged: (value) => setState(() => _keyword = value),
           decoration: const InputDecoration(
