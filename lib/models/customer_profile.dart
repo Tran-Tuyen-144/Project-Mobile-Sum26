@@ -5,6 +5,8 @@ class CustomerProfile {
   final String displayName;
   final String email;
   final String avatarIconKey;
+  final String? avatarUrl;
+  final String? avatarPublicId;
   final String anonymousName;
   final String anonymousAvatarIconKey;
 
@@ -15,6 +17,8 @@ class CustomerProfile {
     required this.displayName,
     required this.email,
     required this.avatarIconKey,
+    this.avatarUrl,
+    this.avatarPublicId,
     required this.anonymousName,
     required this.anonymousAvatarIconKey,
   });
@@ -27,6 +31,8 @@ class CustomerProfile {
       displayName: data['displayName'] as String? ?? 'PetHub User',
       email: data['email'] as String? ?? '',
       avatarIconKey: data['avatarIconKey'] as String? ?? 'default_person',
+      avatarUrl: data['avatarUrl'] as String?,
+      avatarPublicId: data['avatarPublicId'] as String?,
       anonymousName: data['anonymousName'] as String? ?? 'Ẩn danh PetHub',
       anonymousAvatarIconKey:
           data['anonymousAvatarIconKey'] as String? ?? 'anonymous',

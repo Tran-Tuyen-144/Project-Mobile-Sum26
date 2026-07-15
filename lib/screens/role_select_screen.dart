@@ -39,7 +39,8 @@ class RoleSelectScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Cafe thú cưng, dịch vụ chăm sóc Pet và cộng đồng dành cho người yêu động vật.',
+              'Cafe thú cưng, dịch vụ chăm sóc Pet và cộng đồng '
+              'dành cho người yêu động vật.',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(height: 1.5),
@@ -61,30 +62,16 @@ class RoleSelectScreen extends StatelessWidget {
                 }
               },
             ),
-
             const SizedBox(height: 15),
             _RoleCard(
               title: 'Quản lý',
-              subtitle: 'Quản lý đặt bàn, ca làm, nhân viên và doanh thu.',
+              subtitle: 'Quản lý dịch vụ, khách hàng, nhân viên và doanh thu.',
               icon: Icons.admin_panel_settings_rounded,
               color: AppColors.sky,
               onTap: () {
                 context.push('/admin');
               },
             ),
-
-            const SizedBox(height: 15),
-            _RoleCard(
-              title: 'Quản lý dịch vụ',
-              subtitle:
-                  'Tiếp nhận và xác nhận các yêu cầu dịch vụ từ khách hàng.',
-              icon: Icons.receipt_long_rounded,
-              color: AppColors.lavender,
-              onTap: () {
-                context.push('/admin-service-requests');
-              },
-            ),
-
             const SizedBox(height: 30),
             Center(
               child: Text(

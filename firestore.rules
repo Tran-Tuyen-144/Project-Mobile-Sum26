@@ -49,6 +49,10 @@ service cloud.firestore {
 
       return isCurrentUser(userId) &&
 
+        /*
+         * Các trường chung mà cả CustomerAuthService
+         * và CustomerProfileService đều phải có.
+         */
         keys.hasAll([
           'uid',
           'role',
@@ -62,6 +66,11 @@ service cloud.firestore {
           'updatedAt'
         ]) &&
 
+        /*
+         * Các trường được phép xuất hiện.
+         * avatarUrl, avatarPublicId, fullName và profileInitialized
+         * là tùy chọn.
+         */
         keys.hasOnly([
           'uid',
           'role',
@@ -70,6 +79,8 @@ service cloud.firestore {
           'email',
           'phoneNumber',
           'avatarIconKey',
+          'avatarUrl',
+          'avatarPublicId',
           'anonymousName',
           'anonymousAvatarIconKey',
           'profileInitialized',
@@ -87,17 +98,39 @@ service cloud.firestore {
         data.anonymousName is string &&
         data.anonymousAvatarIconKey is string &&
 
+        (
+          data.phoneNumber == null ||
+          data.phoneNumber is string
+        ) &&
+
+        (
+          !keys.hasAny(['fullName']) ||
+          data.fullName is string
+        ) &&
+
+        (
+          !keys.hasAny(['avatarUrl']) ||
+          data.avatarUrl == null ||
+          data.avatarUrl is string
+        ) &&
+
+        (
+          !keys.hasAny(['avatarPublicId']) ||
+          data.avatarPublicId == null ||
+          data.avatarPublicId is string
+        ) &&
+
+        (
+          !keys.hasAny(['profileInitialized']) ||
+          data.profileInitialized == true
+        ) &&
+
         data.createdAt == request.time &&
         data.updatedAt == request.time &&
 
         (
           !keys.hasAny(['lastLoginAt']) ||
           data.lastLoginAt == request.time
-        ) &&
-
-        (
-          !keys.hasAny(['profileInitialized']) ||
-          data.profileInitialized == true
         );
     }
 
@@ -126,6 +159,8 @@ service cloud.firestore {
           'email',
           'phoneNumber',
           'avatarIconKey',
+          'avatarUrl',
+          'avatarPublicId',
           'anonymousName',
           'anonymousAvatarIconKey',
           'profileInitialized',
@@ -592,10 +627,6 @@ service cloud.firestore {
      * USERS
      */
     match /users/{userId} {
-      /*
-       * Luồng đăng nhập chỉ cần đọc document
-       * của đúng tài khoản hiện tại.
-       */
       allow read: if
         isCurrentUser(userId) ||
         isAdmin();
@@ -669,10 +700,64 @@ service cloud.firestore {
     }
 
     /*
+     * CÁC COLLECTION VẬN HÀNH CỦA PETHUB
+     *
+     * Quyền tạm thời cho giai đoạn tích hợp:
+     * - Chỉ tài khoản Firebase đã đăng nhập mới được truy cập.
+     * - Các collection ngoài danh sách vẫn bị từ chối.
+     */
+    match /{collectionName}/{documentId} {
+      allow read, write: if
+        isSignedIn() &&
+        collectionName in [
+          'bookings',
+          'admin_notifications',
+          'customers',
+          'pets',
+          'menu_items',
+          'hotel_rooms',
+          'spa_services',
+          'tables',
+          'vet_services',
+          'vet_doctors',
+          'orders'
+        ]
+
+    }
+    /*
+     * YÊU CẦU ĐẶT DỊCH VỤ
+     *
+     * Bản demo:
+     * - Khách đăng nhập chỉ được tạo yêu cầu mang UID của mình.
+     * - Các tài khoản đăng nhập được đọc để Admin demo vận hành.
+     * - Chỉ được cập nhật trạng thái yêu cầu.
+     *
+     * Khi có đăng nhập Admin riêng, phần read/update sẽ đổi sang isAdmin().
+     */
+    match /service_bookings/{bookingId} {
+      allow create: if
+        isSignedIn() &&
+        request.resource.data.get('customerId', '') ==
+          request.auth.uid;
+
+      allow read: if isSignedIn();
+
+      allow update: if
+        isSignedIn() &&
+        request.resource.data
+          .diff(resource.data)
+          .affectedKeys()
+          .hasOnly(['status']);
+
+      allow delete: if false;
+    }
+
+    /*
      * TỪ CHỐI CÁC COLLECTION CHƯA ĐƯỢC KHAI BÁO
      */
     match /{document=**} {
       allow read, write: if false;
     }
   }
+
 }

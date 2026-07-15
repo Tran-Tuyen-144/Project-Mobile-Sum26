@@ -11,6 +11,7 @@ import '../../../widgets/soft_card.dart';
 import '../booking_confirm/booking_confirm_data.dart';
 import 'customer_drink_order_screen.dart';
 import '../petprofile/pet_list_screen.dart';
+import '../../admin/table/admin_table_form_screen.dart';
 
 class CustomerBookingScreen extends StatefulWidget {
   final String petName;
@@ -25,6 +26,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
   int selectedBranch = 0;
   int selectedGuest = 2;
   int? selectedTable;
+  String? selectedTableName;
   Timer? _clockTimer;
   DateTime _now = DateTime.now();
   DateTime _selectedDate = DateTime.now();
@@ -143,6 +145,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
               setState(() {
                 selectedBranch = index;
                 selectedTable = null;
+                selectedTableName = null;
               });
             },
           ),
@@ -151,8 +154,8 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
 
           SectionTitle(
             title: 'Chọn bàn',
-            actionText: 'Sơ đồ quán',
-            onActionTap: () {},
+            actionText: 'Thêm bàn',
+            onActionTap: _addTableForBranch,
           ),
 
           const SizedBox(height: 12),
@@ -217,6 +220,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
 
                             setState(() {
                               selectedTable = table.tableId;
+                              selectedTableName = table.name;
                             });
                           },
                         ),
@@ -251,6 +255,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
                   final selectedSeats = _selectedTableSeats();
                   if (selectedSeats != null && selectedGuest > selectedSeats) {
                     selectedTable = null;
+                    selectedTableName = null;
                   }
                 });
               }
@@ -278,7 +283,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
             guests: selectedGuest,
             tableName: selectedTable == null
                 ? 'Chưa chọn bàn'
-                : tables.firstWhere((item) => item.id == selectedTable).name,
+                : selectedTableName ?? 'Bàn $selectedTable',
           ),
 
           const SizedBox(height: 18),
@@ -322,9 +327,8 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
                         return;
                       }
 
-                      final tableName = tables
-                          .firstWhere((item) => item.id == selectedTable)
-                          .name;
+                      final tableName =
+                          selectedTableName ?? 'Bàn $selectedTable';
 
                       Navigator.of(context).push(
                         MaterialPageRoute(
@@ -400,9 +404,8 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
                         );
                         return;
                       }
-                      final tableName = tables
-                          .firstWhere((item) => item.id == selectedTable)
-                          .name;
+                      final tableName =
+                          selectedTableName ?? 'Bàn $selectedTable';
                       final branch = branches[selectedBranch];
                       final tableId = selectedTable!;
                       final now = DateTime.now();
@@ -475,6 +478,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
                           _localBookingKey(branch, tableId),
                         );
                         selectedTable = null;
+                        selectedTableName = null;
                       });
                       localContext.push('/booking-confirm', extra: bookingData);
                     },
@@ -491,10 +495,28 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
     final tableId = selectedTable;
     if (tableId == null) return null;
 
+    final liveTables = TableBookingService.tablesFor(branches[selectedBranch]);
+    for (final table in liveTables) {
+      if (table.tableId == tableId) return table.seats;
+    }
+
     for (final table in tables) {
       if (table.id == tableId) return table.seats;
     }
     return null;
+  }
+
+  Future<void> _addTableForBranch() async {
+    final data = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(builder: (_) => const AdminTableFormScreen()),
+    );
+    if (data == null) return;
+    await TableBookingService.addTable(
+      branch: branches[selectedBranch],
+      name: data['name'] as String? ?? '',
+      seats: int.tryParse(data['seats']?.toString() ?? '') ?? 2,
+    );
   }
 
   String _localBookingKey(String branch, int tableId) {

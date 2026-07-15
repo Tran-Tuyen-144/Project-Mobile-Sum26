@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../storage/service_booking_storage.dart';
@@ -233,30 +234,46 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
   late TimeOfDay _selectedTime;
   late TimeOfDay _hotelCheckInTime;
   late TimeOfDay _hotelCheckOutTime;
+
   int _roomCount = 1;
+
   late String _selectedPackage;
+
   String _selectedHotelSize = 'Mèo dưới 3kg';
   bool _hasVaccinationRecord = false;
   bool _needsPickup = false;
+
   String _symptomDuration = 'Dưới 24 giờ';
   String _selectedTherapy = 'Khám tổng quát & lập phác đồ';
   String _healthConcern = 'Đau mãn tính / vận động';
   String _selectedPaymentMethod = 'ZaloPay';
+
   final Set<String> _spaAddOns = {};
+
   final TextEditingController _customerNameController = TextEditingController();
+
   final TextEditingController _phoneController = TextEditingController();
+
   final TextEditingController _conditionController = TextEditingController();
+
   final TextEditingController _noteController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+
     final now = DateTime.now();
+
     _selectedDate = DateTime(now.year, now.month, now.day);
+
     _endDate = _selectedDate.add(const Duration(days: 1));
+
     _selectedTime = const TimeOfDay(hour: 9, minute: 0);
+
     _hotelCheckInTime = const TimeOfDay(hour: 9, minute: 0);
+
     _hotelCheckOutTime = const TimeOfDay(hour: 10, minute: 0);
+
     _selectedPackage = _packageOptions.first;
   }
 
@@ -266,6 +283,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
     _phoneController.dispose();
     _conditionController.dispose();
     _noteController.dispose();
+
     super.dispose();
   }
 
@@ -356,7 +374,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                 ),
                 if (_isSpa) ...[
                   const SizedBox(height: 12),
-                  _SpaProcessCard(),
+                  const _SpaProcessCard(),
                   const SizedBox(height: 12),
                   SoftCard(
                     color: AppColors.peach,
@@ -373,7 +391,8 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                         SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Cần tư vấn tình trạng lông hoặc báo giá trước? Liên hệ: 0822905915',
+                            'Cần tư vấn tình trạng lông hoặc báo giá trước? '
+                            'Liên hệ: 0822905915',
                             style: TextStyle(
                               color: AppColors.textDark,
                               fontWeight: FontWeight.w700,
@@ -390,8 +409,10 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                   _ServiceContactCard(
                     onTap: _callHotline,
                     message: _isHotel
-                        ? 'Cần kiểm tra phòng hoặc tư vấn trước khi gửi bé? Liên hệ: 0822905915'
-                        : 'Cần tư vấn tình trạng của bé trước khi đặt lịch? Liên hệ: 0822905915',
+                        ? 'Cần kiểm tra phòng hoặc tư vấn trước khi gửi bé? '
+                              'Liên hệ: 0822905915'
+                        : 'Cần tư vấn tình trạng của bé trước khi đặt lịch? '
+                              'Liên hệ: 0822905915',
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -416,6 +437,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                     onTap: _pickTime,
                   ),
                 ],
+                const SizedBox(height: 16),
                 Text(
                   _formTitle,
                   style: Theme.of(context).textTheme.titleMedium,
@@ -437,16 +459,21 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
+                  maxLength: 10,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: const InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
                     labelText: 'Số điện thoại',
-                    hintText: 'Nhân viên dùng để liên hệ xác nhận',
+                    hintText: 'Ví dụ: 0987654321',
+                    helperText: 'Nhập đủ 10 chữ số',
+                    counterText: '',
                     prefixIcon: Icon(Icons.phone_outlined),
                   ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _selectedPackage,
                   decoration: const InputDecoration(
                     filled: true,
@@ -454,16 +481,21 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                     labelText: 'Gói dịch vụ',
                     prefixIcon: Icon(Icons.spa_outlined),
                   ),
-                  items: _packageOptions
-                      .map(
-                        (option) => DropdownMenuItem(
-                          value: option,
-                          child: Text(option),
-                        ),
-                      )
-                      .toList(),
+                  items: _packageOptions.map((option) {
+                    return DropdownMenuItem<String>(
+                      value: option,
+                      child: Text(
+                        option,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
                   onChanged: (value) {
-                    if (value == null) return;
+                    if (value == null) {
+                      return;
+                    }
+
                     setState(() {
                       _selectedPackage = value;
                     });
@@ -500,6 +532,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _selectedPaymentMethod,
                   decoration: const InputDecoration(
                     filled: true,
@@ -508,19 +541,32 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                     prefixIcon: Icon(Icons.account_balance_wallet_rounded),
                   ),
                   items: const [
-                    DropdownMenuItem(
+                    DropdownMenuItem<String>(
                       value: 'ZaloPay',
-                      child: Text('ZaloPay • Quét QR demo'),
+                      child: Text(
+                        'ZaloPay • Quét QR demo',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    DropdownMenuItem(
+                    DropdownMenuItem<String>(
                       value: 'Thanh toán tại quầy',
-                      child: Text('Thanh toán tại quầy'),
+                      child: Text(
+                        'Thanh toán tại quầy',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
-                  onChanged: (value) => setState(
-                    () => _selectedPaymentMethod =
-                        value ?? _selectedPaymentMethod,
-                  ),
+                  onChanged: (value) {
+                    if (value == null) {
+                      return;
+                    }
+
+                    setState(() {
+                      _selectedPaymentMethod = value;
+                    });
+                  },
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -552,37 +598,50 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
     );
   }
 
-  bool get _isHotel => widget.service.category == 'Khách sạn';
-  bool get _isSpa => widget.service.category == 'Spa';
-  bool get _isVeterinary => widget.service.category == 'Thú y';
+  bool get _isHotel {
+    return widget.service.category == 'Khách sạn';
+  }
 
-  int get _servicePrice => switch (_selectedPackage) {
-    'Tắm spa trọn gói' => 120000,
-    'Tắm spa + vệ sinh tai, móng, bàn chân' => 180000,
-    'Spa trọn gói + cắt tỉa lông theo yêu cầu' => 280000,
-    'Khám tổng quát & lập phác đồ' => 90000,
-    'Châm cứu hỗ trợ' => 220000,
-    'Laser therapy' => 250000,
-    'Vật lý trị liệu' => 200000,
-    'Tư vấn thảo dược / dinh dưỡng' => 150000,
-    _ when _isHotel =>
-      _hotelDailyPrice *
-          _endDate.difference(_selectedDate).inDays.clamp(1, 60).toInt() *
-          _roomCount,
-    _ => 120000,
-  };
+  bool get _isSpa {
+    return widget.service.category == 'Spa';
+  }
 
-  int get _hotelDailyPrice => switch (_selectedHotelSize) {
-    'Mèo dưới 3kg' => 100000,
-    'Mèo từ 3kg trở lên' => 120000,
-    'Chó dưới 5kg' => 150000,
-    'Chó từ 5kg đến dưới 10kg' => 200000,
-    'Chó từ 10kg đến 20kg' => 250000,
-    _ => 300000,
-  };
+  bool get _isVeterinary {
+    return widget.service.category == 'Thú y';
+  }
 
-  String _money(int value) =>
-      '${value.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => '.')}đ';
+  int get _servicePrice {
+    return switch (_selectedPackage) {
+      'Tắm spa trọn gói' => 120000,
+      'Tắm spa + vệ sinh tai, móng, bàn chân' => 180000,
+      'Spa trọn gói + cắt tỉa lông theo yêu cầu' => 280000,
+      'Khám tổng quát & lập phác đồ' => 90000,
+      'Châm cứu hỗ trợ' => 220000,
+      'Laser therapy' => 250000,
+      'Vật lý trị liệu' => 200000,
+      'Tư vấn thảo dược / dinh dưỡng' => 150000,
+      _ when _isHotel =>
+        _hotelDailyPrice *
+            _endDate.difference(_selectedDate).inDays.clamp(1, 60).toInt() *
+            _roomCount,
+      _ => 120000,
+    };
+  }
+
+  int get _hotelDailyPrice {
+    return switch (_selectedHotelSize) {
+      'Mèo dưới 3kg' => 100000,
+      'Mèo từ 3kg trở lên' => 120000,
+      'Chó dưới 5kg' => 150000,
+      'Chó từ 5kg đến dưới 10kg' => 200000,
+      'Chó từ 10kg đến 20kg' => 250000,
+      _ => 300000,
+    };
+  }
+
+  String _money(int value) {
+    return '${value.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => '.')}đ';
+  }
 
   List<String> get _packageOptions {
     return switch (widget.service.category) {
@@ -646,6 +705,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       case 'Khách sạn':
         return [
           DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: _selectedHotelSize,
             decoration: const InputDecoration(
               filled: true,
@@ -655,21 +715,31 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
             ),
             items:
                 const [
-                      'Mèo dưới 3kg',
-                      'Mèo từ 3kg trở lên',
-                      'Chó dưới 5kg',
-                      'Chó từ 5kg đến dưới 10kg',
-                      'Chó từ 10kg đến 20kg',
-                      'Chó trên 20kg',
-                    ]
-                    .map(
-                      (item) =>
-                          DropdownMenuItem(value: item, child: Text(item)),
-                    )
-                    .toList(),
-            onChanged: (value) => setState(
-              () => _selectedHotelSize = value ?? _selectedHotelSize,
-            ),
+                  'Mèo dưới 3kg',
+                  'Mèo từ 3kg trở lên',
+                  'Chó dưới 5kg',
+                  'Chó từ 5kg đến dưới 10kg',
+                  'Chó từ 10kg đến 20kg',
+                  'Chó trên 20kg',
+                ].map((item) {
+                  return DropdownMenuItem<String>(
+                    value: item,
+                    child: Text(
+                      item,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+            onChanged: (value) {
+              if (value == null) {
+                return;
+              }
+
+              setState(() {
+                _selectedHotelSize = value;
+              });
+            },
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(
@@ -680,32 +750,46 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
               labelText: 'Số phòng cần đặt',
               prefixIcon: Icon(Icons.meeting_room_outlined),
             ),
-            items: List.generate(
-              4,
-              (index) => DropdownMenuItem(
+            items: List.generate(4, (index) {
+              return DropdownMenuItem<int>(
                 value: index + 1,
                 child: Text('${index + 1} phòng'),
-              ),
-            ),
-            onChanged: (value) => setState(() => _roomCount = value ?? 1),
+              );
+            }),
+            onChanged: (value) {
+              if (value == null) {
+                return;
+              }
+
+              setState(() {
+                _roomCount = value;
+              });
+            },
           ),
           const SizedBox(height: 12),
           _TimePickCard(
             label: 'Giờ nhận pet',
             value: _timeText(_hotelCheckInTime),
-            onTap: () => _pickHotelTime(isCheckIn: true),
+            onTap: () {
+              _pickHotelTime(isCheckIn: true);
+            },
           ),
           const SizedBox(height: 12),
           _TimePickCard(
             label: 'Giờ trả pet',
             value: _timeText(_hotelCheckOutTime),
-            onTap: () => _pickHotelTime(isCheckIn: false),
+            onTap: () {
+              _pickHotelTime(isCheckIn: false);
+            },
           ),
           const SizedBox(height: 8),
           CheckboxListTile(
             value: _hasVaccinationRecord,
-            onChanged: (value) =>
-                setState(() => _hasVaccinationRecord = value ?? false),
+            onChanged: (value) {
+              setState(() {
+                _hasVaccinationRecord = value ?? false;
+              });
+            },
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
             title: const Text('Bé đã tiêm phòng và có sổ sức khỏe'),
@@ -715,15 +799,21 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
           ),
           CheckboxListTile(
             value: _needsPickup,
-            onChanged: (value) => setState(() => _needsPickup = value ?? false),
+            onChanged: (value) {
+              setState(() {
+                _needsPickup = value ?? false;
+              });
+            },
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
             title: const Text('Cần hỗ trợ đưa đón thú cưng'),
           ),
         ];
+
       case 'Thú y':
         return [
           DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: _selectedTherapy,
             decoration: const InputDecoration(
               filled: true,
@@ -733,19 +823,30 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
             ),
             items:
                 const [
-                      'Khám tổng quát & lập phác đồ',
-                      'Châm cứu',
-                      'Laser therapy',
-                      'Vật lý trị liệu',
-                      'Thảo dược / dinh dưỡng',
-                    ]
-                    .map(
-                      (item) =>
-                          DropdownMenuItem(value: item, child: Text(item)),
-                    )
-                    .toList(),
-            onChanged: (value) =>
-                setState(() => _selectedTherapy = value ?? _selectedTherapy),
+                  'Khám tổng quát & lập phác đồ',
+                  'Châm cứu',
+                  'Laser therapy',
+                  'Vật lý trị liệu',
+                  'Thảo dược / dinh dưỡng',
+                ].map((item) {
+                  return DropdownMenuItem<String>(
+                    value: item,
+                    child: Text(
+                      item,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+            onChanged: (value) {
+              if (value == null) {
+                return;
+              }
+
+              setState(() {
+                _selectedTherapy = value;
+              });
+            },
           ),
           const SizedBox(height: 12),
           SoftCard(
@@ -770,6 +871,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: _healthConcern,
             decoration: const InputDecoration(
               filled: true,
@@ -779,21 +881,34 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
             ),
             items:
                 const [
-                      'Đau mãn tính / vận động',
-                      'Phục hồi sau chấn thương / phẫu thuật',
-                      'Lo âu / hành vi',
-                      'Da, dị ứng hoặc tiêu hóa',
-                      'Khác / cần bác sĩ đánh giá',
-                    ]
-                    .map(
-                      (item) =>
-                          DropdownMenuItem(value: item, child: Text(item)),
-                    )
-                    .toList(),
-            onChanged: (value) =>
-                setState(() => _healthConcern = value ?? _healthConcern),
+                  'Đau mãn tính / vận động',
+                  'Phục hồi sau chấn thương / phẫu thuật',
+                  'Lo âu / hành vi',
+                  'Da, dị ứng hoặc tiêu hóa',
+                  'Khác / cần bác sĩ đánh giá',
+                ].map((item) {
+                  return DropdownMenuItem<String>(
+                    value: item,
+                    child: Text(
+                      item,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+            onChanged: (value) {
+              if (value == null) {
+                return;
+              }
+
+              setState(() {
+                _healthConcern = value;
+              });
+            },
           ),
+          const SizedBox(height: 12),
           DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: _symptomDuration,
             decoration: const InputDecoration(
               filled: true,
@@ -802,12 +917,29 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
               prefixIcon: Icon(Icons.timelapse_rounded),
             ),
             items: const ['Dưới 24 giờ', '1–3 ngày', 'Trên 3 ngày', 'Không rõ']
-                .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                .map((item) {
+                  return DropdownMenuItem<String>(
+                    value: item,
+                    child: Text(
+                      item,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                })
                 .toList(),
-            onChanged: (value) =>
-                setState(() => _symptomDuration = value ?? _symptomDuration),
+            onChanged: (value) {
+              if (value == null) {
+                return;
+              }
+
+              setState(() {
+                _symptomDuration = value;
+              });
+            },
           ),
         ];
+
       case 'Spa':
         return [
           TextField(
@@ -831,29 +963,32 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
             runSpacing: 8,
             children:
                 [
-                      'Cạo lông bàn chân',
-                      'Vệ sinh tai',
-                      'Cắt & dũa móng',
-                      'Gỡ rối lông',
-                      'Vắt tuyến hôi',
-                      'Massage',
-                      'Dưỡng lông',
-                      'Cắt tạo kiểu',
-                    ]
-                    .map(
-                      (item) => FilterChip(
-                        label: Text(item),
-                        selected: _spaAddOns.contains(item),
-                        onSelected: (selected) => setState(() {
-                          selected
-                              ? _spaAddOns.add(item)
-                              : _spaAddOns.remove(item);
-                        }),
-                      ),
-                    )
-                    .toList(),
+                  'Cạo lông bàn chân',
+                  'Vệ sinh tai',
+                  'Cắt & dũa móng',
+                  'Gỡ rối lông',
+                  'Vắt tuyến hôi',
+                  'Massage',
+                  'Dưỡng lông',
+                  'Cắt tạo kiểu',
+                ].map((item) {
+                  return FilterChip(
+                    label: Text(item),
+                    selected: _spaAddOns.contains(item),
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          _spaAddOns.add(item);
+                        } else {
+                          _spaAddOns.remove(item);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
           ),
         ];
+
       default:
         return [
           TextField(
@@ -872,7 +1007,9 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
 
   Future<void> _pickStartDate() async {
     final now = DateTime.now();
+
     final today = DateTime(now.year, now.month, now.day);
+
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate.isBefore(today) ? today : _selectedDate,
@@ -896,17 +1033,24 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       },
     );
 
-    if (picked == null) return;
+    if (picked == null || !mounted) {
+      return;
+    }
+
     setState(() {
       _selectedDate = DateTime(picked.year, picked.month, picked.day);
-      if (_endDate.isBefore(_selectedDate.add(const Duration(days: 1)))) {
-        _endDate = _selectedDate.add(const Duration(days: 1));
+
+      final minimumEndDate = _selectedDate.add(const Duration(days: 1));
+
+      if (_endDate.isBefore(minimumEndDate)) {
+        _endDate = minimumEndDate;
       }
     });
   }
 
   Future<void> _pickEndDate() async {
     final firstEndDate = _selectedDate.add(const Duration(days: 1));
+
     final picked = await showDatePicker(
       context: context,
       initialDate: _endDate.isBefore(firstEndDate) ? firstEndDate : _endDate,
@@ -930,7 +1074,10 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       },
     );
 
-    if (picked == null) return;
+    if (picked == null || !mounted) {
+      return;
+    }
+
     setState(() {
       _endDate = DateTime(picked.year, picked.month, picked.day);
     });
@@ -958,7 +1105,10 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       },
     );
 
-    if (picked == null) return;
+    if (picked == null || !mounted) {
+      return;
+    }
+
     setState(() {
       _selectedTime = picked;
     });
@@ -966,6 +1116,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
 
   Future<void> _pickHotelTime({required bool isCheckIn}) async {
     final currentTime = isCheckIn ? _hotelCheckInTime : _hotelCheckOutTime;
+
     final picked = await showTimePicker(
       context: context,
       initialTime: currentTime,
@@ -974,7 +1125,10 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       confirmText: 'Chọn',
     );
 
-    if (picked == null) return;
+    if (picked == null || !mounted) {
+      return;
+    }
+
     setState(() {
       if (isCheckIn) {
         _hotelCheckInTime = picked;
@@ -985,47 +1139,68 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
   }
 
   Future<void> _submitRequest() async {
+    FocusScope.of(context).unfocus();
+
     final localContext = context;
+
     final customerName = _customerNameController.text.trim();
     final phone = _phoneController.text.trim();
 
     if (customerName.isEmpty) {
-      ScaffoldMessenger.of(localContext).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập tên khách hàng.')),
-      );
+      ScaffoldMessenger.of(localContext)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Vui lòng nhập tên khách hàng.')),
+        );
+
       return;
     }
 
     if (!RegExp(r'^\d{10}$').hasMatch(phone)) {
-      ScaffoldMessenger.of(localContext).showSnackBar(
-        const SnackBar(content: Text('Số điện thoại cần đủ 10 số.')),
-      );
+      ScaffoldMessenger.of(localContext)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              'Số điện thoại hiện có ${phone.length}/10 số. '
+              'Vui lòng nhập đủ 10 số.',
+            ),
+          ),
+        );
+
       return;
     }
 
-    if (widget.service.category == 'Thú y' &&
-        _noteController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(localContext).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng mô tả triệu chứng để bác sĩ chuẩn bị.'),
-        ),
-      );
+    if (_isVeterinary && _noteController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(localContext)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng mô tả triệu chứng để bác sĩ chuẩn bị.'),
+          ),
+        );
+
       return;
     }
 
     if (_isHotel && !_hasVaccinationRecord) {
-      ScaffoldMessenger.of(localContext).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Vui lòng xác nhận bé đã tiêm phòng và có sổ sức khỏe.',
+      ScaffoldMessenger.of(localContext)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Vui lòng xác nhận bé đã tiêm phòng '
+              'và có sổ sức khỏe.',
+            ),
           ),
-        ),
-      );
+        );
+
       return;
     }
 
     final service = widget.service;
     final details = _serviceDetails();
+
     final request = ServiceBookingRequest(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       createdAt: DateTime.now(),
@@ -1039,7 +1214,8 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       startDay: _dateText(_selectedDate),
       endDay: _isHotel ? _dateText(_endDate) : '',
       time: _isHotel
-          ? 'Nhận ${_timeText(_hotelCheckInTime)} • Trả ${_timeText(_hotelCheckOutTime)}'
+          ? 'Nhận ${_timeText(_hotelCheckInTime)}'
+                ' • Trả ${_timeText(_hotelCheckOutTime)}'
           : _timeText(_selectedTime),
       note: _noteController.text.trim(),
       details: {
@@ -1051,46 +1227,72 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
     );
 
     final shouldSend = await _showBookingSummary(request);
-    if (!shouldSend) return;
 
-    if (_selectedPaymentMethod == 'ZaloPay' && !await _showZaloPayPayment()) {
+    if (!shouldSend || !mounted) {
       return;
+    }
+
+    if (_selectedPaymentMethod == 'ZaloPay') {
+      final paid = await _showZaloPayPayment();
+
+      if (!paid || !mounted) {
+        return;
+      }
     }
 
     try {
       await ServiceBookingStorage.saveRequest(request);
     } catch (error) {
-      if (!localContext.mounted) return;
-      ScaffoldMessenger.of(localContext).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Chưa gửi được lên Firestore. Kiểm tra Firestore Database và rules: $error',
+      if (!localContext.mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(localContext)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              'Chưa gửi được lên Firestore. '
+              'Kiểm tra Firestore Database và rules: $error',
+            ),
           ),
-        ),
-      );
+        );
+
       return;
     }
+
     widget.onRequestSubmitted?.call();
 
-    if (!mounted) return;
-    Navigator.pop(context);
+    if (!mounted) {
+      return;
+    }
+
     await showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Yêu cầu đã gửi admin'),
+          title: const Text('Thanh toán thành công'),
           content: Text(
-            'Lịch dịch vụ đã được lưu. Admin sẽ kiểm tra và xác nhận lịch qua số $phone.',
+            'Lịch dịch vụ đã được lưu. '
+            'Admin sẽ kiểm tra và xác nhận lịch '
+            'qua số $phone.',
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
               child: const Text('Đã hiểu'),
             ),
           ],
         );
       },
     );
+
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   Map<String, String> _serviceDetails() {
@@ -1103,6 +1305,7 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
           'Giờ trả pet': _timeText(_hotelCheckOutTime),
           'Đưa đón': _needsPickup ? 'Cần hỗ trợ' : 'Tự đưa đón',
         };
+
       case 'Thú y':
         return {
           'Phương pháp hỗ trợ': _selectedTherapy,
@@ -1110,12 +1313,14 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
           'Vấn đề cần hỗ trợ': _healthConcern,
           'Thời gian triệu chứng': _symptomDuration,
         };
+
       case 'Spa':
         return {
           if (_conditionController.text.trim().isNotEmpty)
             'Tình trạng lông / da': _conditionController.text.trim(),
           if (_spaAddOns.isNotEmpty) 'Dịch vụ bổ sung': _spaAddOns.join(', '),
         };
+
       default:
         return {
           if (_conditionController.text.trim().isNotEmpty)
@@ -1129,86 +1334,107 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       'Dịch vụ: ${request.serviceName}',
       'Gói: ${request.packageName}',
       request.endDay.isEmpty
-          ? 'Lịch hẹn: ${request.startDay} • ${request.time}'
-          : 'Lưu trú: ${request.startDay} đến ${request.endDay} • ${request.time}',
+          ? 'Lịch hẹn: ${request.startDay}'
+                ' • ${request.time}'
+          : 'Lưu trú: ${request.startDay}'
+                ' đến ${request.endDay}'
+                ' • ${request.time}',
       ...request.details.entries.map((entry) => '${entry.key}: ${entry.value}'),
       if (request.note.isNotEmpty) 'Ghi chú: ${request.note}',
     ];
 
-    return await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Xác nhận thông tin đặt lịch'),
-            content: SingleChildScrollView(
-              child: Text(summaryLines.join('\n\n')),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('Chỉnh sửa'),
-              ),
-              ElevatedButton.icon(
-                onPressed: () => Navigator.pop(dialogContext, true),
-                icon: const Icon(Icons.send_rounded),
-                label: const Text('Gửi admin'),
-              ),
-            ],
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Xác nhận thông tin đặt lịch'),
+          content: SingleChildScrollView(
+            child: Text(summaryLines.join('\n\n')),
           ),
-        ) ??
-        false;
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Chỉnh sửa'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              icon: const Icon(Icons.send_rounded),
+              label: const Text('Gửi admin'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
   }
 
-  String get _doctorForTherapy => switch (_selectedTherapy) {
-    'Châm cứu' => 'BS. Nguyễn Xuân Hiếu • Châm cứu & giảm đau',
-    'Laser therapy' => 'BS. Nguyễn Xuân Hiếu • Laser & phục hồi mô',
-    'Vật lý trị liệu' => 'BS. Nguyễn Xuân Hiếu • Phục hồi vận động',
-    'Thảo dược / dinh dưỡng' => 'BS. Nguyễn Xuân Hiếu • Dinh dưỡng & thảo dược',
-    _ => 'BS. Nguyễn Xuân Hiếu • Khám tổng quát',
-  };
+  String get _doctorForTherapy {
+    return switch (_selectedTherapy) {
+      'Châm cứu' => 'BS. Nguyễn Xuân Hiếu • Châm cứu & giảm đau',
+      'Laser therapy' => 'BS. Nguyễn Xuân Hiếu • Laser & phục hồi mô',
+      'Vật lý trị liệu' => 'BS. Nguyễn Xuân Hiếu • Phục hồi vận động',
+      'Thảo dược / dinh dưỡng' =>
+        'BS. Nguyễn Xuân Hiếu • Dinh dưỡng & thảo dược',
+      _ => 'BS. Nguyễn Xuân Hiếu • Khám tổng quát',
+    };
+  }
 
   Future<bool> _showZaloPayPayment() async {
     final paymentCode = 'ZLP-${DateTime.now().millisecondsSinceEpoch}';
-    Future<void>.delayed(const Duration(seconds: 8), () {
-      if (mounted && Navigator.of(context).canPop()) {
-        Navigator.of(context).pop(true);
-      }
-    });
-    return await showDialog<bool>(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: const Text('Quét mã ZaloPay'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.qr_code_2_rounded,
-                  size: 150,
-                  color: AppColors.primary,
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        Future<void>.delayed(const Duration(seconds: 8), () {
+          if (dialogContext.mounted && Navigator.of(dialogContext).canPop()) {
+            Navigator.of(dialogContext).pop(true);
+          }
+        });
+
+        return AlertDialog(
+          title: const Text('Quét mã ZaloPay'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.qr_code_2_rounded,
+                size: 150,
+                color: AppColors.primary,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _money(_servicePrice),
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  _money(_servicePrice),
-                  style: const TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                Text(paymentCode),
-                const SizedBox(height: 8),
-                const Text(
-                  'Demo sẽ tự xác nhận thanh toán sau vài giây.',
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 4),
+              Text(paymentCode),
+              const SizedBox(height: 8),
+              const Text(
+                'Demo sẽ tự xác nhận thanh toán '
+                'sau vài giây.',
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-        ) ??
-        false;
+        );
+      },
+    );
+
+    return result ?? false;
   }
 
   Future<void> _callHotline() async {
     final opened = await launchUrl(Uri(scheme: 'tel', path: '0822905915'));
+
     if (!opened && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Thiết bị này không hỗ trợ gọi điện.')),
@@ -1218,10 +1444,17 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
 
   String _dateText(DateTime date) {
     final now = DateTime.now();
+
     final today = DateTime(now.year, now.month, now.day);
+
     final normalized = DateTime(date.year, date.month, date.day);
+
     final label = normalized == today ? 'Hôm nay' : _weekdayLabel(date.weekday);
-    return '$label, ${_twoDigits(date.day)}/${_twoDigits(date.month)}/${date.year}';
+
+    return '$label, '
+        '${_twoDigits(date.day)}/'
+        '${_twoDigits(date.month)}/'
+        '${date.year}';
   }
 
   String _weekdayLabel(int weekday) {
@@ -1242,7 +1475,8 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
   }
 
   String _timeText(TimeOfDay time) {
-    return '${_twoDigits(time.hour)}:${_twoDigits(time.minute)}';
+    return '${_twoDigits(time.hour)}:'
+        '${_twoDigits(time.minute)}';
   }
 }
 
@@ -1359,12 +1593,17 @@ class _InfoRow extends StatelessWidget {
         Icon(icon, color: AppColors.primary, size: 20),
         const SizedBox(width: 10),
         Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        const Spacer(),
-        Text(
-          value,
-          style: const TextStyle(
-            color: AppColors.textDark,
-            fontWeight: FontWeight.w800,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.end,
+            style: const TextStyle(
+              color: AppColors.textDark,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ],
@@ -1395,9 +1634,8 @@ class _SpaProcessCard extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 10),
-          ...List.generate(
-            steps.length,
-            (index) => Padding(
+          ...List.generate(steps.length, (index) {
+            return Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 children: [
@@ -1417,8 +1655,8 @@ class _SpaProcessCard extends StatelessWidget {
                   Expanded(child: Text(steps[index])),
                 ],
               ),
-            ),
-          ),
+            );
+          }),
         ],
       ),
     );

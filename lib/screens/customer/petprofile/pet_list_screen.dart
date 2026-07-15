@@ -6,10 +6,10 @@ import '../booking_confirm/booking_confirm_screen.dart';
 import 'pet_detail_screen.dart';
 
 class PetListScreen extends StatefulWidget {
+  const PetListScreen({super.key, this.tableBookingId, this.bookingData});
+
   final String? tableBookingId;
   final BookingConfirmData? bookingData;
-
-  const PetListScreen({super.key, this.tableBookingId, this.bookingData});
 
   @override
   State<PetListScreen> createState() => _PetListScreenState();
@@ -17,8 +17,7 @@ class PetListScreen extends StatefulWidget {
 
 class _PetListScreenState extends State<PetListScreen> {
   late final List<String> _selectedPets;
-
-  bool get _isSelectingPet => widget.bookingData != null;
+  bool get _selecting => widget.bookingData != null;
 
   @override
   void initState() {
@@ -26,34 +25,17 @@ class _PetListScreenState extends State<PetListScreen> {
     _selectedPets = [...?widget.bookingData?.petNames];
   }
 
-  void _togglePet(PetProfile pet) {
+  void _toggle(PetProfile pet) {
     if (_selectedPets.contains(pet.name)) {
       setState(() => _selectedPets.remove(pet.name));
-      return;
+    } else if (pet.isAvailable && _selectedPets.length < 3) {
+      setState(() => _selectedPets.add(pet.name));
     }
-    if (!pet.isAvailable || pet.bookingStatus == 'Đã được đặt') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pet này hiện không thể chọn.')),
-      );
-      return;
-    }
-    if (_selectedPets.length == 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mỗi khách chỉ được chọn tối đa 3 pet.')),
-      );
-      return;
-    }
-    setState(() => _selectedPets.add(pet.name));
   }
 
-  void _continueToConfirm() {
-    if (_selectedPets.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn ít nhất 1 pet.')),
-      );
-      return;
-    }
-    final booking = widget.bookingData!;
+  void _continue() {
+    if (_selectedPets.isEmpty) return;
+    final data = widget.bookingData!;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -61,12 +43,12 @@ class _PetListScreenState extends State<PetListScreen> {
           data: BookingConfirmData(
             petNames: _selectedPets,
             petStatus: 'Đã chọn',
-            customerName: booking.customerName,
-            branch: booking.branch,
-            day: booking.day,
-            time: booking.time,
-            guests: booking.guests,
-            tableName: booking.tableName,
+            customerName: data.customerName,
+            branch: data.branch,
+            day: data.day,
+            time: data.time,
+            guests: data.guests,
+            tableName: data.tableName,
           ),
         ),
       ),
@@ -74,70 +56,47 @@ class _PetListScreenState extends State<PetListScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final petStore = PetBookingStore.instance;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isSelectingPet ? 'Chọn pet (tối đa 3)' : 'Hồ sơ thú cưng'),
-      ),
-      body: ValueListenableBuilder<List<PetProfile>>(
-        valueListenable: petStore.petsNotifier,
-        builder: (context, pets, _) => ListView.builder(
-          padding: const EdgeInsets.only(bottom: 90),
-          itemCount: pets.length,
-          itemBuilder: (context, index) {
-            final pet = pets[index];
-            final selected = _selectedPets.contains(pet.name);
-            final locked =
-                !pet.isAvailable || pet.bookingStatus == 'Đã được đặt';
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              color: locked && !selected ? Colors.grey.shade200 : null,
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: selected ? Colors.green.shade100 : pet.color,
-                  child: Icon(
-                    selected ? Icons.check : (locked ? Icons.lock : Icons.pets),
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: Text(_selecting ? 'Chọn pet (tối đa 3)' : 'Hồ sơ thú cưng'),
+    ),
+    body: ValueListenableBuilder<List<PetProfile>>(
+      valueListenable: PetBookingStore.instance.petsNotifier,
+      builder: (context, pets, _) => ListView.builder(
+        itemCount: pets.length,
+        itemBuilder: (context, index) {
+          final pet = pets[index];
+          final selected = _selectedPets.contains(pet.name);
+          return ListTile(
+            leading: CircleAvatar(
+              backgroundColor: pet.color,
+              child: Icon(selected ? Icons.check : Icons.pets),
+            ),
+            title: Text(pet.name),
+            subtitle: Text('${pet.age} • ${pet.healthStatus}'),
+            trailing: _selecting
+                ? Checkbox(value: selected, onChanged: (_) => _toggle(pet))
+                : const Icon(Icons.chevron_right),
+            onTap: _selecting
+                ? () => _toggle(pet)
+                : () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PetDetailScreen(pet: pet.toMap()),
+                    ),
                   ),
-                ),
-                title: Text(pet.name),
-                subtitle: Text(
-                  '${pet.age} • ${pet.healthStatus}\n${locked && !selected
-                      ? 'Đã được đặt'
-                      : selected
-                      ? 'Đang chọn'
-                      : 'Còn trống'}',
-                ),
-                isThreeLine: true,
-                trailing: _isSelectingPet
-                    ? Checkbox(
-                        value: selected,
-                        onChanged: (_) => _togglePet(pet),
-                      )
-                    : const Icon(Icons.arrow_forward_ios),
-                onTap: () => _isSelectingPet
-                    ? _togglePet(pet)
-                    : Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PetDetailScreen(pet: pet.toMap()),
-                        ),
-                      ),
-              ),
-            );
-          },
-        ),
+          );
+        },
       ),
-      bottomNavigationBar: _isSelectingPet
-          ? SafeArea(
-              minimum: const EdgeInsets.all(16),
-              child: FilledButton.icon(
-                onPressed: _continueToConfirm,
-                icon: const Icon(Icons.arrow_forward),
-                label: Text('Tiếp tục (${_selectedPets.length}/3 pet)'),
-              ),
-            )
-          : null,
-    );
-  }
+    ),
+    bottomNavigationBar: _selecting
+        ? SafeArea(
+            minimum: const EdgeInsets.all(16),
+            child: FilledButton(
+              onPressed: _selectedPets.isEmpty ? null : _continue,
+              child: Text('Tiếp tục (${_selectedPets.length}/3)'),
+            ),
+          )
+        : null,
+  );
 }

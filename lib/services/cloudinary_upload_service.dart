@@ -38,10 +38,35 @@ class CloudinaryUploadService {
   static const String cloudName = 'kxkbvskv';
   static const String uploadPreset = 'pethub_unsigned';
   static const String uploadFolder = 'pethub_community';
+  static String profileFolder(String uid) {
+    return 'pethub/profiles/${_safeFolderSegment(uid)}';
+  }
+
+  static String _safeFolderSegment(String value) {
+    final safe = value.trim().replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
+
+    return safe.isEmpty ? 'anonymous' : safe;
+  }
 
   static const int maximumImagesPerPost = 5;
 
   static final ImagePicker _picker = ImagePicker();
+
+  static Future<XFile?> pickImageFromGallery() async {
+    return _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 1600,
+    );
+  }
+
+  static Future<XFile?> pickImageFromCamera() async {
+    return _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 85,
+      maxWidth: 1600,
+    );
+  }
 
   static Future<List<XFile>> pickImagesFromGallery() async {
     final images = await _picker.pickMultiImage(
@@ -52,7 +77,10 @@ class CloudinaryUploadService {
     return images.take(maximumImagesPerPost).toList();
   }
 
-  static Future<CloudinaryUploadResult> uploadImageFile(XFile imageFile) async {
+  static Future<CloudinaryUploadResult> uploadImageFile(
+    XFile imageFile, {
+    String folder = uploadFolder,
+  }) async {
     final uploadUrl = Uri.parse(
       'https://api.cloudinary.com/v1_1/'
       '$cloudName/image/upload',
@@ -61,8 +89,7 @@ class CloudinaryUploadService {
     final request = http.MultipartRequest('POST', uploadUrl);
 
     request.fields['upload_preset'] = uploadPreset;
-    request.fields['folder'] = uploadFolder;
-
+    request.fields['folder'] = folder;
     final imageBytes = await imageFile.readAsBytes();
 
     request.files.add(

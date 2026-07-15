@@ -1,4 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../services/admin_notification_service.dart';
+import '../services/crm_service.dart';
 
 enum ServiceBookingStatus {
   sent('Đã gửi admin'),
@@ -18,6 +22,7 @@ enum ServiceBookingStatus {
 
 class ServiceBookingRequest {
   final String id;
+  final String customerId;
   final DateTime createdAt;
   final String serviceName;
   final String serviceCategory;
@@ -35,6 +40,7 @@ class ServiceBookingRequest {
 
   const ServiceBookingRequest({
     required this.id,
+    this.customerId = '',
     required this.createdAt,
     required this.serviceName,
     required this.serviceCategory,
@@ -51,9 +57,13 @@ class ServiceBookingRequest {
     required this.status,
   });
 
-  ServiceBookingRequest copyWith({ServiceBookingStatus? status}) {
+  ServiceBookingRequest copyWith({
+    String? customerId,
+    ServiceBookingStatus? status,
+  }) {
     return ServiceBookingRequest(
       id: id,
+      customerId: customerId ?? this.customerId,
       createdAt: createdAt,
       serviceName: serviceName,
       serviceCategory: serviceCategory,
@@ -74,6 +84,7 @@ class ServiceBookingRequest {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'customerId': customerId,
       'createdAt': createdAt.toIso8601String(),
       'serviceName': serviceName,
       'serviceCategory': serviceCategory,
@@ -94,6 +105,7 @@ class ServiceBookingRequest {
   factory ServiceBookingRequest.fromJson(Map<String, dynamic> json) {
     return ServiceBookingRequest(
       id: json['id'] as String? ?? '',
+      customerId: json['customerId'] as String? ?? '',
       createdAt:
           DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.now(),
@@ -130,8 +142,55 @@ class ServiceBookingStorage {
         .toList();
   }
 
+  static Future<List<ServiceBookingRequest>>
+  loadCurrentCustomerRequests() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return [];
+    }
+
+    final snapshot = await _bookings
+        .where('customerId', isEqualTo: user.uid)
+        .get();
+
+    final requests = snapshot.docs
+        .map((document) => ServiceBookingRequest.fromJson(document.data()))
+        .toList();
+
+    requests.sort(
+      (first, second) => second.createdAt.compareTo(first.createdAt),
+    );
+
+    return requests;
+  }
+
   static Future<void> saveRequest(ServiceBookingRequest request) async {
-    await _bookings.doc(request.id).set(request.toJson());
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      throw Exception('Bạn cần đăng nhập trước khi đặt dịch vụ.');
+    }
+
+    final ownedRequest = request.copyWith(customerId: user.uid);
+
+    await _bookings.doc(ownedRequest.id).set(ownedRequest.toJson());
+
+    try {
+      await CrmService.upsertByPhone(
+        name: ownedRequest.customerName,
+        phone: ownedRequest.phone,
+      );
+    } catch (_) {}
+
+    await AdminNotificationService.create(
+      title: 'Yêu cầu dịch vụ mới',
+      body:
+          '${ownedRequest.customerName} • '
+          '${ownedRequest.serviceName} • '
+          '${ownedRequest.phone}',
+      type: 'service',
+    );
   }
 
   static Future<void> confirmRequest(String id) async {

@@ -112,6 +112,37 @@ class CustomerAuthService {
     await _auth.sendPasswordResetEmail(email: cleanEmail);
   }
 
+  static Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    final email = user?.email;
+
+    if (user == null || email == null || email.isEmpty) {
+      throw Exception(
+        'Tài khoản này không dùng mật khẩu. '
+        'Hãy đặt lại mật khẩu qua email.',
+      );
+    }
+
+    if (currentPassword.trim().isEmpty) {
+      throw Exception('Vui lòng nhập mật khẩu hiện tại.');
+    }
+
+    if (newPassword.length < 6) {
+      throw Exception('Mật khẩu mới phải có ít nhất 6 ký tự.');
+    }
+
+    final credential = EmailAuthProvider.credential(
+      email: email,
+      password: currentPassword,
+    );
+
+    await user.reauthenticateWithCredential(credential);
+    await user.updatePassword(newPassword);
+  }
+
   static Future<void> logout() async {
     try {
       await GoogleSignIn.instance.signOut();
