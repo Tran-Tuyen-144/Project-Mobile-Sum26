@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
@@ -38,27 +39,23 @@ class CloudinaryUploadService {
   static const String uploadPreset = 'pethub_unsigned';
   static const String uploadFolder = 'pethub_community';
 
+  static const int maximumImagesPerPost = 5;
+
   static final ImagePicker _picker = ImagePicker();
 
-  static Future<XFile?> pickImageFromGallery() async {
-    return _picker.pickImage(
-      source: ImageSource.gallery,
+  static Future<List<XFile>> pickImagesFromGallery() async {
+    final images = await _picker.pickMultiImage(
       imageQuality: 85,
       maxWidth: 1600,
     );
-  }
 
-  static Future<XFile?> pickImageFromCamera() async {
-    return _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 85,
-      maxWidth: 1600,
-    );
+    return images.take(maximumImagesPerPost).toList();
   }
 
   static Future<CloudinaryUploadResult> uploadImageFile(XFile imageFile) async {
     final uploadUrl = Uri.parse(
-      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
+      'https://api.cloudinary.com/v1_1/'
+      '$cloudName/image/upload',
     );
 
     final request = http.MultipartRequest('POST', uploadUrl);
@@ -66,22 +63,34 @@ class CloudinaryUploadService {
     request.fields['upload_preset'] = uploadPreset;
     request.fields['folder'] = uploadFolder;
 
+    final imageBytes = await imageFile.readAsBytes();
+
     request.files.add(
-      await http.MultipartFile.fromPath('file', imageFile.path),
+      http.MultipartFile.fromBytes(
+        'file',
+        imageBytes,
+        filename: imageFile.name,
+      ),
     );
 
     final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
 
-    final responseBody = response.body;
+    final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(
-        'Upload ảnh thất bại: ${response.statusCode} - $responseBody',
+        'Upload ảnh thất bại: '
+        '${response.statusCode} - ${response.body}',
       );
     }
 
-    final data = jsonDecode(responseBody) as Map<String, dynamic>;
+    final decodedData = jsonDecode(response.body);
+
+    if (decodedData is! Map) {
+      throw Exception('Cloudinary trả về dữ liệu không hợp lệ.');
+    }
+
+    final data = Map<String, dynamic>.from(decodedData);
 
     final result = CloudinaryUploadResult.fromJson(data);
 

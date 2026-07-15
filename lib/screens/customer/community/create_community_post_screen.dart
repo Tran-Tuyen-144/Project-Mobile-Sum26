@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +13,74 @@ import '../../../widgets/soft_card.dart';
 import 'community_post.dart';
 import 'create_community_post_widgets.dart';
 
+class XFileImagePreview extends StatefulWidget {
+  final XFile imageFile;
+
+  const XFileImagePreview({super.key, required this.imageFile});
+
+  @override
+  State<XFileImagePreview> createState() => _XFileImagePreviewState();
+}
+
+class _XFileImagePreviewState extends State<XFileImagePreview> {
+  late final Future<Uint8List> _imageBytesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _imageBytesFuture = widget.imageFile.readAsBytes();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Uint8List>(
+      future: _imageBytesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const ColoredBox(
+            color: AppColors.cream,
+            child: Center(
+              child: Icon(
+                Icons.broken_image_outlined,
+                color: AppColors.textSoft,
+              ),
+            ),
+          );
+        }
+
+        final imageBytes = snapshot.data;
+
+        if (imageBytes == null) {
+          return const ColoredBox(
+            color: AppColors.cream,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return Image.memory(
+          imageBytes,
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          errorBuilder: (context, error, stackTrace) {
+            return const ColoredBox(
+              color: AppColors.cream,
+              child: Center(
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  color: AppColors.textSoft,
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
 class CreateCommunityPostScreen extends StatefulWidget {
   final CommunityPost? initialPost;
 
@@ -21,8 +89,9 @@ class CreateCommunityPostScreen extends StatefulWidget {
   bool get isEditMode => initialPost != null;
 
   @override
-  State<CreateCommunityPostScreen> createState() =>
-      _CreateCommunityPostScreenState();
+  State<CreateCommunityPostScreen> createState() {
+    return _CreateCommunityPostScreenState();
+  }
 }
 
 class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
@@ -43,10 +112,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
 
   String selectedCategory = '';
 
-  XFile? selectedImageFile;
-  String? currentImageUrl;
-  String? currentImagePublicId;
-  bool removeCurrentImage = false;
+  final List<XFile> selectedImageFiles = [];
+  final List<String> currentImageUrls = [];
+  final List<String> currentImagePublicIds = [];
 
   final List<String> postCategories = const [
     'Mèo',
@@ -125,8 +193,10 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       contentController.text = oldPost.content;
       selectedCategory = oldPost.category;
       isAnonymous = oldPost.isAnonymous;
-      currentImageUrl = oldPost.imageUrl;
-      currentImagePublicId = oldPost.imagePublicId;
+
+      currentImageUrls.addAll(oldPost.allImageUrls);
+
+      currentImagePublicIds.addAll(oldPost.allImagePublicIds);
     }
 
     _loadCurrentProfile();
@@ -135,6 +205,7 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
   @override
   void dispose() {
     contentController.dispose();
+
     super.dispose();
   }
 
@@ -142,7 +213,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
     try {
       final profile = await CustomerProfileService.getCurrentProfile();
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
         currentProfile = profile;
@@ -159,10 +232,13 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
         isLoadingProfile = false;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
         loadingError = error.toString().replaceFirst('Exception: ', '');
+
         isLoadingProfile = false;
       });
     }
@@ -217,7 +293,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
   }
 
   void _toggleAnonymous(bool value) {
-    if (isSavingIdentity || isUploadingPost) return;
+    if (isSavingIdentity || isUploadingPost) {
+      return;
+    }
 
     setState(() {
       isAnonymous = value;
@@ -274,16 +352,21 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
 
     controller.dispose();
 
-    if (result == null) return;
+    if (result == null) {
+      return;
+    }
 
     final cleanName = result.trim();
 
     if (cleanName.isEmpty) {
       _showMessage('Tên ẩn danh không được để trống.');
+
       return;
     }
 
-    if (cleanName == anonymousName) return;
+    if (cleanName == anonymousName) {
+      return;
+    }
 
     setState(() {
       isSavingIdentity = true;
@@ -292,7 +375,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
     try {
       await CustomerProfileService.updateAnonymousName(cleanName);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
         anonymousName = cleanName;
@@ -300,7 +385,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
 
       _showMessage('Đã cập nhật tên ẩn danh.');
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       _showMessage(error.toString().replaceFirst('Exception: ', ''));
     } finally {
@@ -414,7 +501,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       },
     );
 
-    if (selectedOption == null) return;
+    if (selectedOption == null) {
+      return;
+    }
 
     if (selectedOption.iconKey == anonymousAvatarIconKey) {
       return;
@@ -429,7 +518,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
         selectedOption.iconKey,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
         anonymousAvatarIconKey = selectedOption.iconKey;
@@ -437,7 +528,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
 
       _showMessage('Đã cập nhật avatar ẩn danh.');
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       _showMessage(error.toString().replaceFirst('Exception: ', ''));
     } finally {
@@ -450,7 +543,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
   }
 
   void _showTagPicker() {
-    if (isUploadingPost) return;
+    if (isUploadingPost) {
+      return;
+    }
 
     showModalBottomSheet<void>(
       context: context,
@@ -521,23 +616,43 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
     );
   }
 
-  Future<void> _pickImageFromGallery() async {
+  int get _totalSelectedImages {
+    return currentImageUrls.length + selectedImageFiles.length;
+  }
+
+  Future<void> _pickImagesFromGallery() async {
     if (isUploadingPost) {
       return;
     }
 
-    try {
-      final image =
-      await CloudinaryUploadService.pickImageFromGallery();
+    final remainingSlots =
+        CloudinaryUploadService.maximumImagesPerPost - _totalSelectedImages;
 
-      if (!mounted || image == null) {
+    if (remainingSlots <= 0) {
+      _showMessage('Mỗi bài viết chỉ được tối đa 5 ảnh.');
+
+      return;
+    }
+
+    try {
+      final images = await CloudinaryUploadService.pickImagesFromGallery();
+
+      if (!mounted || images.isEmpty) {
         return;
       }
 
+      final acceptedImages = images.take(remainingSlots).toList();
+
       setState(() {
-        selectedImageFile = image;
-        removeCurrentImage = false;
+        selectedImageFiles.addAll(acceptedImages);
       });
+
+      if (images.length > remainingSlots) {
+        _showMessage(
+          'Chỉ thêm $remainingSlots ảnh để đủ '
+          'tối đa 5 ảnh cho bài viết.',
+        );
+      }
     } catch (error) {
       if (!mounted) {
         return;
@@ -547,12 +662,27 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
     }
   }
 
-  void _removeSelectedImage() {
-    if (isUploadingPost) return;
+  void _removeCurrentImageAt(int index) {
+    if (isUploadingPost) {
+      return;
+    }
 
     setState(() {
-      selectedImageFile = null;
-      removeCurrentImage = true;
+      currentImageUrls.removeAt(index);
+
+      if (index < currentImagePublicIds.length) {
+        currentImagePublicIds.removeAt(index);
+      }
+    });
+  }
+
+  void _removeSelectedImageAt(int index) {
+    if (isUploadingPost) {
+      return;
+    }
+
+    setState(() {
+      selectedImageFiles.removeAt(index);
     });
   }
 
@@ -561,11 +691,13 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
 
     if (profile == null) {
       _showMessage('Không tìm thấy hồ sơ người dùng.');
+
       return;
     }
 
     if (isSavingIdentity) {
       _showMessage('Đang lưu danh tính, vui lòng đợi.');
+
       return;
     }
 
@@ -577,6 +709,7 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
 
     if (content.isEmpty) {
       _showMessage('Em nhập nội dung bài viết trước nha.');
+
       return;
     }
 
@@ -584,35 +717,27 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       isUploadingPost = true;
     });
 
-    CommunityPost? resultPost;
+    late final CommunityPost resultPost;
 
     try {
       final authorName = _currentAuthorName(profile);
+
       final avatarIconKey = _currentAvatarIconKey(profile);
 
       final authorRole = isAnonymous
           ? 'Thành viên ẩn danh'
           : 'Thành viên PetHub';
 
-      final colorKey = CommunityPost.colorKeyFromIconKey(
-        avatarIconKey,
-      );
+      final colorKey = CommunityPost.colorKeyFromIconKey(avatarIconKey);
 
       final oldPost = widget.initialPost;
 
-      String? finalImageUrl = currentImageUrl;
-      String? finalImagePublicId = currentImagePublicId;
+      final finalImageUrls = List<String>.from(currentImageUrls);
 
-      if (removeCurrentImage) {
-        finalImageUrl = null;
-        finalImagePublicId = null;
-      }
+      final finalImagePublicIds = List<String>.from(currentImagePublicIds);
 
-      final imageFile = selectedImageFile;
-
-      if (imageFile != null) {
-        final uploadResult =
-        await CloudinaryUploadService.uploadImageFile(
+      for (final imageFile in selectedImageFiles) {
+        final uploadResult = await CloudinaryUploadService.uploadImageFile(
           imageFile,
         );
 
@@ -620,13 +745,25 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
           return;
         }
 
-        finalImageUrl =
-            CloudinaryUploadService.optimizedImageUrl(
-              uploadResult.imageUrl,
-            );
+        finalImageUrls.add(
+          CloudinaryUploadService.optimizedImageUrl(uploadResult.imageUrl),
+        );
 
-        finalImagePublicId = uploadResult.publicId;
+        finalImagePublicIds.add(uploadResult.publicId);
       }
+
+      if (finalImageUrls.length >
+          CloudinaryUploadService.maximumImagesPerPost) {
+        throw Exception('Mỗi bài viết chỉ được tối đa 5 ảnh.');
+      }
+
+      final String? finalImageUrl = finalImageUrls.isEmpty
+          ? null
+          : finalImageUrls.first;
+
+      final String? finalImagePublicId = finalImagePublicIds.isEmpty
+          ? null
+          : finalImagePublicIds.first;
 
       if (oldPost == null) {
         resultPost = CommunityPost(
@@ -645,6 +782,8 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
           colorKey: colorKey,
           imageUrl: finalImageUrl,
           imagePublicId: finalImagePublicId,
+          imageUrls: finalImageUrls,
+          imagePublicIds: finalImagePublicIds,
           commentList: const [],
         );
       } else {
@@ -659,9 +798,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
           colorKey: colorKey,
           imageUrl: finalImageUrl,
           imagePublicId: finalImagePublicId,
-          removeCloudinaryImage:
-          finalImageUrl == null &&
-              finalImagePublicId == null,
+          imageUrls: finalImageUrls,
+          imagePublicIds: finalImagePublicIds,
+          removeCloudinaryImage: finalImageUrls.isEmpty,
           timeAgo: 'Vừa chỉnh sửa',
         );
       }
@@ -675,13 +814,14 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
       });
 
       _showMessage(
-        'Không đăng được ảnh/bài viết: $error',
+        'Không đăng được ảnh/bài viết: '
+        '$error',
       );
 
       return;
     }
 
-    if (!mounted || resultPost == null) {
+    if (!mounted) {
       return;
     }
 
@@ -693,17 +833,20 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _buildImagePickerSection() {
-    final hasSelectedImage = selectedImageFile != null;
-    final hasOldImage =
-        currentImageUrl != null &&
-        currentImageUrl!.trim().isNotEmpty &&
-        !removeCurrentImage;
+    final hasImages = _totalSelectedImages > 0;
+
+    final canAddMore =
+        _totalSelectedImages < CloudinaryUploadService.maximumImagesPerPost;
 
     return SoftCard(
       color: Colors.white,
@@ -718,11 +861,11 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                 child: Icon(Icons.image_rounded, color: AppColors.primary),
               ),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Ảnh bài viết',
                       style: TextStyle(
                         color: AppColors.textDark,
@@ -730,10 +873,11 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                         fontSize: 15,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
-                      'Ảnh sẽ được lưu trên Cloudinary.',
-                      style: TextStyle(
+                      'Đã chọn '
+                      '$_totalSelectedImages/5 ảnh.',
+                      style: const TextStyle(
                         color: AppColors.textSoft,
                         fontWeight: FontWeight.w600,
                       ),
@@ -742,57 +886,73 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                 ),
               ),
               OutlinedButton.icon(
-                onPressed: isUploadingPost ? null : _pickImageFromGallery,
+                onPressed: isUploadingPost || !canAddMore
+                    ? null
+                    : _pickImagesFromGallery,
                 icon: const Icon(Icons.add_photo_alternate_rounded),
-                label: Text(
-                  hasSelectedImage || hasOldImage ? 'Đổi ảnh' : 'Chọn ảnh',
-                ),
+                label: const Text('Chọn ảnh'),
               ),
             ],
           ),
-          if (hasSelectedImage || hasOldImage) ...[
+          if (hasImages) ...[
             const SizedBox(height: 14),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: AspectRatio(
-                aspectRatio: 16 / 10,
-                child: hasSelectedImage
-                    ? Image.file(
-                        File(selectedImageFile!.path),
+            SizedBox(
+              height: 128,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _totalSelectedImages,
+                separatorBuilder: (context, index) {
+                  return const SizedBox(width: 10);
+                },
+                itemBuilder: (context, index) {
+                  final isOldImage = index < currentImageUrls.length;
+
+                  if (isOldImage) {
+                    return _SelectedImageTile(
+                      image: Image.network(
+                        currentImageUrls[index],
                         fit: BoxFit.cover,
-                      )
-                    : Image.network(
-                        currentImageUrl!,
-                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
                         errorBuilder: (context, error, stackTrace) {
-                          return Container(
+                          return const ColoredBox(
                             color: AppColors.cream,
-                            alignment: Alignment.center,
-                            child: const Text(
-                              'Không tải được ảnh.',
-                              style: TextStyle(
+                            child: Center(
+                              child: Icon(
+                                Icons.broken_image_outlined,
                                 color: AppColors.textSoft,
-                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           );
                         },
                       ),
+                      onRemove: () {
+                        _removeCurrentImageAt(index);
+                      },
+                    );
+                  }
+
+                  final localIndex = index - currentImageUrls.length;
+
+                  return _SelectedImageTile(
+                    image: XFileImagePreview(
+                      imageFile: selectedImageFiles[localIndex],
+                    ),
+                    onRemove: () {
+                      _removeSelectedImageAt(localIndex);
+                    },
+                  );
+                },
               ),
             ),
+          ],
+          if (!canAddMore) ...[
             const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton.icon(
-                onPressed: isUploadingPost ? null : _removeSelectedImage,
-                icon: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: Colors.redAccent,
-                ),
-                label: const Text(
-                  'Gỡ ảnh khỏi bài viết',
-                  style: TextStyle(color: Colors.redAccent),
-                ),
+            const Text(
+              'Đã đủ tối đa 5 ảnh.',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ],
@@ -821,7 +981,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
               ),
               const SizedBox(height: 14),
               Text(
-                loadingError ?? 'Không tìm thấy hồ sơ người dùng.',
+                loadingError ??
+                    'Không tìm thấy hồ sơ '
+                        'người dùng.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: AppColors.textDark,
@@ -843,7 +1005,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
     final profile = currentProfile!;
 
     final authorName = _currentAuthorName(profile);
+
     final avatarIconKey = _currentAvatarIconKey(profile);
+
     final selectedOption = _findIconOption(avatarIconKey);
 
     return Stack(
@@ -858,12 +1022,13 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                     ? 'Chỉnh sửa bài viết'
                     : 'Tạo bài viết',
                 subtitle: isAnonymous
-                    ? 'Bạn đang đăng bằng danh tính ẩn danh.'
-                    : 'Bài viết đang sử dụng tên và avatar trong trang cá nhân.',
+                    ? 'Bạn đang đăng bằng '
+                          'danh tính ẩn danh.'
+                    : 'Bài viết đang sử dụng '
+                          'tên và avatar trong '
+                          'trang cá nhân.',
               ),
-
               const SizedBox(height: 20),
-
               SoftCard(
                 color: Colors.white,
                 child: SwitchListTile(
@@ -879,15 +1044,17 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                   ),
                   subtitle: Text(
                     isAnonymous
-                        ? 'Người khác sẽ thấy tên và avatar ẩn danh.'
-                        : 'Người khác sẽ thấy tên hiển thị trong trang cá nhân.',
+                        ? 'Người khác sẽ thấy '
+                              'tên và avatar '
+                              'ẩn danh.'
+                        : 'Người khác sẽ thấy '
+                              'tên hiển thị trong '
+                              'trang cá nhân.',
                   ),
                   activeThumbColor: AppColors.primary,
                 ),
               ),
-
               const SizedBox(height: 20),
-
               _AuthorIdentityCard(
                 authorName: authorName,
                 selectedOption: selectedOption,
@@ -896,18 +1063,13 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                 onAvatarTap: isAnonymous ? _showAnonymousAvatarPicker : null,
                 onNameTap: isAnonymous ? _changeAnonymousName : null,
               ),
-
               if (isSavingIdentity) ...[
                 const SizedBox(height: 12),
                 const LinearProgressIndicator(),
               ],
-
               const SizedBox(height: 24),
-
               const SectionTitle(title: 'Nội dung bài viết'),
-
               const SizedBox(height: 12),
-
               SoftCard(
                 color: Colors.white,
                 child: TextField(
@@ -915,31 +1077,27 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                   enabled: !isUploadingPost,
                   maxLines: 6,
                   minLines: 4,
-                  onChanged: (_) {
+                  onChanged: (value) {
                     setState(() {});
                   },
                   decoration: const InputDecoration(
                     hintText:
-                        'Ví dụ: Hôm nay bé mèo nhà mình hơi lười ăn, mọi người có kinh nghiệm gì không?',
+                        'Ví dụ: Hôm nay '
+                        'bé mèo nhà mình '
+                        'hơi lười ăn, mọi '
+                        'người có kinh '
+                        'nghiệm gì không?',
                     border: InputBorder.none,
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
-
               const SectionTitle(title: 'Ảnh minh họa'),
-
               const SizedBox(height: 12),
-
               _buildImagePickerSection(),
-
               const SizedBox(height: 24),
-
               const SectionTitle(title: 'Tag bài viết'),
-
               const SizedBox(height: 12),
-
               TagPickerCard(
                 selectedCategory: selectedCategory,
                 onTap: _showTagPicker,
@@ -949,13 +1107,9 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                   });
                 },
               ),
-
               const SizedBox(height: 24),
-
               const SectionTitle(title: 'Xem trước bài viết'),
-
               const SizedBox(height: 12),
-
               PostPreviewCard(
                 authorName: authorName,
                 content: contentController.text,
@@ -963,14 +1117,16 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                 icon: selectedOption.icon,
                 color: selectedOption.color,
               ),
-
               const SizedBox(height: 26),
-
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: isUploadingPost ? null : () => context.pop(),
+                      onPressed: isUploadingPost
+                          ? null
+                          : () {
+                              context.pop();
+                            },
                       icon: const Icon(Icons.close_rounded),
                       label: const Text('Hủy'),
                     ),
@@ -998,7 +1154,6 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
             ],
           ),
         ),
-
         if (isUploadingPost)
           Positioned.fill(
             child: Container(
@@ -1013,7 +1168,8 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
                         CircularProgressIndicator(),
                         SizedBox(height: 14),
                         Text(
-                          'Đang upload ảnh và lưu bài viết...',
+                          'Đang upload ảnh '
+                          'và lưu bài viết...',
                           style: TextStyle(fontWeight: FontWeight.w800),
                         ),
                       ],
@@ -1024,6 +1180,50 @@ class _CreateCommunityPostScreenState extends State<CreateCommunityPostScreen> {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _SelectedImageTile extends StatelessWidget {
+  final Widget image;
+  final VoidCallback onRemove;
+
+  const _SelectedImageTile({required this.image, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 128,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: image,
+            ),
+          ),
+          Positioned(
+            top: 6,
+            right: 6,
+            child: Material(
+              color: Colors.black54,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: onRemove,
+                child: const Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1108,8 +1308,12 @@ class _AuthorIdentityCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       isAnonymous
-                          ? 'Bấm để đổi tên hoặc avatar ẩn danh'
-                          : 'Tên và avatar lấy từ trang cá nhân',
+                          ? 'Bấm để đổi tên '
+                                'hoặc avatar '
+                                'ẩn danh'
+                          : 'Tên và avatar '
+                                'lấy từ trang '
+                                'cá nhân',
                       style: const TextStyle(
                         color: AppColors.textSoft,
                         fontWeight: FontWeight.w600,

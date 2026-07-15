@@ -36,7 +36,13 @@ class CustomerSavedPostService {
     required String userId,
     required CommunityPost post,
   }) async {
-    final reference = _savedPostsRef(userId).doc(post.id.toString());
+    final cleanUserId = userId.trim();
+
+    if (cleanUserId.isEmpty) {
+      throw Exception('Người dùng chưa đăng nhập.');
+    }
+
+    final reference = _savedPostsRef(cleanUserId).doc(post.id.toString());
 
     final snapshot = await reference.get();
 
@@ -45,7 +51,7 @@ class CustomerSavedPostService {
       return false;
     }
 
-    await _savePost(userId: userId, post: post);
+    await _savePost(userId: cleanUserId, post: post);
 
     return true;
   }
@@ -55,14 +61,33 @@ class CustomerSavedPostService {
     required CommunityPost post,
     required bool isSaved,
   }) async {
-    final reference = _savedPostsRef(userId).doc(post.id.toString());
+    final cleanUserId = userId.trim();
+
+    if (cleanUserId.isEmpty) {
+      throw Exception('Người dùng chưa đăng nhập.');
+    }
+
+    final reference = _savedPostsRef(cleanUserId).doc(post.id.toString());
 
     if (!isSaved) {
       await reference.delete();
       return;
     }
 
-    await _savePost(userId: userId, post: post);
+    await _savePost(userId: cleanUserId, post: post);
+  }
+
+  static Future<void> removeSavedPost({
+    required String userId,
+    required int postId,
+  }) async {
+    final cleanUserId = userId.trim();
+
+    if (cleanUserId.isEmpty) {
+      return;
+    }
+
+    await _savedPostsRef(cleanUserId).doc(postId.toString()).delete();
   }
 
   static Future<void> _savePost({
@@ -75,6 +100,9 @@ class CustomerSavedPostService {
         ? '${cleanContent.substring(0, 120)}...'
         : cleanContent;
 
+    final imageUrls = post.allImageUrls;
+    final imagePublicIds = post.allImagePublicIds;
+
     await _savedPostsRef(userId).doc(post.id.toString()).set({
       'postId': post.id,
       'authorId': post.authorId,
@@ -82,8 +110,10 @@ class CustomerSavedPostService {
       'authorRole': post.authorRole,
       'category': post.category,
       'contentPreview': contentPreview,
-      'imageUrl': post.imageUrl,
-      'imagePublicId': post.imagePublicId,
+      'imageUrl': imageUrls.isEmpty ? null : imageUrls.first,
+      'imagePublicId': imagePublicIds.isEmpty ? null : imagePublicIds.first,
+      'imageUrls': imageUrls,
+      'imagePublicIds': imagePublicIds,
       'savedAt': FieldValue.serverTimestamp(),
     });
   }

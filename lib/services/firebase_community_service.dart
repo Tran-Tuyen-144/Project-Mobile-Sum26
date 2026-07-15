@@ -5,40 +5,49 @@ import '../screens/customer/community/community_post.dart';
 class FirebaseCommunityService {
   FirebaseCommunityService._();
 
-  static final CollectionReference<Map<String, dynamic>> _posts =
-  FirebaseFirestore.instance.collection('community_posts');
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  static final CollectionReference<Map<String, dynamic>> _posts = _firestore
+      .collection('community_posts');
 
   static Stream<List<CommunityPost>> watchPosts() {
-    return _posts
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
+    return _posts.orderBy('createdAt', descending: true).snapshots().map((
+      snapshot,
+    ) {
+      return snapshot.docs.map((document) {
+        final data = document.data();
 
         return CommunityPost.fromJson({
           ...data,
-          'id': data['id'] ?? int.tryParse(doc.id),
+          'id': data['id'] ?? int.tryParse(document.id),
         });
       }).toList();
     });
   }
 
   static Stream<List<CommunityPost>> watchPostsByAuthor(String authorId) {
-    return _posts
-        .where('authorId', isEqualTo: authorId)
-        .snapshots()
-        .map((snapshot) {
-      final posts = snapshot.docs.map((doc) {
-        final data = doc.data();
+    return _posts.where('authorId', isEqualTo: authorId).snapshots().map((
+      snapshot,
+    ) {
+      final posts = snapshot.docs.map((document) {
+        final data = document.data();
 
         return CommunityPost.fromJson({
           ...data,
-          'id': data['id'] ?? int.tryParse(doc.id),
+          'id': data['id'] ?? int.tryParse(document.id),
         });
       }).toList();
 
-      posts.sort((first, second) => second.id.compareTo(first.id));
+      posts.sort((first, second) {
+        final firstTime = first.createdAt;
+        final secondTime = second.createdAt;
+
+        if (firstTime != null && secondTime != null) {
+          return secondTime.compareTo(firstTime);
+        }
+
+        return second.id.compareTo(first.id);
+      });
 
       return posts;
     });
@@ -56,14 +65,24 @@ class FirebaseCommunityService {
         return null;
       }
 
-      return CommunityPost.fromJson({
-        ...data,
-        'id': data['id'] ?? postId,
-      });
+      return CommunityPost.fromJson({...data, 'id': data['id'] ?? postId});
     });
   }
 
   static Future<void> createPost(CommunityPost post) async {
+    final cleanContent = post.content.trim();
+
+    if (cleanContent.isEmpty) {
+      throw Exception('Nội dung bài viết không được để trống.');
+    }
+
+    final imageUrls = post.allImageUrls;
+    final imagePublicIds = post.allImagePublicIds;
+
+    if (imageUrls.length > 5 || imagePublicIds.length > 5) {
+      throw Exception('Mỗi bài viết chỉ được tối đa 5 ảnh.');
+    }
+
     await _posts.doc(post.id.toString()).set({
       'id': post.id,
       'authorId': post.authorId,
@@ -72,57 +91,84 @@ class FirebaseCommunityService {
       'isAnonymous': post.isAnonymous,
       'avatarIconKey': post.avatarIconKey,
       'colorKey': post.colorKey,
-      'timeAgo': post.timeAgo,
-      'content': post.content,
-      'category': post.category,
-
-      // Ảnh lưu trên Cloudinary, Firestore chỉ lưu đường dẫn ảnh.
-      'imageUrl': post.imageUrl,
-      'imagePublicId': post.imagePublicId,
-
-      'likes': post.likes,
-      'likedBy': post.likedBy,
-      'commentList': post.commentList
-          .map((comment) => comment.toJson())
-          .toList(),
-
+      'timeAgo': 'Vừa xong',
+      'content': cleanContent,
+      'category': post.category.trim(),
+      'imageUrl': imageUrls.isEmpty ? null : imageUrls.first,
+      'imagePublicId': imagePublicIds.isEmpty ? null : imagePublicIds.first,
+      'imageUrls': imageUrls,
+      'imagePublicIds': imagePublicIds,
+      'likes': 0,
+      'likedBy': const <String>[],
+      'commentCount': 0,
       'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
   static Future<void> updatePost(CommunityPost post) async {
-    await _posts.doc(post.id.toString()).update({
-      'authorId': post.authorId,
-      'authorName': post.authorName,
-      'authorRole': post.authorRole,
-      'isAnonymous': post.isAnonymous,
-      'avatarIconKey': post.avatarIconKey,
-      'colorKey': post.colorKey,
-      'timeAgo': post.timeAgo,
-      'content': post.content,
-      'category': post.category,
+    final cleanContent = post.content.trim();
 
-      // Không cập nhật commentList ở đây để tránh ghi đè bình luận mới.
-      'imageUrl': post.imageUrl,
-      'imagePublicId': post.imagePublicId,
+    if (cleanContent.isEmpty) {
+      throw Exception('Nội dung bài viết không được để trống.');
+    }
 
-      'updatedAt': FieldValue.serverTimestamp(),
+    final imageUrls = post.allImageUrls;
+    final imagePublicIds = post.allImagePublicIds;
+
+    if (imageUrls.length > 5 || imagePublicIds.length > 5) {
+      throw Exception('Mỗi bài viết chỉ được tối đa 5 ảnh.');
+    }
+
+    final postReference = _posts.doc(post.id.toString());
+
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(postReference);
+
+      if (!snapshot.exists) {
+        throw Exception('Bài viết không còn tồn tại.');
+      }
+
+      transaction.update(postReference, {
+        'authorId': post.authorId,
+        'authorName': post.authorName,
+        'authorRole': post.authorRole,
+        'isAnonymous': post.isAnonymous,
+        'avatarIconKey': post.avatarIconKey,
+        'colorKey': post.colorKey,
+        'timeAgo': 'Vừa chỉnh sửa',
+        'content': cleanContent,
+        'category': post.category.trim(),
+        'imageUrl': imageUrls.isEmpty ? null : imageUrls.first,
+        'imagePublicId': imagePublicIds.isEmpty ? null : imagePublicIds.first,
+        'imageUrls': imageUrls,
+        'imagePublicIds': imagePublicIds,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     });
   }
 
   static Future<void> deletePost(CommunityPost post) async {
-    await _posts.doc(post.id.toString()).delete();
+    final postReference = _posts.doc(post.id.toString());
+
+    await _deleteCommentsSubcollection(postReference);
+
+    await _runWithRetry(() => postReference.delete());
   }
 
   static Future<void> toggleLike({
     required CommunityPost post,
     required String userId,
   }) async {
-    final postRef = _posts.doc(post.id.toString());
+    final cleanUserId = userId.trim();
 
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      final snapshot = await transaction.get(postRef);
+    if (cleanUserId.isEmpty) {
+      throw Exception('Người dùng chưa đăng nhập.');
+    }
+
+    final postReference = _posts.doc(post.id.toString());
+
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(postReference);
 
       if (!snapshot.exists) {
         throw Exception('Bài viết không còn tồn tại.');
@@ -142,137 +188,22 @@ class FirebaseCommunityService {
 
       final currentLikes = (data['likes'] as num?)?.toInt() ?? 0;
 
-      if (likedBy.contains(userId)) {
-        likedBy.remove(userId);
+      if (likedBy.contains(cleanUserId)) {
+        likedBy.remove(cleanUserId);
 
-        transaction.update(postRef, {
+        transaction.update(postReference, {
           'likedBy': likedBy,
           'likes': currentLikes > 0 ? currentLikes - 1 : 0,
-          'updatedAt': FieldValue.serverTimestamp(),
         });
-      } else {
-        likedBy.add(userId);
 
-        transaction.update(postRef, {
-          'likedBy': likedBy,
-          'likes': currentLikes + 1,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
-    });
-  }
-
-  static Future<void> addComment({
-    required int postId,
-    required PostComment comment,
-  }) async {
-    final postRef = _posts.doc(postId.toString());
-
-    await _runWithRetry(() async {
-      await FirebaseFirestore.instance.runTransaction((transaction) async {
-        final snapshot = await transaction.get(postRef);
-
-        if (!snapshot.exists) {
-          throw Exception('Bài viết không còn tồn tại.');
-        }
-
-        final data = snapshot.data();
-
-        if (data == null) {
-          throw Exception('Không đọc được dữ liệu bài viết.');
-        }
-
-        final comments = _readComments(data['commentList']);
-
-        final commentAlreadyExists = comments.any(
-              (item) => item.id == comment.id,
-        );
-
-        if (commentAlreadyExists) {
-          return;
-        }
-
-        comments.add(comment);
-
-        transaction.update(postRef, {
-          'commentList': comments
-              .map((item) => item.toJson())
-              .toList(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      });
-    });
-  }
-  static Future<void> updateComment({
-    required int postId,
-    required PostComment comment,
-  }) async {
-    final postRef = _posts.doc(postId.toString());
-
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      final snapshot = await transaction.get(postRef);
-
-      if (!snapshot.exists) {
-        throw Exception('Bài viết không còn tồn tại.');
+        return;
       }
 
-      final data = snapshot.data();
+      likedBy.add(cleanUserId);
 
-      if (data == null) {
-        throw Exception('Không đọc được dữ liệu bài viết.');
-      }
-
-      final comments = _readComments(data['commentList']);
-
-      final commentIndex = comments.indexWhere(
-            (item) => item.id == comment.id,
-      );
-
-      if (commentIndex < 0) {
-        throw Exception('Bình luận không còn tồn tại.');
-      }
-
-      comments[commentIndex] = comment;
-
-      transaction.update(postRef, {
-        'commentList': comments.map((item) => item.toJson()).toList(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    });
-  }
-
-  static Future<void> deleteComment({
-    required int postId,
-    required int commentId,
-  }) async {
-    final postRef = _posts.doc(postId.toString());
-
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      final snapshot = await transaction.get(postRef);
-
-      if (!snapshot.exists) {
-        throw Exception('Bài viết không còn tồn tại.');
-      }
-
-      final data = snapshot.data();
-
-      if (data == null) {
-        throw Exception('Không đọc được dữ liệu bài viết.');
-      }
-
-      final comments = _readComments(data['commentList']);
-
-      final oldLength = comments.length;
-
-      comments.removeWhere((item) => item.id == commentId);
-
-      if (comments.length == oldLength) {
-        throw Exception('Bình luận không còn tồn tại.');
-      }
-
-      transaction.update(postRef, {
-        'commentList': comments.map((item) => item.toJson()).toList(),
-        'updatedAt': FieldValue.serverTimestamp(),
+      transaction.update(postReference, {
+        'likedBy': likedBy,
+        'likes': currentLikes + 1,
       });
     });
   }
@@ -283,8 +214,28 @@ class FirebaseCommunityService {
     required String authorName,
     required String avatarIconKey,
   }) async {
+    final cleanAuthorId = authorId.trim();
+    final cleanAuthorName = authorName.trim();
+    final cleanAvatarIconKey = avatarIconKey.trim();
+
+    if (cleanAuthorId.isEmpty) {
+      return;
+    }
+
+    final resolvedAuthorName = cleanAuthorName.isEmpty
+        ? isAnonymous
+              ? 'Ẩn danh PetHub'
+              : 'Bạn PetHub'
+        : cleanAuthorName;
+
+    final resolvedAvatarIconKey = cleanAvatarIconKey.isEmpty
+        ? isAnonymous
+              ? 'anonymous'
+              : 'default_person'
+        : cleanAvatarIconKey;
+
     final snapshot = await _posts
-        .where('authorId', isEqualTo: authorId)
+        .where('authorId', isEqualTo: cleanAuthorId)
         .get();
 
     final matchingDocuments = snapshot.docs.where((document) {
@@ -294,7 +245,7 @@ class FirebaseCommunityService {
 
       final storedAnonymous =
           data['isAnonymous'] as bool? ??
-              storedRole.toLowerCase().contains('ẩn danh');
+          storedRole.toLowerCase().contains('ẩn danh');
 
       return storedAnonymous == isAnonymous;
     }).toList();
@@ -306,56 +257,79 @@ class FirebaseCommunityService {
     const maximumWritesPerBatch = 450;
 
     for (
-    var start = 0;
-    start < matchingDocuments.length;
-    start += maximumWritesPerBatch
+      var start = 0;
+      start < matchingDocuments.length;
+      start += maximumWritesPerBatch
     ) {
-      final end = start + maximumWritesPerBatch < matchingDocuments.length
-          ? start + maximumWritesPerBatch
+      final proposedEnd = start + maximumWritesPerBatch;
+
+      final end = proposedEnd < matchingDocuments.length
+          ? proposedEnd
           : matchingDocuments.length;
 
-      final batch = FirebaseFirestore.instance.batch();
+      final batch = _firestore.batch();
 
       for (var index = start; index < end; index++) {
         final document = matchingDocuments[index];
 
         batch.update(document.reference, {
-          'authorName': authorName,
+          'authorName': resolvedAuthorName,
           'authorRole': isAnonymous
               ? 'Thành viên ẩn danh'
               : 'Thành viên PetHub',
           'isAnonymous': isAnonymous,
-          'avatarIconKey': avatarIconKey,
-          'colorKey': CommunityPost.colorKeyFromIconKey(avatarIconKey),
-          'updatedAt': FieldValue.serverTimestamp(),
+          'avatarIconKey': resolvedAvatarIconKey,
+          'colorKey': CommunityPost.colorKeyFromIconKey(resolvedAvatarIconKey),
         });
       }
 
-      await batch.commit();
+      await _runWithRetry(() => batch.commit());
     }
   }
-  static Future<void> _runWithRetry(
-      Future<void> Function() operation,
-      ) async {
+
+  static Future<void> _deleteCommentsSubcollection(
+    DocumentReference<Map<String, dynamic>> postReference,
+  ) async {
+    const batchSize = 400;
+
+    while (true) {
+      final snapshot = await postReference
+          .collection('comments')
+          .limit(batchSize)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        return;
+      }
+
+      final batch = _firestore.batch();
+
+      for (final document in snapshot.docs) {
+        batch.delete(document.reference);
+      }
+
+      await _runWithRetry(() => batch.commit());
+
+      if (snapshot.docs.length < batchSize) {
+        return;
+      }
+    }
+  }
+
+  static Future<void> _runWithRetry(Future<void> Function() operation) async {
     const maximumAttempts = 4;
 
-    var retryDelay = const Duration(
-      milliseconds: 700,
-    );
+    var retryDelay = const Duration(milliseconds: 700);
 
-    for (
-    var attempt = 1;
-    attempt <= maximumAttempts;
-    attempt++
-    ) {
+    for (var attempt = 1; attempt <= maximumAttempts; attempt++) {
       try {
         await operation();
         return;
       } on FirebaseException catch (error) {
         final canRetry =
             error.code == 'unavailable' ||
-                error.code == 'deadline-exceeded' ||
-                error.code == 'aborted';
+            error.code == 'deadline-exceeded' ||
+            error.code == 'aborted';
 
         if (!canRetry || attempt == maximumAttempts) {
           rethrow;
@@ -363,26 +337,8 @@ class FirebaseCommunityService {
 
         await Future.delayed(retryDelay);
 
-        retryDelay = Duration(
-          milliseconds: retryDelay.inMilliseconds * 2,
-        );
+        retryDelay = Duration(milliseconds: retryDelay.inMilliseconds * 2);
       }
     }
-  }
-
-
-  static List<PostComment> _readComments(Object? rawComments) {
-    if (rawComments is! List) {
-      return <PostComment>[];
-    }
-
-    return rawComments
-        .whereType<Map>()
-        .map(
-          (item) => PostComment.fromJson(
-        Map<String, dynamic>.from(item),
-      ),
-    )
-        .toList();
   }
 }

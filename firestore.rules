@@ -1,0 +1,678 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isCurrentUser(userId) {
+      return isSignedIn() &&
+        request.auth.uid == userId;
+    }
+
+    function userPath(userId) {
+      return /databases/$(database)/documents/users/$(userId);
+    }
+
+    function postPath(postId) {
+      return /databases/$(database)/documents/community_posts/$(postId);
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(userPath(request.auth.uid)) &&
+        get(userPath(request.auth.uid))
+          .data
+          .get('role', '') == 'admin';
+    }
+
+    function isPostOwner(postId) {
+      return isSignedIn() &&
+        exists(postPath(postId)) &&
+        get(postPath(postId))
+          .data
+          .get('authorId', '') == request.auth.uid;
+    }
+
+    /*
+     * TẠO HỒ SƠ NGƯỜI DÙNG
+     *
+     * Hỗ trợ cả:
+     * - CustomerAuthService
+     * - CustomerProfileService
+     */
+    function validUserCreate(userId) {
+      let data = request.resource.data;
+      let keys = data.keys();
+
+      return isCurrentUser(userId) &&
+
+        keys.hasAll([
+          'uid',
+          'role',
+          'displayName',
+          'email',
+          'phoneNumber',
+          'avatarIconKey',
+          'anonymousName',
+          'anonymousAvatarIconKey',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+
+        keys.hasOnly([
+          'uid',
+          'role',
+          'fullName',
+          'displayName',
+          'email',
+          'phoneNumber',
+          'avatarIconKey',
+          'anonymousName',
+          'anonymousAvatarIconKey',
+          'profileInitialized',
+          'createdAt',
+          'updatedAt',
+          'lastLoginAt'
+        ]) &&
+
+        data.uid == userId &&
+        data.role == 'customer' &&
+
+        data.displayName is string &&
+        data.email is string &&
+        data.avatarIconKey is string &&
+        data.anonymousName is string &&
+        data.anonymousAvatarIconKey is string &&
+
+        data.createdAt == request.time &&
+        data.updatedAt == request.time &&
+
+        (
+          !keys.hasAny(['lastLoginAt']) ||
+          data.lastLoginAt == request.time
+        ) &&
+
+        (
+          !keys.hasAny(['profileInitialized']) ||
+          data.profileInitialized == true
+        );
+    }
+
+    /*
+     * CẬP NHẬT HỒ SƠ
+     *
+     * Cho phép CustomerAuthService cập nhật:
+     * - email
+     * - phoneNumber
+     * - lastLoginAt
+     * - updatedAt
+     */
+    function validUserUpdate(userId) {
+      let changedFields =
+        request.resource.data
+          .diff(resource.data)
+          .affectedKeys();
+
+      return isCurrentUser(userId) &&
+
+        changedFields.hasOnly([
+          'uid',
+          'role',
+          'fullName',
+          'displayName',
+          'email',
+          'phoneNumber',
+          'avatarIconKey',
+          'anonymousName',
+          'anonymousAvatarIconKey',
+          'profileInitialized',
+          'updatedAt',
+          'lastLoginAt'
+        ]) &&
+
+        request.resource.data.get('uid', userId) ==
+          userId &&
+
+        request.resource.data.get('role', 'customer') ==
+          resource.data.get('role', 'customer') &&
+
+        (
+          !changedFields.hasAny(['updatedAt']) ||
+          request.resource.data.updatedAt ==
+            request.time
+        ) &&
+
+        (
+          !changedFields.hasAny(['lastLoginAt']) ||
+          request.resource.data.lastLoginAt ==
+            request.time
+        );
+    }
+
+    /*
+     * BÀI VIẾT ĐÃ LƯU
+     */
+    function validSavedPostWrite() {
+      let data = request.resource.data;
+
+      return data.keys().hasAll([
+          'postId',
+          'authorId',
+          'authorName',
+          'authorRole',
+          'category',
+          'contentPreview',
+          'imageUrl',
+          'imagePublicId',
+          'imageUrls',
+          'imagePublicIds',
+          'savedAt'
+        ]) &&
+
+        data.keys().hasOnly([
+          'postId',
+          'authorId',
+          'authorName',
+          'authorRole',
+          'category',
+          'contentPreview',
+          'imageUrl',
+          'imagePublicId',
+          'imageUrls',
+          'imagePublicIds',
+          'savedAt'
+        ]) &&
+
+        data.postId is int &&
+        data.authorId is string &&
+        data.authorName is string &&
+        data.authorRole is string &&
+        data.category is string &&
+        data.contentPreview is string &&
+        data.imageUrls is list &&
+        data.imagePublicIds is list &&
+        data.imageUrls.size() <= 5 &&
+        data.imagePublicIds.size() <= 5 &&
+        data.imagePublicIds.size() <= data.imageUrls.size() &&
+
+        data.contentPreview.size() <= 500 &&
+        data.savedAt == request.time;
+    }
+
+    /*
+     * TẠO BÀI VIẾT
+     */
+    function validPostCreate() {
+      let data = request.resource.data;
+
+      return isSignedIn() &&
+
+        data.keys().hasAll([
+          'id',
+          'authorId',
+          'authorName',
+          'authorRole',
+          'isAnonymous',
+          'avatarIconKey',
+          'colorKey',
+          'timeAgo',
+          'content',
+          'category',
+          'imageUrl',
+          'imagePublicId',
+          'imageUrls',
+          'imagePublicIds',
+          'likes',
+          'likedBy',
+          'commentCount',
+          'createdAt'
+        ]) &&
+
+        data.keys().hasOnly([
+          'id',
+          'authorId',
+          'authorName',
+          'authorRole',
+          'isAnonymous',
+          'avatarIconKey',
+          'colorKey',
+          'timeAgo',
+          'content',
+          'category',
+          'imageUrl',
+          'imagePublicId',
+          'imageUrls',
+          'imagePublicIds',
+          'likes',
+          'likedBy',
+          'commentCount',
+          'createdAt'
+        ]) &&
+
+        data.id is int &&
+        data.authorId == request.auth.uid &&
+        data.authorName is string &&
+        data.authorRole is string &&
+        data.isAnonymous is bool &&
+        data.avatarIconKey is string &&
+        data.colorKey is string &&
+
+        data.timeAgo == 'Vừa xong' &&
+
+        data.content is string &&
+        data.content.size() > 0 &&
+        data.content.size() <= 10000 &&
+
+        data.category is string &&
+        data.imageUrls is list &&
+        data.imagePublicIds is list &&
+        data.imageUrls.size() <= 5 &&
+        data.imagePublicIds.size() <= 5 &&
+        data.imagePublicIds.size() <= data.imageUrls.size() &&
+
+        data.likes == 0 &&
+        data.likedBy is list &&
+        data.likedBy.size() == 0 &&
+
+        data.commentCount == 0 &&
+        data.createdAt == request.time;
+    }
+
+    /*
+     * CHỦ BÀI SỬA BÀI
+     */
+    function validOwnerPostUpdate() {
+      let changedFields =
+        request.resource.data
+          .diff(resource.data)
+          .affectedKeys();
+
+      let changedPostContent =
+        changedFields.hasAny([
+          'content',
+          'category',
+          'imageUrl',
+          'imagePublicId',
+          'imageUrls',
+          'imagePublicIds',
+          'timeAgo'
+        ]);
+
+      return isSignedIn() &&
+
+        resource.data.get('authorId', '') ==
+          request.auth.uid &&
+
+        request.resource.data.get('authorId', '') ==
+          resource.data.get('authorId', '') &&
+
+        request.resource.data.get('id', 0) ==
+          resource.data.get('id', 0) &&
+
+        changedFields.hasOnly([
+          'authorName',
+          'authorRole',
+          'isAnonymous',
+          'avatarIconKey',
+          'colorKey',
+          'timeAgo',
+          'content',
+          'category',
+          'imageUrl',
+          'imagePublicId',
+          'imageUrls',
+          'imagePublicIds',
+          'updatedAt'
+        ]) &&
+
+        request.resource.data.authorName is string &&
+        request.resource.data.authorRole is string &&
+        request.resource.data.isAnonymous is bool &&
+        request.resource.data.avatarIconKey is string &&
+        request.resource.data.colorKey is string &&
+
+        request.resource.data.content is string &&
+        request.resource.data.content.size() > 0 &&
+        request.resource.data.content.size() <= 10000 &&
+
+        request.resource.data.category is string &&
+        request.resource.data.imageUrls is list &&
+        request.resource.data.imagePublicIds is list &&
+        request.resource.data.imageUrls.size() <= 5 &&
+        request.resource.data.imagePublicIds.size() <= 5 &&
+        request.resource.data.imagePublicIds.size() <=
+          request.resource.data.imageUrls.size() &&
+
+        (
+          !changedPostContent ||
+          (
+            changedFields.hasAny(['updatedAt']) &&
+            request.resource.data.updatedAt ==
+              request.time
+          )
+        ) &&
+
+        (
+          !changedFields.hasAny(['timeAgo']) ||
+          request.resource.data.timeAgo ==
+            'Vừa chỉnh sửa'
+        );
+    }
+
+    /*
+     * THÍCH VÀ BỎ THÍCH
+     */
+    function validLikeUpdate() {
+      let changedFields =
+        request.resource.data
+          .diff(resource.data)
+          .affectedKeys();
+
+      let oldLikedBy =
+        resource.data.get('likedBy', []);
+
+      let newLikedBy =
+        request.resource.data.get('likedBy', []);
+
+      let oldLikes =
+        resource.data.get('likes', 0);
+
+      let newLikes =
+        request.resource.data.get('likes', 0);
+
+      let currentUserId =
+        isSignedIn()
+          ? request.auth.uid
+          : '';
+
+      let addingLike =
+        !oldLikedBy.hasAny([currentUserId]) &&
+        newLikedBy.hasAny([currentUserId]) &&
+        newLikedBy.hasAll(oldLikedBy) &&
+        newLikedBy.size() ==
+          oldLikedBy.size() + 1 &&
+        newLikes == oldLikes + 1;
+
+      let removingLike =
+        oldLikedBy.hasAny([currentUserId]) &&
+        !newLikedBy.hasAny([currentUserId]) &&
+        oldLikedBy.hasAll(newLikedBy) &&
+        newLikedBy.size() ==
+          oldLikedBy.size() - 1 &&
+        newLikes == oldLikes - 1;
+
+      return isSignedIn() &&
+
+        changedFields.hasOnly([
+          'likedBy',
+          'likes'
+        ]) &&
+
+        oldLikedBy is list &&
+        newLikedBy is list &&
+        oldLikes is int &&
+        newLikes is int &&
+        newLikes >= 0 &&
+
+        (
+          addingLike ||
+          removingLike
+        );
+    }
+
+    /*
+     * CẬP NHẬT SỐ BÌNH LUẬN
+     */
+    function validCommentCountUpdate() {
+      let changedFields =
+        request.resource.data
+          .diff(resource.data)
+          .affectedKeys();
+
+      let oldCount =
+        resource.data.get('commentCount', 0);
+
+      let newCount =
+        request.resource.data.get(
+          'commentCount',
+          0
+        );
+
+      let expectedDecrement =
+        oldCount > 0
+          ? oldCount - 1
+          : 0;
+
+      return isSignedIn() &&
+
+        changedFields.hasOnly([
+          'commentCount'
+        ]) &&
+
+        oldCount is int &&
+        newCount is int &&
+        newCount >= 0 &&
+
+        (
+          newCount == oldCount + 1 ||
+          newCount == expectedDecrement
+        );
+    }
+
+    /*
+     * THÊM BÌNH LUẬN
+     */
+    function validCommentCreate(postId) {
+      let postBefore =
+        get(postPath(postId)).data;
+
+      let postAfter =
+        getAfter(postPath(postId)).data;
+
+      let oldCount =
+        postBefore.get('commentCount', 0);
+
+      let data =
+        request.resource.data;
+
+      return isSignedIn() &&
+        exists(postPath(postId)) &&
+
+        data.keys().hasAll([
+          'id',
+          'authorId',
+          'authorName',
+          'isAnonymous',
+          'avatarIconKey',
+          'colorKey',
+          'content',
+          'timeAgo',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+
+        data.keys().hasOnly([
+          'id',
+          'authorId',
+          'authorName',
+          'isAnonymous',
+          'avatarIconKey',
+          'colorKey',
+          'content',
+          'timeAgo',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+
+        data.id is int &&
+        data.authorId == request.auth.uid &&
+        data.authorName is string &&
+        data.isAnonymous is bool &&
+        data.avatarIconKey is string &&
+        data.colorKey is string &&
+
+        data.content is string &&
+        data.content.size() > 0 &&
+        data.content.size() <= 5000 &&
+
+        data.timeAgo == 'Vừa xong' &&
+        data.createdAt == request.time &&
+        data.updatedAt == null &&
+
+        oldCount is int &&
+
+        postAfter.get('commentCount', 0) ==
+          oldCount + 1;
+    }
+
+    /*
+     * SỬA BÌNH LUẬN
+     */
+    function validCommentUpdate() {
+      let changedFields =
+        request.resource.data
+          .diff(resource.data)
+          .affectedKeys();
+
+      return isSignedIn() &&
+
+        resource.data.get('authorId', '') ==
+          request.auth.uid &&
+
+        changedFields.hasOnly([
+          'content',
+          'timeAgo',
+          'updatedAt'
+        ]) &&
+
+        request.resource.data.content is string &&
+        request.resource.data.content.size() > 0 &&
+        request.resource.data.content.size() <= 5000 &&
+
+        request.resource.data.timeAgo ==
+          'Vừa chỉnh sửa' &&
+
+        request.resource.data.updatedAt ==
+          request.time;
+    }
+
+    /*
+     * NGƯỜI DÙNG XÓA BÌNH LUẬN CỦA MÌNH
+     */
+    function validOwnCommentDelete(postId) {
+      let postBefore =
+        get(postPath(postId)).data;
+
+      let postAfter =
+        getAfter(postPath(postId)).data;
+
+      let oldCount =
+        postBefore.get('commentCount', 0);
+
+      let expectedCount =
+        oldCount > 0
+          ? oldCount - 1
+          : 0;
+
+      return isSignedIn() &&
+
+        resource.data.get('authorId', '') ==
+          request.auth.uid &&
+
+        oldCount is int &&
+
+        postAfter.get('commentCount', 0) ==
+          expectedCount;
+    }
+
+    /*
+     * USERS
+     */
+    match /users/{userId} {
+      /*
+       * Luồng đăng nhập chỉ cần đọc document
+       * của đúng tài khoản hiện tại.
+       */
+      allow read: if
+        isCurrentUser(userId) ||
+        isAdmin();
+
+      allow create: if
+        validUserCreate(userId) ||
+        isAdmin();
+
+      allow update: if
+        validUserUpdate(userId) ||
+        isAdmin();
+
+      allow delete: if isAdmin();
+
+      match /savedCommunityPosts/{savedPostId} {
+        allow read: if
+          isCurrentUser(userId) ||
+          isAdmin();
+
+        allow create, update: if
+          (
+            isCurrentUser(userId) &&
+            validSavedPostWrite()
+          ) ||
+          isAdmin();
+
+        allow delete: if
+          isCurrentUser(userId) ||
+          isAdmin();
+      }
+    }
+
+    /*
+     * COMMUNITY POSTS
+     */
+    match /community_posts/{postId} {
+      allow read: if isSignedIn();
+
+      allow create: if
+        validPostCreate();
+
+      allow update: if
+        validOwnerPostUpdate() ||
+        validLikeUpdate() ||
+        validCommentCountUpdate() ||
+        isAdmin();
+
+      allow delete: if
+        (
+          isSignedIn() &&
+          resource.data.get('authorId', '') ==
+            request.auth.uid
+        ) ||
+        isAdmin();
+
+      match /comments/{commentId} {
+        allow read: if isSignedIn();
+
+        allow create: if
+          validCommentCreate(postId);
+
+        allow update: if
+          validCommentUpdate() ||
+          isAdmin();
+
+        allow delete: if
+          isAdmin() ||
+          isPostOwner(postId) ||
+          validOwnCommentDelete(postId);
+      }
+    }
+
+    /*
+     * TỪ CHỐI CÁC COLLECTION CHƯA ĐƯỢC KHAI BÁO
+     */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

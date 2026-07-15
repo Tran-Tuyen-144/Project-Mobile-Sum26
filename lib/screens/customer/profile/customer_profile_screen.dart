@@ -72,6 +72,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   @override
   void initState() {
     super.initState();
+
     profileInitialization = CustomerProfileService.ensureCurrentProfile();
   }
 
@@ -120,8 +121,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                     crossAxisSpacing: 12,
                     childAspectRatio: 0.88,
                   ),
-                  itemBuilder: (context, index) {
+                  itemBuilder: (_, index) {
                     final option = avatarOptions[index];
+
                     final isSelected = option.keyName == profile.avatarIconKey;
 
                     return InkWell(
@@ -129,9 +131,17 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                       onTap: () async {
                         Navigator.of(bottomSheetContext).pop();
 
-                        await CustomerProfileService.updateAvatarIcon(
-                          option.keyName,
-                        );
+                        try {
+                          await CustomerProfileService.updateAvatarIcon(
+                            option.keyName,
+                          );
+
+                          _showMessage('Đã cập nhật ảnh đại diện.');
+                        } catch (error) {
+                          _showMessage(
+                            error.toString().replaceFirst('Exception: ', ''),
+                          );
+                        }
                       },
                       child: Container(
                         padding: const EdgeInsets.all(8),
@@ -185,6 +195,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
   Future<void> _editProfile(CustomerProfile profile) async {
     final fullNameController = TextEditingController(text: profile.fullName);
+
     final displayNameController = TextEditingController(
       text: profile.displayName,
     );
@@ -245,19 +256,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
           displayName: displayNameController.text,
         );
 
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã cập nhật thông tin cá nhân.')),
-        );
+        _showMessage('Đã cập nhật thông tin cá nhân.');
       } catch (error) {
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.toString().replaceFirst('Exception: ', '')),
-          ),
-        );
+        _showMessage(error.toString().replaceFirst('Exception: ', ''));
       }
     }
 
@@ -268,7 +269,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   Future<void> _createPost(CustomerProfile profile) async {
     final result = await context.push<CommunityPost>('/community/create-post');
 
-    if (result == null) return;
+    if (result == null) {
+      return;
+    }
 
     final post = result.copyWith(
       authorId: profile.uid,
@@ -279,17 +282,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     try {
       await FirebaseCommunityService.createPost(post);
 
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã đăng bài lên cộng đồng.')),
-      );
+      _showMessage('Đã đăng bài lên cộng đồng.');
     } catch (error) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Không đăng được bài: $error')));
+      _showMessage('Không đăng được bài: $error');
     }
   }
 
@@ -299,7 +294,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
       extra: post,
     );
 
-    if (result == null) return;
+    if (result == null) {
+      return;
+    }
 
     final updatedPost = result.copyWith(
       authorId: post.authorId,
@@ -311,17 +308,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     try {
       await FirebaseCommunityService.updatePost(updatedPost);
 
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Đã cập nhật bài viết.')));
+      _showMessage('Đã cập nhật bài viết.');
     } catch (error) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không sửa được bài viết: $error')),
-      );
+      _showMessage('Không sửa được bài viết: $error');
     }
   }
 
@@ -335,7 +324,8 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
           ),
           title: const Text('Xóa bài viết?'),
           content: const Text(
-            'Bài viết sẽ bị xóa khỏi trang cá nhân và cộng đồng.',
+            'Bài viết sẽ bị xóa khỏi '
+            'trang cá nhân và cộng đồng.',
           ),
           actions: [
             TextButton(
@@ -356,22 +346,16 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
       },
     );
 
-    if (shouldDelete != true) return;
+    if (shouldDelete != true) {
+      return;
+    }
 
     try {
       await FirebaseCommunityService.deletePost(post);
 
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Đã xóa bài viết.')));
+      _showMessage('Đã xóa bài viết.');
     } catch (error) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không xóa được bài viết: $error')),
-      );
+      _showMessage('Không xóa được bài viết: $error');
     }
   }
 
@@ -379,11 +363,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     try {
       await FirebaseCommunityService.toggleLike(post: post, userId: userId);
     } catch (error) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Không thể thả tim: $error')));
+      _showMessage('Không thể thả tim: $error');
     }
   }
 
@@ -394,19 +374,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
         post: post,
       );
 
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(isSaved ? 'Đã lưu bài viết.' : 'Đã bỏ lưu bài viết.'),
-        ),
-      );
+      _showMessage(isSaved ? 'Đã lưu bài viết.' : 'Đã bỏ lưu bài viết.');
     } catch (error) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không lưu được bài viết: $error')),
-      );
+      _showMessage('Không lưu được bài viết: $error');
     }
   }
 
@@ -426,11 +396,7 @@ ${post.content}
         ),
       );
     } catch (error) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Không chia sẻ được: $error')));
+      _showMessage('Không chia sẻ được: $error');
     }
   }
 
@@ -442,47 +408,10 @@ ${post.content}
     final wasLiked = post.likedBy.contains(userId);
     final wasSaved = savedPostIds.contains(post.id);
 
-    final result = await context.push<PostDetailResult>(
+    await context.push<PostDetailResult>(
       '/community/post-detail',
       extra: PostDetailArgs(post: post, isLiked: wasLiked, isSaved: wasSaved),
     );
-
-    if (result == null) return;
-
-    try {
-      if (result.isLiked != wasLiked) {
-        await FirebaseCommunityService.toggleLike(post: post, userId: userId);
-      }
-
-      if (result.isSaved != wasSaved) {
-        await CustomerSavedPostService.setSavedPost(
-          userId: userId,
-          post: post,
-          isSaved: result.isSaved,
-        );
-      }
-
-      final updatedPost = result.post.copyWith(
-        authorId: post.authorId,
-        authorName: post.authorName,
-        authorRole: post.authorRole,
-        isAnonymous: post.isAnonymous,
-        avatarIconKey: post.avatarIconKey,
-        colorKey: post.colorKey,
-        likes: post.likes,
-        likedBy: post.likedBy,
-        imageUrl: post.imageUrl,
-        imagePublicId: post.imagePublicId,
-      );
-
-      await FirebaseCommunityService.updatePost(updatedPost);
-    } catch (error) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không cập nhật bài viết: $error')),
-      );
-    }
   }
 
   Future<void> _logout() async {
@@ -495,7 +424,8 @@ ${post.content}
           ),
           title: const Text('Đăng xuất tài khoản?'),
           content: const Text(
-            'Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng PetHub.',
+            'Bạn sẽ cần đăng nhập lại để '
+            'tiếp tục sử dụng PetHub.',
           ),
           actions: [
             TextButton(
@@ -516,21 +446,31 @@ ${post.content}
       },
     );
 
-    if (shouldLogout != true) return;
+    if (shouldLogout != true) {
+      return;
+    }
 
     try {
       await CustomerAuthService.logout();
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       context.go('/customer-auth');
     } catch (error) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Không đăng xuất được: $error')));
+      _showMessage('Không đăng xuất được: $error');
     }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -562,6 +502,19 @@ ${post.content}
               return const Center(child: CircularProgressIndicator());
             }
 
+            if (profileSnapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Text(
+                    'Không tải được hồ sơ:\n'
+                    '${profileSnapshot.error}',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            }
+
             final profile = profileSnapshot.data;
 
             if (profile == null) {
@@ -580,14 +533,20 @@ ${post.content}
                   _ProfileHeader(
                     profile: profile,
                     avatar: avatar,
-                    onAvatarTap: () => _showAvatarPicker(profile),
-                    onEditTap: () => _editProfile(profile),
+                    onAvatarTap: () {
+                      _showAvatarPicker(profile);
+                    },
+                    onEditTap: () {
+                      _editProfile(profile);
+                    },
                   ),
                   const SizedBox(height: 22),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () => _createPost(profile),
+                      onPressed: () {
+                        _createPost(profile);
+                      },
                       icon: const Icon(Icons.add_rounded),
                       label: const Text('Đăng bài mới'),
                     ),
@@ -599,11 +558,16 @@ ${post.content}
                   const SizedBox(height: 26),
                   _ProfileCommunitySections(
                     profile: profile,
-                    onLike: (post) => _toggleLike(post, profile.uid),
-                    onSave: (post) => _toggleSave(post, profile.uid),
+                    onLike: (post) {
+                      _toggleLike(post, profile.uid);
+                    },
+                    onSave: (post) {
+                      _toggleSave(post, profile.uid);
+                    },
                     onShare: _sharePost,
-                    onOpenDetail: (post, savedPostIds) =>
-                        _openPostDetail(post, profile.uid, savedPostIds),
+                    onOpenDetail: (post, savedPostIds) {
+                      _openPostDetail(post, profile.uid, savedPostIds);
+                    },
                     onEdit: _editPost,
                     onDelete: _deletePost,
                   ),
@@ -626,7 +590,9 @@ class _ProfileCommunitySections extends StatelessWidget {
   final ValueChanged<CommunityPost> onLike;
   final ValueChanged<CommunityPost> onSave;
   final ValueChanged<CommunityPost> onShare;
+
   final void Function(CommunityPost post, Set<int> savedPostIds) onOpenDetail;
+
   final ValueChanged<CommunityPost> onEdit;
   final ValueChanged<CommunityPost> onDelete;
 
@@ -645,12 +611,20 @@ class _ProfileCommunitySections extends StatelessWidget {
     return StreamBuilder<Set<int>>(
       stream: CustomerSavedPostService.watchSavedPostIds(profile.uid),
       builder: (context, savedSnapshot) {
+        if (savedSnapshot.hasError) {
+          return Text(
+            'Không tải được bài viết đã lưu: '
+            '${savedSnapshot.error}',
+          );
+        }
+
         final savedPostIds = savedSnapshot.data ?? <int>{};
 
         return StreamBuilder<List<CommunityPost>>(
           stream: FirebaseCommunityService.watchPosts(),
           builder: (context, postsSnapshot) {
-            if (postsSnapshot.connectionState == ConnectionState.waiting) {
+            if (postsSnapshot.connectionState == ConnectionState.waiting &&
+                !postsSnapshot.hasData) {
               return const Center(
                 child: Padding(
                   padding: EdgeInsets.all(20),
@@ -660,7 +634,10 @@ class _ProfileCommunitySections extends StatelessWidget {
             }
 
             if (postsSnapshot.hasError) {
-              return Text('Không tải được bài viết: ${postsSnapshot.error}');
+              return Text(
+                'Không tải được bài viết: '
+                '${postsSnapshot.error}',
+              );
             }
 
             final allPosts = postsSnapshot.data ?? [];
@@ -721,10 +698,13 @@ class _ProfilePostSection extends StatelessWidget {
   final Set<int> savedPostIds;
   final CustomerProfile profile;
   final bool allowManageOwnPost;
+
   final ValueChanged<CommunityPost> onLike;
   final ValueChanged<CommunityPost> onSave;
   final ValueChanged<CommunityPost> onShare;
+
   final void Function(CommunityPost post, Set<int> savedPostIds) onOpenDetail;
+
   final ValueChanged<CommunityPost> onEdit;
   final ValueChanged<CommunityPost> onDelete;
 
@@ -766,11 +746,14 @@ class _ProfilePostSection extends StatelessWidget {
             itemCount: posts.length,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            separatorBuilder: (context, index) {
+              return const SizedBox(height: 12);
+            },
             itemBuilder: (context, index) {
               final post = posts[index];
 
               final isLiked = post.likedBy.contains(profile.uid);
+
               final isSaved = savedPostIds.contains(post.id);
 
               final canManage =
@@ -780,13 +763,25 @@ class _ProfilePostSection extends StatelessWidget {
                 post: post,
                 isLiked: isLiked,
                 isSaved: isSaved,
-                onLike: () => onLike(post),
-                onSave: () => onSave(post),
-                onShare: () => onShare(post),
-                onOpenDetail: () => onOpenDetail(post, savedPostIds),
+                onLike: () {
+                  onLike(post);
+                },
+                onSave: () {
+                  onSave(post);
+                },
+                onShare: () {
+                  onShare(post);
+                },
+                onOpenDetail: () {
+                  onOpenDetail(post, savedPostIds);
+                },
                 canManage: canManage,
-                onEdit: () => onEdit(post),
-                onDelete: () => onDelete(post),
+                onEdit: () {
+                  onEdit(post);
+                },
+                onDelete: () {
+                  onDelete(post);
+                },
               );
             },
           ),

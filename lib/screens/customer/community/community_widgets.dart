@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../services/cloudinary_upload_service.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/soft_card.dart';
 import 'community_post.dart';
@@ -46,7 +47,8 @@ class CommunityHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Chia sẻ khoảnh khắc, hỏi đáp chăm sóc và kết nối với những người yêu pet.',
+                  'Chia sẻ khoảnh khắc, hỏi đáp chăm sóc '
+                  'và kết nối với những người yêu pet.',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(height: 1.4),
@@ -79,14 +81,19 @@ class CommunityCategorySelector extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) {
+          return const SizedBox(width: 10);
+        },
         itemBuilder: (context, index) {
           final category = categories[index];
+
           final isSelected = selectedCategory == category;
 
           return InkWell(
             borderRadius: BorderRadius.circular(18),
-            onTap: () => onSelected(category),
+            onTap: () {
+              onSelected(category);
+            },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 18),
               alignment: Alignment.center,
@@ -132,7 +139,8 @@ class CreatePostCard extends StatelessWidget {
           const SizedBox(width: 14),
           Expanded(
             child: Text(
-              'Bạn muốn chia sẻ điều gì về bé pet hôm nay?',
+              'Bạn muốn chia sẻ điều gì về '
+              'bé pet hôm nay?',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
@@ -184,7 +192,6 @@ class CommunityPostCard extends StatelessWidget {
             children: [
               _PostAvatar(post: post),
               const SizedBox(width: 12),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +204,8 @@ class CommunityPostCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${post.authorRole} • ${post.displayTimeAgo}',
+                      '${post.authorRole} • '
+                      '${post.displayTimeLabel}',
                       style: Theme.of(
                         context,
                       ).textTheme.bodyMedium?.copyWith(fontSize: 12),
@@ -205,8 +213,8 @@ class CommunityPostCard extends StatelessWidget {
                   ],
                 ),
               ),
-
               IconButton(
+                tooltip: isSaved ? 'Bỏ lưu bài viết' : 'Lưu bài viết',
                 onPressed: onSave,
                 icon: Icon(
                   isSaved
@@ -215,7 +223,6 @@ class CommunityPostCard extends StatelessWidget {
                   color: isSaved ? AppColors.primary : AppColors.textSoft,
                 ),
               ),
-
               if (canManage)
                 PopupMenuButton<String>(
                   icon: const Icon(
@@ -255,7 +262,10 @@ class CommunityPostCard extends StatelessWidget {
                               color: Colors.redAccent,
                             ),
                             SizedBox(width: 10),
-                            Text('Xóa bài viết'),
+                            Text(
+                              'Xóa bài viết',
+                              style: TextStyle(color: Colors.redAccent),
+                            ),
                           ],
                         ),
                       ),
@@ -264,28 +274,22 @@ class CommunityPostCard extends StatelessWidget {
                 ),
             ],
           ),
-
           if (post.hasTag) ...[
             const SizedBox(height: 12),
             _TagChip(post: post),
           ],
-
           const SizedBox(height: 14),
-
           Text(
             post.content,
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(height: 1.45),
           ),
-
           if (post.hasImage) ...[
             const SizedBox(height: 14),
             _PostImage(post: post),
           ],
-
           const SizedBox(height: 14),
-
           Wrap(
             spacing: 10,
             runSpacing: 8,
@@ -358,46 +362,99 @@ class _TagChip extends StatelessWidget {
   }
 }
 
-class _PostImage extends StatelessWidget {
+class _PostImage extends StatefulWidget {
   final CommunityPost post;
 
   const _PostImage({required this.post});
 
   @override
+  State<_PostImage> createState() => _PostImageState();
+}
+
+class _PostImageState extends State<_PostImage> {
+  int currentIndex = 0;
+
+  @override
   Widget build(BuildContext context) {
-    final imageUrl = post.imageUrl ?? '';
+    final imageUrls = widget.post.allImageUrls;
+
+    if (imageUrls.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
       child: AspectRatio(
         aspectRatio: 16 / 10,
-        child: Image.network(
-          imageUrl,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) {
-              return child;
-            }
+        child: Stack(
+          children: [
+            PageView.builder(
+              itemCount: imageUrls.length,
+              onPageChanged: (index) {
+                setState(() {
+                  currentIndex = index;
+                });
+              },
+              itemBuilder: (context, index) {
+                final imageUrl = CloudinaryUploadService.optimizedImageUrl(
+                  imageUrls[index],
+                );
 
-            return Container(
-              color: AppColors.cream,
-              alignment: Alignment.center,
-              child: const CircularProgressIndicator(),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: AppColors.cream,
-              alignment: Alignment.center,
-              child: const Text(
-                'Không tải được ảnh.',
-                style: TextStyle(
-                  color: AppColors.textSoft,
-                  fontWeight: FontWeight.w700,
+                return Image.network(
+                  imageUrl,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) {
+                      return child;
+                    }
+
+                    return Container(
+                      color: AppColors.cream,
+                      alignment: Alignment.center,
+                      child: const CircularProgressIndicator(),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: AppColors.cream,
+                      alignment: Alignment.center,
+                      child: const Text(
+                        'Không tải được ảnh.',
+                        style: TextStyle(
+                          color: AppColors.textSoft,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+            if (imageUrls.length > 1)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    '${currentIndex + 1}/${imageUrls.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                    ),
+                  ),
                 ),
               ),
-            );
-          },
+          ],
         ),
       ),
     );
