@@ -2,8 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../l10n/app_localizations.dart';
-import '../../main.dart';
 import '../../services/customer_auth_service.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/soft_card.dart';
@@ -20,7 +18,7 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
-  TextEditingController();
+      TextEditingController();
 
   bool isLoginMode = true;
   bool isLoading = false;
@@ -51,22 +49,22 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
     final confirmPassword = confirmPasswordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      _showMessage('Em nhập email và mật khẩu trước nha.');
+      _showMessage('Em nháº­p email vĂ  máº­t kháº©u trÆ°á»›c nha.');
       return;
     }
 
     if (!isLoginMode && name.isEmpty) {
-      _showMessage('Em nhập họ tên trước nha.');
+      _showMessage('Em nháº­p há» tĂªn trÆ°á»›c nha.');
       return;
     }
 
     if (!isLoginMode && password != confirmPassword) {
-      _showMessage('Mật khẩu nhập lại chưa khớp.');
+      _showMessage('Máº­t kháº©u nháº­p láº¡i chÆ°a khá»›p.');
       return;
     }
 
     if (password.length < 6) {
-      _showMessage('Mật khẩu phải từ 6 ký tự trở lên.');
+      _showMessage('Máº­t kháº©u pháº£i tá»« 6 kĂ½ tá»± trá»Ÿ lĂªn.');
       return;
     }
 
@@ -136,7 +134,7 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
       if (!mounted) return;
 
       _showMessage(
-        'Đã gửi email đặt lại mật khẩu. Em kiểm tra hộp thư nha.',
+        'ÄĂ£ gá»­i email Ä‘áº·t láº¡i máº­t kháº©u. Em kiá»ƒm tra há»™p thÆ° nha.',
       );
     } catch (error) {
       if (!mounted) return;
@@ -149,23 +147,23 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
     if (error is FirebaseAuthException) {
       switch (error.code) {
         case 'email-already-in-use':
-          return 'Email này đã có tài khoản.';
+          return 'Email nĂ y Ä‘Ă£ cĂ³ tĂ i khoáº£n.';
         case 'invalid-email':
-          return 'Email không hợp lệ.';
+          return 'Email khĂ´ng há»£p lá»‡.';
         case 'user-not-found':
-          return 'Không tìm thấy tài khoản.';
+          return 'KhĂ´ng tĂ¬m tháº¥y tĂ i khoáº£n.';
         case 'wrong-password':
-          return 'Mật khẩu không đúng.';
+          return 'Máº­t kháº©u khĂ´ng Ä‘Ăºng.';
         case 'invalid-credential':
-          return 'Email hoặc mật khẩu không đúng.';
+          return 'Email hoáº·c máº­t kháº©u khĂ´ng Ä‘Ăºng.';
         case 'weak-password':
-          return 'Mật khẩu quá yếu.';
+          return 'Máº­t kháº©u quĂ¡ yáº¿u.';
         case 'network-request-failed':
-          return 'Lỗi mạng, em kiểm tra internet nha.';
+          return 'Lá»—i máº¡ng, em kiá»ƒm tra internet nha.';
         case 'account-exists-with-different-credential':
-          return 'Email này đã đăng nhập bằng phương thức khác.';
+          return 'Email nĂ y Ä‘Ă£ Ä‘Äƒng nháº­p báº±ng phÆ°Æ¡ng thá»©c khĂ¡c.';
         default:
-          return error.message ?? 'Có lỗi xảy ra.';
+          return error.message ?? 'CĂ³ lá»—i xáº£y ra.';
       }
     }
 
@@ -180,48 +178,14 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Lấy trạng thái ngôn ngữ hiện tại
-    final locale = Localizations.localeOf(context);
-    final isVietnamese = locale.languageCode == 'vi';
+    final title = isLoginMode ? 'ÄÄƒng nháº­p' : 'ÄÄƒng kĂ½';
 
-    final title = isLoginMode
-        ? AppLocalizations.of(context)!.loginTitle
-        : AppLocalizations.of(context)!.registerNow;
     final subtitle = isLoginMode
-        ? 'Chào mừng bạn quay lại PetHub.'
-        : 'Tạo tài khoản khách hàng để lưu hồ sơ và bài viết.';
+        ? 'ChĂ o má»«ng em quay láº¡i PetHub.'
+        : 'Táº¡o tĂ i khoáº£n khĂ¡ch hĂ ng Ä‘á»ƒ lÆ°u há»“ sÆ¡ vĂ  bĂ i viáº¿t.';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        // ==========================================
-        // THÊM NÚT ĐỔI NGÔN NGỮ Ở GÓC PHẢI APPBAR
-        // ==========================================
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: TextButton.icon(
-              onPressed: () {
-                // Đảo ngược ngôn ngữ khi bấm
-                final newLocale = isVietnamese ? const Locale('en') : const Locale('vi');
-                PetHubApp.setLocale(context, newLocale);
-              },
-              icon: Text(
-                isVietnamese ? '🇻🇳' : '🇬🇧',
-                style: const TextStyle(fontSize: 18),
-              ),
-              label: Text(
-                isVietnamese ? 'VN' : 'EN',
-                style: const TextStyle(
-                  color: AppColors.textSoft,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(title)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 26),
@@ -229,7 +193,9 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _AuthHeader(title: title, subtitle: subtitle),
+
               const SizedBox(height: 22),
+
               SoftCard(
                 color: Colors.white,
                 child: Column(
@@ -239,7 +205,7 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
                         controller: nameController,
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
-                          labelText: 'Họ tên',
+                          labelText: 'Há» tĂªn',
                           prefixIcon: Icon(Icons.person_rounded),
                         ),
                       ),
@@ -270,7 +236,7 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
                         }
                       },
                       decoration: InputDecoration(
-                        labelText: 'Mật khẩu',
+                        labelText: 'Máº­t kháº©u',
                         prefixIcon: const Icon(Icons.lock_rounded),
                         suffixIcon: IconButton(
                           onPressed: () {
@@ -295,7 +261,7 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
                         textInputAction: TextInputAction.done,
                         onSubmitted: (_) => _submit(),
                         decoration: InputDecoration(
-                          labelText: 'Nhập lại mật khẩu',
+                          labelText: 'Nháº­p láº¡i máº­t kháº©u',
                           prefixIcon: const Icon(Icons.lock_reset_rounded),
                           suffixIcon: IconButton(
                             onPressed: () {
@@ -319,7 +285,7 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: isLoading ? null : _forgotPassword,
-                          child: const Text('Quên mật khẩu?'),
+                          child: const Text('QuĂªn máº­t kháº©u?'),
                         ),
                       ),
                     ],
@@ -332,23 +298,23 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
                         onPressed: isLoading ? null : _submit,
                         icon: isLoading
                             ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        )
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : Icon(
-                          isLoginMode
-                              ? Icons.login_rounded
-                              : Icons.person_add_rounded,
-                        ),
+                                isLoginMode
+                                    ? Icons.login_rounded
+                                    : Icons.person_add_rounded,
+                              ),
                         label: Text(
                           isLoading
-                              ? 'Đang xử lý...'
+                              ? 'Äang xá»­ lĂ½...'
                               : isLoginMode
-                              ? 'Đăng nhập'
-                              : 'Đăng ký',
+                              ? 'ÄÄƒng nháº­p'
+                              : 'ÄÄƒng kĂ½',
                         ),
                       ),
                     ),
@@ -361,7 +327,7 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
-                            'hoặc',
+                            'hoáº·c',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ),
@@ -376,7 +342,7 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
                       child: OutlinedButton.icon(
                         onPressed: isLoading ? null : _loginWithGoogle,
                         icon: const Icon(Icons.g_mobiledata_rounded),
-                        label: const Text('Tiếp tục với Google'),
+                        label: const Text('Tiáº¿p tá»¥c vá»›i Google'),
                       ),
                     ),
 
@@ -387,8 +353,8 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
                       children: [
                         Text(
                           isLoginMode
-                              ? 'Chưa có tài khoản?'
-                              : 'Đã có tài khoản?',
+                              ? 'ChÆ°a cĂ³ tĂ i khoáº£n?'
+                              : 'ÄĂ£ cĂ³ tĂ i khoáº£n?',
                           style: const TextStyle(
                             color: AppColors.textSoft,
                             fontWeight: FontWeight.w600,
@@ -397,7 +363,7 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
                         TextButton(
                           onPressed: isLoading ? null : _toggleMode,
                           child: Text(
-                            isLoginMode ? 'Đăng ký' : 'Đăng nhập',
+                            isLoginMode ? 'ÄÄƒng kĂ½' : 'ÄÄƒng nháº­p',
                           ),
                         ),
                       ],
