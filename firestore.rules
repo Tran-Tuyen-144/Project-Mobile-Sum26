@@ -712,6 +712,7 @@ service cloud.firestore {
         collectionName in [
           'bookings',
           'admin_notifications',
+          'customer_booking_notifications',
           'customers',
           'pets',
           'menu_items',
