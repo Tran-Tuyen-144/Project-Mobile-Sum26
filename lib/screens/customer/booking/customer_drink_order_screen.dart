@@ -8,6 +8,7 @@ import '../../../theme/app_colors.dart';
 import '../../../widgets/section_title.dart';
 import '../../../widgets/soft_card.dart';
 import 'cat_saved_data_button.dart';
+import '../../../services/order_revenue_service.dart';
 
 const Color _blueSoft = Color(0xFFDDF6FF);
 const Color _bluePale = Color(0xFFEFFBFF);
@@ -251,6 +252,43 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
       paymentMethod: paymentMethod,
     );
 
+    final firestoreItems = _cart.entries.map((entry) {
+      final drink = _drinks.firstWhere((item) => item.id == entry.key);
+
+      return <String, dynamic>{
+        'itemId': drink.id.toString(),
+        'name': drink.name,
+        'category': drink.category,
+        'quantity': entry.value,
+        'unitPrice': drink.price,
+        'subtotal': drink.price * entry.value,
+      };
+    }).toList();
+
+    try {
+      await OrderRevenueService.createCustomerCafeOrder(
+        items: firestoreItems,
+        totalAmount: order.totalPrice,
+        paymentMethod: paymentMethod,
+        isPaid: paymentMethod == _zaloPayMethodLabel,
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Không đồng bộ được đơn hàng: '
+            '${error.toString().replaceFirst('Exception: ', '')}',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     await OfflineDrinkOrderStorage.saveOfflineOrder(order);
     await OfflineDrinkOrderStorage.clearCart();
 
@@ -282,8 +320,9 @@ class _CustomerDrinkOrderScreenState extends State<CustomerDrinkOrderScreen> {
     });
 
     final message = paymentMethod == _zaloPayMethodLabel
-        ? 'Đã thanh toán thành công và lưu vào biểu tượng mèo.'
-        : 'Đã lưu đơn gọi nước với $submittedItems món vào biểu tượng mèo.';
+        ? 'Đã thanh toán và đồng bộ doanh thu với Admin.'
+        : 'Đã gửi đơn đến Admin. '
+              'Doanh thu sẽ được ghi nhận khi Admin xác nhận thanh toán.';
 
     ScaffoldMessenger.of(
       context,

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../theme/app_colors.dart';
 import 'checkout_screen.dart';
+import 'customer_cafe_orders_panel.dart';
 
 const Color _blueSoft = Color(0xFFDDF6FF);
 const Color _bluePale = Color(0xFFEFFBFF);
@@ -174,6 +175,10 @@ class _AdminCafeServiceScreenState extends State<AdminCafeServiceScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const CustomerCafeOrdersPanel(),
+
+                        const SizedBox(height: 20),
+
                         // Thanh Tìm Kiếm
                         TextField(
                           onChanged: (value) =>
