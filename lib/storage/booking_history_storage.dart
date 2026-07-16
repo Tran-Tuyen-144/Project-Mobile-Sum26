@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/admin_notification_service.dart';
 import '../services/crm_service.dart';
+import '../services/customer_booking_notification_service.dart';
 
 enum BookingStatus {
   confirmed('Đã xác nhận'),
@@ -147,6 +148,12 @@ class BookingHistoryStorage {
       body:
           '${booking.customerName} • ${booking.tableName} • ${booking.branch}',
       type: 'booking',
+      bookingId: booking.id,
+    );
+
+    await CustomerBookingNotificationService.createPending(
+      bookingId: booking.id,
+      tableName: booking.tableName,
     );
     return uploaded;
   }

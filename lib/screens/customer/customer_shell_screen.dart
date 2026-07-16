@@ -7,6 +7,7 @@ import 'booking/customer_booking_screen.dart';
 import 'services/customer_services_screen.dart';
 import 'map/customer_map_screen.dart';
 import 'community/customer_community_screen.dart';
+import '../../services/customer_booking_notification_service.dart';
 
 class CustomerShellScreen extends StatefulWidget {
   final int initialIndex;
@@ -90,11 +91,25 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
           ),
           title: Text(_titles[_currentIndex]),
           actions: [
-            IconButton(
-              onPressed: () {
-                context.push('/notifications');
+            StreamBuilder<List<CustomerBookingNotification>>(
+              stream: CustomerBookingNotificationService.watch(),
+              builder: (context, snapshot) {
+                final notificationCount = snapshot.data?.length ?? 0;
+
+                return IconButton(
+                  tooltip: notificationCount > 0
+                      ? '$notificationCount thông báo'
+                      : 'Thông báo',
+                  onPressed: () {
+                    context.push('/notifications');
+                  },
+                  icon: Badge.count(
+                    count: notificationCount,
+                    isLabelVisible: notificationCount > 0,
+                    child: const Icon(Icons.notifications_none_rounded),
+                  ),
+                );
               },
-              icon: const Icon(Icons.notifications_none_rounded),
             ),
             IconButton(
               onPressed: () {
