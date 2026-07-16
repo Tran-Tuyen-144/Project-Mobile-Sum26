@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'customer_booking_notification_service.dart';
+
 class AdminNotification {
   final String id;
   final String title;
@@ -12,6 +14,7 @@ class AdminNotification {
   final DateTime createdAt;
   final bool isRead;
   final bool isApproved;
+  final String? bookingId;
 
   const AdminNotification({
     required this.id,
@@ -21,6 +24,7 @@ class AdminNotification {
     required this.createdAt,
     required this.isRead,
     required this.isApproved,
+    this.bookingId,
   });
 
   AdminNotification copyWith({bool? isRead, bool? isApproved}) =>
@@ -32,6 +36,7 @@ class AdminNotification {
         createdAt: createdAt,
         isRead: isRead ?? this.isRead,
         isApproved: isApproved ?? this.isApproved,
+        bookingId: bookingId,
       );
 
   Map<String, dynamic> toJson() => {
@@ -42,6 +47,7 @@ class AdminNotification {
     'createdAt': createdAt.toIso8601String(),
     'isRead': isRead,
     'isApproved': isApproved,
+    'bookingId': bookingId,
   };
 
   factory AdminNotification.fromJson(Map<String, dynamic> data) =>
@@ -55,6 +61,7 @@ class AdminNotification {
             DateTime.now(),
         isRead: data['isRead'] as bool? ?? false,
         isApproved: data['isApproved'] as bool? ?? false,
+        bookingId: data['bookingId'] as String?,
       );
 }
 
@@ -75,6 +82,7 @@ class AdminNotificationService {
     required String title,
     required String body,
     required String type,
+    String? bookingId,
   }) async {
     await _ensureLoaded();
     final item = AdminNotification(
@@ -85,6 +93,7 @@ class AdminNotificationService {
       createdAt: DateTime.now(),
       isRead: false,
       isApproved: false,
+      bookingId: bookingId,
     );
     _local.insert(0, item);
     await _saveAndEmit();
@@ -123,6 +132,10 @@ class AdminNotificationService {
     if (index < 0) return;
     _local[index] = _local[index].copyWith(isRead: true, isApproved: true);
     await _saveAndEmit();
+    final bookingId = _local[index].bookingId;
+    if (bookingId != null && bookingId.isNotEmpty) {
+      await CustomerBookingNotificationService.confirmBooking(bookingId);
+    }
     try {
       await _items.doc(id).update({'isRead': true, 'isApproved': true});
     } on FirebaseException {
