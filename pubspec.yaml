@@ -42,4 +42,5 @@ flutter:
 
   assets:
     - assets/image/
+    - assets/image/maqr.jpg
     - assets/images/bs_nguyen_xuan_hieu.jpg

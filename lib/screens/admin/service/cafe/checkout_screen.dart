@@ -39,7 +39,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
           const Divider(),
           ...widget.cart.entries.map(
-            (e) => ListTile(
+                (e) => ListTile(
               title: Text(widget.cartItems[e.key].name),
               trailing: Text(
                 "x${e.value} | ${_money(widget.cartItems[e.key].price * e.value)}",
@@ -89,19 +89,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   border: OutlineInputBorder(),
                 ),
                 items:
-                    snap.data?.docs
-                        .map(
-                          (t) => DropdownMenuItem(
-                            value: t.id,
-                            child: Text(t['name']),
-                          ),
-                        )
-                        .toList() ??
+                snap.data?.docs
+                    .map(
+                      (t) => DropdownMenuItem(
+                    value: t.id,
+                    child: Text(t['name']),
+                  ),
+                )
+                    .toList() ??
                     [],
                 onChanged: (v) {
                   _selectedTableId = v as String;
                   _selectedTableName = snap.data!.docs.firstWhere(
-                    (t) => t.id == v,
+                        (t) => t.id == v,
                   )['name'];
                 },
               ),
@@ -123,6 +123,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             groupValue: _paymentMethod,
             onChanged: (v) => setState(() => _paymentMethod = v!),
           ),
+
+          // --- ĐOẠN THÊM ẢNH MÃ QR BẮT ĐẦU TỪ ĐÂY ---
+          if (_paymentMethod == 'Mã QR') ...[
+            const SizedBox(height: 15),
+            Center(
+              child: Column(
+                children: [
+                  Image.asset(
+                    'assets/image/maqr.jpg',
+                    width: 250,
+                    height: 250,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "Vui lòng quét mã để thanh toán",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 15),
+          ],
+          // --- KẾT THÚC ĐOẠN THÊM ẢNH MÃ QR ---
+
         ],
       ),
       bottomNavigationBar: Padding(
@@ -148,10 +176,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               'items': widget.cart.entries
                   .map(
                     (e) => {
-                      'name': widget.cartItems[e.key].name,
-                      'qty': e.value,
-                    },
-                  )
+                  'name': widget.cartItems[e.key].name,
+                  'qty': e.value,
+                },
+              )
                   .toList(),
               'status': 'completed',
               'createdAt': FieldValue.serverTimestamp(),

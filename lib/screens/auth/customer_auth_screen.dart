@@ -49,12 +49,12 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
     final confirmPassword = confirmPasswordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      _showMessage('Em nhập email và mật khẩu trước nha.');
+      _showMessage('Hãy nhập email và mật khẩu trước nha.');
       return;
     }
 
     if (!isLoginMode && name.isEmpty) {
-      _showMessage('Em nhập họ tên trước nha.');
+      _showMessage('Hãy nhập họ tên trước nha.');
       return;
     }
 
@@ -142,7 +142,7 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
 
       if (!mounted) return;
 
-      _showMessage('Đã gửi email đặt lại mật khẩu. Em kiểm tra hộp thư nha.');
+      _showMessage('Đã gửi email đặt lại mật khẩu. Hãy kiểm tra hộp thư nha.');
     } catch (error) {
       if (!mounted) return;
 
@@ -188,7 +188,7 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
     final title = isLoginMode ? 'Đăng nhập' : 'Đăng ký';
 
     final subtitle = isLoginMode
-        ? 'Chào mừng em quay lại PetHub.'
+        ? 'Chào mừng bạn quay lại PetHub.'
         : 'Tạo tài khoản khách hàng để lưu hồ sơ và bài viết.';
 
     return Scaffold(
