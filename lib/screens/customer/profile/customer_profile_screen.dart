@@ -560,46 +560,74 @@ ${post.content}
     }
   }
 
-  Future<void> _logout() async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: const Text('Đăng xuất tài khoản?'),
-          content: const Text(
-            'Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng PetHub.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(false);
-              },
-              child: const Text('Hủy'),
-            ),
-            FilledButton.icon(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(true);
-              },
-              icon: const Icon(Icons.logout_rounded),
-              label: const Text('Đăng xuất'),
-            ),
-          ],
-        );
-      },
-    );
+  Future<void> _logout(BuildContext context) async {
+    final shouldLogout =
+        await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: const Text('Đăng xuất tài khoản?'),
+              content: const Text(
+                'Bạn sẽ quay về màn hình đăng nhập PetHub.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop(false);
+                  },
+                  child: const Text('Hủy'),
+                ),
+                FilledButton.icon(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop(true);
+                  },
+                  icon: const Icon(Icons.logout_rounded),
+                  label: const Text('Đăng xuất'),
+                ),
+              ],
+            );
+          },
+        ) ??
+            false;
 
-    if (shouldLogout != true) return;
+    if (!shouldLogout) {
+      return;
+    }
 
     try {
       await CustomerAuthService.logout();
-    } finally {
-      // Logout must still take the user to the login screen if an optional
-      // provider sign-out fails on web.
-      if (mounted) context.go('/customer-auth');
+
+      // Cho Firebase Auth cập nhật currentUser trước khi router kiểm tra.
+      await Future<void>.delayed(
+        const Duration(milliseconds: 150),
+      );
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              'Đăng xuất gặp lỗi: '
+                  '${error.toString().replaceFirst('Exception: ', '')}',
+            ),
+          ),
+        );
+
+      return;
     }
+
+    if (!context.mounted) {
+      return;
+    }
+
+    GoRouter.of(context).go('/customer-auth');
   }
 
   @override
