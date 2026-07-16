@@ -1,11 +1,75 @@
 import 'package:flutter/material.dart';
-import '../../../../theme/app_colors.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../services/customer_auth_service.dart';
+import '../../../theme/app_colors.dart';
 
 class AdminProfileScreen extends StatelessWidget {
   const AdminProfileScreen({super.key});
 
+  Future<void> _logout(BuildContext context) async {
+    final shouldLogout =
+        await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: const Text('Đăng xuất tài khoản?'),
+              content: const Text('Bạn sẽ quay về màn hình đăng nhập PetHub.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop(false);
+                  },
+                  child: const Text('Hủy'),
+                ),
+                FilledButton.icon(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop(true);
+                  },
+                  icon: const Icon(Icons.logout_rounded),
+                  label: const Text('Đăng xuất'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (!shouldLogout || !context.mounted) {
+      return;
+    }
+
+    try {
+      await CustomerAuthService.logout();
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Không thể đăng xuất: '
+            '${error.toString().replaceFirst('Exception: ', '')}',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    if (context.mounted) {
+      context.go('/customer-auth');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final adminUser = CustomerAuthService.currentUser;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: ListView(
@@ -24,21 +88,23 @@ class AdminProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          const Center(
+          Center(
             child: Column(
               children: [
                 Text(
-                  'Quản trị viên',
-                  style: TextStyle(
+                  adminUser?.displayName?.trim().isNotEmpty == true
+                      ? adminUser!.displayName!
+                      : 'Quản trị viên',
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textDark,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  'admin.pethub@gmail.com',
-                  style: TextStyle(
+                  adminUser?.email ?? 'Tài khoản quản trị',
+                  style: const TextStyle(
                     color: AppColors.textSoft,
                     fontWeight: FontWeight.w600,
                   ),
@@ -47,7 +113,6 @@ class AdminProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 36),
-
           const Text(
             'Quản trị hệ thống',
             style: TextStyle(
@@ -57,7 +122,6 @@ class AdminProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-
           _buildSettingsCard([
             _buildListTile(
               Icons.people_alt_rounded,
@@ -77,11 +141,10 @@ class AdminProfileScreen extends StatelessWidget {
               AppColors.sky,
             ),
           ]),
-
           const SizedBox(height: 36),
           OutlinedButton.icon(
-            onPressed: () {
-              // Xử lý đăng xuất Firebase Auth và điều hướng về trang Login
+            onPressed: () async {
+              await _logout(context);
             },
             icon: const Icon(Icons.logout_rounded),
             label: const Text(
@@ -136,9 +199,7 @@ class AdminProfileScreen extends StatelessWidget {
         size: 16,
         color: AppColors.textSoft,
       ),
-      onTap: () {
-        // Điều hướng đến các trang chức năng
-      },
+      onTap: () {},
     );
   }
 }

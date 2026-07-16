@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../screens/admin/admin_main_screen.dart';
 import '../screens/customer/profile/customer_profile_screen.dart';
 import '../screens/customer/profile/profile_menu_screens.dart';
-import '../screens/role_select_screen.dart';
+import '../services/customer_auth_service.dart';
 import '../screens/customer/customer_shell_screen.dart';
 import '../screens/customer/booking/customer_drink_order_screen.dart';
 import '../screens/customer/notifications/customer_notification_screen.dart';
@@ -16,17 +16,37 @@ import '../screens/customer/community/community_post.dart';
 import '../screens/auth/customer_auth_screen.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/customer-auth',
   overridePlatformDefaultLocation: true,
   debugLogDiagnostics: true,
+
+  redirect: (context, state) async {
+    final user = CustomerAuthService.currentUser;
+    final location = state.matchedLocation;
+
+    final isAuthRoute = location == '/customer-auth';
+    final isAdminRoute = location.startsWith('/admin');
+
+    if (user == null) {
+      return isAuthRoute ? null : '/customer-auth';
+    }
+
+    final role = await CustomerAuthService.getCurrentUserRole();
+    final isAdmin = role == 'admin';
+
+    if (isAdmin) {
+      return isAdminRoute ? null : '/admin';
+    }
+
+    if (isAuthRoute || isAdminRoute || location == '/') {
+      return '/customer';
+    }
+
+    return null;
+  },
+
   routes: [
-    GoRoute(
-      path: '/',
-      name: 'role',
-      builder: (context, state) {
-        return const RoleSelectScreen();
-      },
-    ),
+    GoRoute(path: '/', redirect: (context, state) => '/customer-auth'),
 
     GoRoute(
       path: '/customer-auth',

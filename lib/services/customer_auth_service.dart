@@ -16,6 +16,26 @@ class CustomerAuthService {
     return _auth.authStateChanges();
   }
 
+  static Future<String> getCurrentUserRole() async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      return 'guest';
+    }
+
+    final snapshot = await _firestore.collection('users').doc(user.uid).get();
+
+    final role = snapshot.data()?['role'];
+
+    return role == 'admin' ? 'admin' : 'customer';
+  }
+
+  static Future<String> getCurrentUserHomeRoute() async {
+    final role = await getCurrentUserRole();
+
+    return role == 'admin' ? '/admin' : '/customer';
+  }
+
   static Future<UserCredential> registerWithEmail({
     required String displayName,
     required String email,
@@ -144,11 +164,13 @@ class CustomerAuthService {
   }
 
   static Future<void> logout() async {
-    try {
-      await GoogleSignIn.instance.signOut();
-    } catch (_) {}
+    await _auth.signOut();
 
-    await FirebaseAuth.instance.signOut();
+    if (_isGoogleInitialized) {
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (_) {}
+    }
   }
 
   static Future<void> _ensureGoogleInitialized() async {

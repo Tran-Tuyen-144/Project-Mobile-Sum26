@@ -86,9 +86,13 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
         );
       }
 
-      if (!mounted) return;
+      final homeRoute = await CustomerAuthService.getCurrentUserHomeRoute();
 
-      context.go('/customer');
+      if (!mounted) {
+        return;
+      }
+
+      context.go(homeRoute);
     } catch (error) {
       if (!mounted) return;
 
@@ -110,9 +114,13 @@ class _CustomerAuthScreenState extends State<CustomerAuthScreen> {
     try {
       await CustomerAuthService.loginWithGoogle();
 
-      if (!mounted) return;
+      final homeRoute = await CustomerAuthService.getCurrentUserHomeRoute();
 
-      context.go('/customer');
+      if (!mounted) {
+        return;
+      }
+
+      context.go(homeRoute);
     } catch (error) {
       if (!mounted) return;
 
