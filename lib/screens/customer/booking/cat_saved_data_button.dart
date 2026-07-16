@@ -5,16 +5,7 @@ import '../../../storage/offline_drink_order_storage.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/soft_card.dart';
 
-const Map<int, String> _drinkNames = {
-  1: 'Latte Mây Xanh',
-  2: 'Cappuccino PetHub',
-  3: 'Trà Đào Cam Sả',
-  4: 'Trà Sữa Pastel',
-  5: 'Sinh Tố Dâu Mây',
-  6: 'Sinh Tố Bơ Sữa',
-  7: 'Cheesecake Mini',
-  8: 'Cookie Paw',
-};
+
 
 class CatSavedDataButton extends StatelessWidget {
   const CatSavedDataButton({super.key});
@@ -321,8 +312,8 @@ class _DrinkSavedTile extends StatelessWidget {
                     order.items.entries
                         .map(
                           (entry) =>
-                              '${_drinkNames[entry.key] ?? 'Món #${entry.key}'} x${entry.value}',
-                        )
+                      '${order.itemName(entry.key)} x${entry.value}',
+                    )
                         .join(', '),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

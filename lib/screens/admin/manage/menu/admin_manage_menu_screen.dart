@@ -1,62 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../theme/app_colors.dart';
+
+import '../../../../models/menu_item_data.dart';
 import '../../../../services/cloudinary_upload_service.dart';
+import '../../../../services/menu_repository.dart';
+import '../../../../theme/app_colors.dart';
 
 class AdminManageMenuScreen extends StatefulWidget {
   const AdminManageMenuScreen({super.key});
 
   @override
-  State<AdminManageMenuScreen> createState() => _AdminManageMenuScreenState();
+  State<AdminManageMenuScreen> createState() =>
+      _AdminManageMenuScreenState();
 }
 
-class _AdminManageMenuScreenState extends State<AdminManageMenuScreen> {
-  final CollectionReference _menuCollection = FirebaseFirestore.instance
-      .collection('menu_items');
+class _AdminManageMenuScreenState
+    extends State<AdminManageMenuScreen> {
+  late Future<void> _seedFuture;
 
-  // ĐÃ SỬA: Xóa chữ 'Khác' ở đây để không bị trùng lặp ở Dropdown
-  final List<String> _defaultCategories = [
-    'Cafe',
-    'Trà',
-    'Sinh tố',
-    'Bánh ngọt',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _seedFuture = MenuRepository.seedDefaultMenuIfNeeded();
+  }
 
-  final List<Map<String, dynamic>> _mockDrinks = [
-    {
-      "id": "M1",
-      "name": "Latte Mây Xanh",
-      "price": 45000,
-      "category": "Cafe",
-      "image": "",
-      "isFirebase": false,
-    },
-    {
-      "id": "M2",
-      "name": "Trà Đào Cam Sả",
-      "price": 42000,
-      "category": "Trà",
-      "image": "",
-      "isFirebase": false,
-    },
-    {
-      "id": "M3",
-      "name": "Sinh Tố Dâu Mây",
-      "price": 50000,
-      "category": "Sinh tố",
-      "image": "",
-      "isFirebase": false,
-    },
-  ];
-
-  // Hàm định dạng tiền tệ có dấu chấm phân cách
-  String formatCurrency(dynamic price) {
-    if (price == null) return '0';
-    String priceStr = price.toString();
-    return priceStr.replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
+  String formatCurrency(int price) {
+    return price.toString().replaceAllMapped(
+      RegExp(r'\B(?=(\d{3})+(?!\d))'),
+          (_) => '.',
     );
+  }
+
+  void _retrySeed() {
+    setState(() {
+      _seedFuture =
+          MenuRepository.seedDefaultMenuIfNeeded();
+    });
   }
 
   @override
@@ -69,227 +47,694 @@ class _AdminManageMenuScreenState extends State<AdminManageMenuScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _menuCollection.snapshots(),
-        builder: (context, snapshot) {
-          List<Map<String, dynamic>> menuItems = [];
-          if (snapshot.hasData) {
-            menuItems.addAll(
-              snapshot.data!.docs.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                data['id'] = doc.id;
-                data['isFirebase'] = true;
-                return data;
-              }),
+      body: FutureBuilder<void>(
+        future: _seedFuture,
+        builder: (context, seedSnapshot) {
+          if (seedSnapshot.connectionState ==
+              ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
             );
           }
-          menuItems.addAll(_mockDrinks);
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(20),
-            itemCount: menuItems.length,
-            itemBuilder: (context, index) {
-              final item = menuItems[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage:
-                        (item['image'] != null && item['image'] != "")
-                        ? NetworkImage(item['image'])
-                        : null,
-                    child: (item['image'] == null || item['image'] == "")
-                        ? const Icon(Icons.restaurant_menu)
-                        : null,
+          if (seedSnapshot.hasError) {
+            return _SeedErrorView(
+              message:
+              'Không thể khởi tạo thực đơn mặc định.\n'
+                  '${seedSnapshot.error}',
+              onRetry: _retrySeed,
+            );
+          }
+
+          return StreamBuilder<List<MenuItemData>>(
+            stream: MenuRepository.watchAllMenuItems(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text(
+                    'Không tải được thực đơn.\n'
+                        '${snapshot.error}',
+                    textAlign: TextAlign.center,
                   ),
-                  title: Text(
-                    item['name'],
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  // ĐÃ SỬA: Hiển thị giá tiền có định dạng
-                  subtitle: Text(
-                    "${formatCurrency(item['price'])}đ • ${item['category']}",
-                  ),
-                  trailing: item['isFirebase'] == true
-                      ? IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () =>
-                              _menuCollection.doc(item['id']).delete(),
-                        )
-                      : null,
-                  onTap: () => _showMenuForm(item: item),
-                ),
+                );
+              }
+
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              final menuItems = snapshot.data!;
+              final categories =
+              MenuRepository.categoriesFrom(
+                menuItems,
+                includeAll: false,
+              );
+
+              if (menuItems.isEmpty) {
+                return const Center(
+                  child: Text('Chưa có món trong thực đơn.'),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(20),
+                itemCount: menuItems.length,
+                itemBuilder: (context, index) {
+                  final item = menuItems[index];
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius.circular(15),
+                    ),
+                    child: ListTile(
+                      onTap: () => _showMenuForm(
+                        item: item,
+                        categories: categories,
+                      ),
+                      leading: _MenuAvatar(item: item),
+                      title: Text(
+                        item.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '${formatCurrency(item.price)}đ'
+                            ' • ${item.category}'
+                            '\n${item.sourceLabel}'
+                            ' • ${item.isActive ? 'Đang bán' : 'Đang ẩn'}',
+                      ),
+                      isThreeLine: true,
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: item.isActive
+                                ? 'Ẩn khỏi khách hàng'
+                                : 'Hiện cho khách hàng',
+                            onPressed: () {
+                              MenuRepository.setItemActive(
+                                itemId: item.id,
+                                isActive: !item.isActive,
+                              );
+                            },
+                            icon: Icon(
+                              item.isActive
+                                  ? Icons.visibility_rounded
+                                  : Icons
+                                  .visibility_off_rounded,
+                              color: item.isActive
+                                  ? Colors.green
+                                  : Colors.grey,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Sửa món',
+                            onPressed: () => _showMenuForm(
+                              item: item,
+                              categories: categories,
+                            ),
+                            icon: const Icon(
+                              Icons.edit_rounded,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Xóa món',
+                            onPressed: () =>
+                                _confirmDelete(item),
+                            icon: const Icon(
+                              Icons.delete_rounded,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               );
             },
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showMenuForm(),
-        label: const Text("Thêm món mới"),
-        icon: const Icon(Icons.add),
-        backgroundColor: AppColors.primary,
+      floatingActionButton: StreamBuilder<List<MenuItemData>>(
+        stream: MenuRepository.watchAllMenuItems(),
+        builder: (context, snapshot) {
+          final categories =
+          MenuRepository.categoriesFrom(
+            snapshot.data ?? const <MenuItemData>[],
+            includeAll: false,
+          );
+
+          return FloatingActionButton.extended(
+            onPressed: () => _showMenuForm(
+              categories: categories,
+            ),
+            label: const Text('Thêm món mới'),
+            icon: const Icon(Icons.add),
+            backgroundColor: AppColors.primary,
+          );
+        },
       ),
     );
   }
 
-  void _showMenuForm({Map<String, dynamic>? item}) {
-    final nameCtrl = TextEditingController(text: item?['name'] ?? '');
-    // ĐÃ SỬA: Tự động định dạng giá tiền khi mở form sửa
-    final priceCtrl = TextEditingController(
-      text: item != null ? formatCurrency(item['price']) : '',
-    );
-
-    // TỐI ƯU: Nếu danh mục cũ không có trong list mặc định, điền sẵn vào ô nhập "Khác"
-    bool isCustomCategory =
-        item != null && !_defaultCategories.contains(item['category']);
-    final newCatCtrl = TextEditingController(
-      text: isCustomCategory ? item['category'] : '',
-    );
-
-    String? currentImageUrl = item?['image'] ?? '';
-    String selectedCat = isCustomCategory
-        ? 'Khác'
-        : (item == null ? _defaultCategories.first : item['category']);
-    bool isUploading = false;
-
-    showDialog(
+  Future<void> _confirmDelete(MenuItemData item) async {
+    final accepted = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(item == null ? 'Thêm món mới' : 'Sửa món'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: () async {
-                    final image =
-                        await CloudinaryUploadService.pickImageFromGallery();
-                    if (image != null) {
-                      setDialogState(() => isUploading = true);
-                      final result =
-                          await CloudinaryUploadService.uploadImageFile(image);
-                      setDialogState(() {
-                        currentImageUrl =
-                            CloudinaryUploadService.optimizedImageUrl(
-                              result.imageUrl,
-                            );
-                        isUploading = false;
-                      });
-                    }
-                  },
-                  child: Container(
-                    height: 100,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: isUploading
-                        ? const Center(child: CircularProgressIndicator())
-                        : (currentImageUrl != null && currentImageUrl != ""
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    currentImageUrl!,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.add_a_photo,
-                                  color: Colors.grey,
-                                  size: 30,
-                                )),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Tên món',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: priceCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Giá tiền',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedCat,
-                  items: [..._defaultCategories, 'Khác']
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                      .toList(),
-                  onChanged: (val) => setDialogState(() => selectedCat = val!),
-                  decoration: const InputDecoration(
-                    labelText: 'Danh mục',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                if (selectedCat == 'Khác')
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: TextField(
-                      controller: newCatCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Nhập tên danh mục mới',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Xóa món'),
+          content: Text(
+            'Xóa "${item.name}" khỏi thực đơn?\n\n'
+                'Món sẽ biến mất ở cả Admin và khách hàng.',
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, false),
               child: const Text('Hủy'),
             ),
             ElevatedButton(
-              onPressed: isUploading
-                  ? null
-                  : () async {
-                      final cat = (selectedCat == 'Khác')
-                          ? newCatCtrl.text.trim()
-                          : selectedCat;
-                      if (cat.isEmpty) {
-                        return; // Không cho lưu nếu để trống danh mục "Khác"
-                      }
+              onPressed: () =>
+                  Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Xóa'),
+            ),
+          ],
+        );
+      },
+    );
 
-                      // ĐÃ SỬA: Lọc bỏ các dấu chấm, ký tự lạ để lấy lại số nguyên gốc
-                      String rawPrice = priceCtrl.text.replaceAll(
-                        RegExp(r'[^0-9]'),
-                        '',
+    if (accepted != true) {
+      return;
+    }
+
+    try {
+      await MenuRepository.deleteItem(item.id);
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã xóa ${item.name}.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không xóa được món: $error'),
+        ),
+      );
+    }
+  }
+
+  void _showMenuForm({
+    MenuItemData? item,
+    required List<String> categories,
+  }) {
+    const customCategoryValue = '__custom_category__';
+
+    final categoryOptions = <String>{
+      ...categories.where(
+            (category) => category.trim().isNotEmpty,
+      ),
+    }.toList();
+
+    if (categoryOptions.isEmpty) {
+      categoryOptions.addAll([
+        'Cafe',
+        'Trà',
+        'Sinh tố',
+        'Bánh ngọt',
+        'Khác',
+      ]);
+    }
+
+    final nameController = TextEditingController(
+      text: item?.name ?? '',
+    );
+
+    final descriptionController = TextEditingController(
+      text: item?.description ?? '',
+    );
+
+    final priceController = TextEditingController(
+      text: item == null
+          ? ''
+          : formatCurrency(item.price),
+    );
+
+    final newCategoryController =
+    TextEditingController();
+
+    String selectedCategory;
+
+    if (item != null &&
+        categoryOptions.contains(item.category)) {
+      selectedCategory = item.category;
+    } else {
+      selectedCategory = categoryOptions.first;
+    }
+
+    String currentImageUrl = item?.imageUrl ?? '';
+    bool isUploading = false;
+    bool isSaving = false;
+    bool isActive = item?.isActive ?? true;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            Future<void> uploadImage() async {
+              try {
+                final image =
+                await CloudinaryUploadService
+                    .pickImageFromGallery();
+
+                if (image == null) {
+                  return;
+                }
+
+                setDialogState(() {
+                  isUploading = true;
+                });
+
+                final result =
+                await CloudinaryUploadService
+                    .uploadImageFile(image);
+
+                setDialogState(() {
+                  currentImageUrl =
+                      CloudinaryUploadService
+                          .optimizedImageUrl(
+                        result.imageUrl,
                       );
-                      int finalPrice = int.tryParse(rawPrice) ?? 0;
 
-                      final data = {
-                        'name': nameCtrl.text,
-                        'price': finalPrice, // Sử dụng giá đã được chuẩn hóa
-                        'category': cat,
-                        'image': currentImageUrl,
-                      };
+                  isUploading = false;
+                });
+              } catch (error) {
+                setDialogState(() {
+                  isUploading = false;
+                });
 
-                      if (item != null && item['isFirebase'] == true) {
-                        await _menuCollection.doc(item['id']).update(data);
-                      } else if (item == null) {
-                        await _menuCollection.add(data);
-                      }
-                      if (mounted) Navigator.pop(dialogContext);
-                    },
-              child: const Text('Lưu'),
+                if (!dialogContext.mounted) {
+                  return;
+                }
+
+                ScaffoldMessenger.of(dialogContext)
+                    .showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Không tải được ảnh: $error',
+                    ),
+                  ),
+                );
+              }
+            }
+
+            Future<void> saveItem() async {
+              final name = nameController.text.trim();
+
+              final category = selectedCategory ==
+                  customCategoryValue
+                  ? newCategoryController.text.trim()
+                  : selectedCategory.trim();
+
+              final rawPrice =
+              priceController.text.replaceAll(
+                RegExp(r'[^0-9]'),
+                '',
+              );
+
+              final price = int.tryParse(rawPrice) ?? 0;
+
+              if (name.isEmpty) {
+                ScaffoldMessenger.of(dialogContext)
+                    .showSnackBar(
+                  const SnackBar(
+                    content:
+                    Text('Vui lòng nhập tên món.'),
+                  ),
+                );
+                return;
+              }
+
+              if (category.isEmpty) {
+                ScaffoldMessenger.of(dialogContext)
+                    .showSnackBar(
+                  const SnackBar(
+                    content:
+                    Text('Vui lòng nhập danh mục.'),
+                  ),
+                );
+                return;
+              }
+
+              if (price <= 0) {
+                ScaffoldMessenger.of(dialogContext)
+                    .showSnackBar(
+                  const SnackBar(
+                    content:
+                    Text('Giá món phải lớn hơn 0.'),
+                  ),
+                );
+                return;
+              }
+
+              setDialogState(() {
+                isSaving = true;
+              });
+
+              try {
+                if (item == null) {
+                  await MenuRepository.addItem(
+                    name: name,
+                    description:
+                    descriptionController.text,
+                    category: category,
+                    price: price,
+                    imageUrl: currentImageUrl,
+                    isActive: isActive,
+                  );
+                } else {
+                  await MenuRepository.updateItem(
+                    itemId: item.id,
+                    name: name,
+                    description:
+                    descriptionController.text,
+                    category: category,
+                    price: price,
+                    imageUrl: currentImageUrl,
+                    iconKey: item.iconKey,
+                    colorValue: item.colorValue,
+                    isActive: isActive,
+                  );
+                }
+
+                if (!dialogContext.mounted) {
+                  return;
+                }
+
+                Navigator.pop(dialogContext);
+              } catch (error) {
+                setDialogState(() {
+                  isSaving = false;
+                });
+
+                if (!dialogContext.mounted) {
+                  return;
+                }
+
+                ScaffoldMessenger.of(dialogContext)
+                    .showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Không lưu được món: $error',
+                    ),
+                  ),
+                );
+              }
+            }
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                item == null
+                    ? 'Thêm món mới'
+                    : 'Sửa món',
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: isUploading || isSaving
+                          ? null
+                          : uploadImage,
+                      child: Container(
+                        height: 110,
+                        width: 110,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius:
+                          BorderRadius.circular(12),
+                        ),
+                        child: isUploading
+                            ? const Center(
+                          child:
+                          CircularProgressIndicator(),
+                        )
+                            : currentImageUrl.isNotEmpty
+                            ? ClipRRect(
+                          borderRadius:
+                          BorderRadius
+                              .circular(12),
+                          child: Image.network(
+                            currentImageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (
+                                context,
+                                error,
+                                stackTrace,
+                                ) {
+                              return const Icon(
+                                Icons
+                                    .broken_image_rounded,
+                              );
+                            },
+                          ),
+                        )
+                            : const Icon(
+                          Icons.add_a_photo,
+                          color: Colors.grey,
+                          size: 32,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    TextField(
+                      controller: nameController,
+                      decoration:
+                      const InputDecoration(
+                        labelText: 'Tên món',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: descriptionController,
+                      minLines: 2,
+                      maxLines: 3,
+                      decoration:
+                      const InputDecoration(
+                        labelText: 'Mô tả',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: priceController,
+                      keyboardType:
+                      TextInputType.number,
+                      decoration:
+                      const InputDecoration(
+                        labelText: 'Giá tiền',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedCategory,
+                      items: [
+                        ...categoryOptions.map(
+                              (category) =>
+                              DropdownMenuItem(
+                                value: category,
+                                child: Text(category),
+                              ),
+                        ),
+                        const DropdownMenuItem(
+                          value: customCategoryValue,
+                          child:
+                          Text('Thêm danh mục mới'),
+                        ),
+                      ],
+                      onChanged: isSaving
+                          ? null
+                          : (value) {
+                        if (value == null) {
+                          return;
+                        }
+
+                        setDialogState(() {
+                          selectedCategory =
+                              value;
+                        });
+                      },
+                      decoration:
+                      const InputDecoration(
+                        labelText: 'Danh mục',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    if (selectedCategory ==
+                        customCategoryValue) ...[
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller:
+                        newCategoryController,
+                        decoration:
+                        const InputDecoration(
+                          labelText:
+                          'Tên danh mục mới',
+                          border:
+                          OutlineInputBorder(),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title:
+                      const Text('Hiển thị cho khách'),
+                      subtitle: Text(
+                        isActive
+                            ? 'Khách hàng đang thấy món này'
+                            : 'Món đang bị ẩn khỏi khách hàng',
+                      ),
+                      value: isActive,
+                      onChanged: isSaving
+                          ? null
+                          : (value) {
+                        setDialogState(() {
+                          isActive = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSaving
+                      ? null
+                      : () =>
+                      Navigator.pop(dialogContext),
+                  child: const Text('Hủy'),
+                ),
+                ElevatedButton(
+                  onPressed: isUploading || isSaving
+                      ? null
+                      : saveItem,
+                  child: isSaving
+                      ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child:
+                    CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  )
+                      : const Text('Lưu'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _MenuAvatar extends StatelessWidget {
+  final MenuItemData item;
+
+  const _MenuAvatar({
+    required this.item,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      backgroundColor: item.color,
+      child: item.imageUrl.isEmpty
+          ? Icon(
+        item.icon,
+        color: AppColors.primary,
+      )
+          : ClipOval(
+        child: Image.network(
+          item.imageUrl,
+          width: 44,
+          height: 44,
+          fit: BoxFit.cover,
+          errorBuilder: (
+              context,
+              error,
+              stackTrace,
+              ) {
+            return Icon(
+              item.icon,
+              color: AppColors.primary,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _SeedErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _SeedErrorView({
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.cloud_off_rounded,
+              size: 50,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Thử lại'),
             ),
           ],
         ),
