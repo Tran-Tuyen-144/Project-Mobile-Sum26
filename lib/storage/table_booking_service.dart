@@ -55,7 +55,11 @@ class TableBookingItem {
 /// Single local source of truth for the customer booking grid and admin table
 /// plan.  It intentionally works when Firestore permissions are unavailable.
 class TableBookingService {
-  static const branches = ['PetHub'];
+  static const branches = [
+    'PetHub Quận 1',
+    'PetHub Bình Thạnh',
+    'PetHub Thủ Đức',
+  ];
   static const _storageKey = 'table_booking_map_v1';
   static final Map<String, List<TableBookingItem>> _tablesByBranch = {};
   static final Map<String, StreamController<List<TableBookingItem>>>
@@ -72,13 +76,11 @@ class TableBookingService {
 
   static List<TableBookingItem> tablesFor(String branch) {
     initializeTables();
-    _tablesByBranch.putIfAbsent(branch, () => _defaultTables(branch));
     return List.unmodifiable(_tablesByBranch[branch] ?? const []);
   }
 
   static Stream<List<TableBookingItem>> tableStream(String branch) {
     initializeTables();
-    _tablesByBranch.putIfAbsent(branch, () => _defaultTables(branch));
     final controller = _controllers.putIfAbsent(
       branch,
       () => StreamController<List<TableBookingItem>>.broadcast(),
@@ -89,10 +91,7 @@ class TableBookingService {
 
   static Future<void> bookTable(String branch, int tableId) async {
     initializeTables();
-    final tables = _tablesByBranch.putIfAbsent(
-      branch,
-      () => _defaultTables(branch),
-    );
+    final tables = _tablesByBranch[branch] ?? [];
     if (!tables.any((table) => table.tableId == tableId && !table.isBooked)) {
       throw StateError('Bàn này không còn trống.');
     }
