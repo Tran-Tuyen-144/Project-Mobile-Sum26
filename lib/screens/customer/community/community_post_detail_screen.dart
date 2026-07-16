@@ -12,7 +12,6 @@ import '../../../services/customer_saved_post_service.dart';
 import '../../../services/firebase_community_comment_service.dart';
 import '../../../services/firebase_community_service.dart';
 import '../../../theme/app_colors.dart';
-import '../../../widgets/soft_card.dart';
 import 'community_post.dart';
 
 class PostDetailArgs {
@@ -50,19 +49,24 @@ class PostDetailResult {
 class CommunityPostDetailScreen extends StatefulWidget {
   final PostDetailArgs args;
 
-  const CommunityPostDetailScreen({super.key, required this.args});
+  const CommunityPostDetailScreen({
+    super.key,
+    required this.args,
+  });
 
   @override
   State<CommunityPostDetailScreen> createState() =>
       _CommunityPostDetailScreenState();
 }
 
-class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
+class _CommunityPostDetailScreenState
+    extends State<CommunityPostDetailScreen> {
   late CommunityPost post;
   late bool isLiked;
   late bool isSaved;
 
-  final TextEditingController commentController = TextEditingController();
+  final TextEditingController commentController =
+  TextEditingController();
 
   CustomerProfile? currentProfile;
 
@@ -101,49 +105,54 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
   }
 
   void _listenToPost() {
-    _postSubscription = FirebaseCommunityService.watchPost(post.id).listen(
-      (latestPost) {
-        if (!mounted) {
-          return;
-        }
+    _postSubscription =
+        FirebaseCommunityService.watchPost(post.id).listen(
+              (latestPost) {
+            if (!mounted) {
+              return;
+            }
 
-        if (latestPost == null) {
-          unawaited(_handleDeletedPost());
-          return;
-        }
+            if (latestPost == null) {
+              unawaited(_handleDeletedPost());
+              return;
+            }
 
-        final userId = currentProfile?.uid ?? '';
-        final currentComments = post.commentList;
+            final userId = currentProfile?.uid ?? '';
+            final currentComments = post.commentList;
 
-        final currentCommentCount = isLoadingComments
-            ? latestPost.commentCount
-            : currentComments.length;
+            final currentCommentCount = isLoadingComments
+                ? latestPost.commentCount
+                : currentComments.length;
 
-        setState(() {
-          post = latestPost.copyWith(
-            commentList: currentComments,
-            commentCount: currentCommentCount,
-          );
+            setState(() {
+              post = latestPost.copyWith(
+                commentList: currentComments,
+                commentCount: currentCommentCount,
+              );
 
-          if (userId.isNotEmpty) {
-            isLiked = latestPost.likedBy.contains(userId);
-          }
-        });
-      },
-      onError: (Object error) {
-        if (!mounted || _isHandlingDeletedPost) {
-          return;
-        }
+              if (userId.isNotEmpty) {
+                isLiked = latestPost.likedBy.contains(userId);
+              }
+            });
+          },
+          onError: (Object error) {
+            if (!mounted || _isHandlingDeletedPost) {
+              return;
+            }
 
-        _showMessage('Không cập nhật được bài viết: $error');
-      },
-    );
+            _showMessage(
+              'Không cập nhật được bài viết: $error',
+            );
+          },
+        );
   }
 
   void _listenToComments() {
     _commentSubscription =
-        FirebaseCommunityCommentService.watchComments(post.id).listen(
-          (comments) {
+        FirebaseCommunityCommentService.watchComments(
+          post.id,
+        ).listen(
+              (comments) {
             if (!mounted || _isHandlingDeletedPost) {
               return;
             }
@@ -166,7 +175,9 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
               isLoadingComments = false;
             });
 
-            _showMessage('Không tải được bình luận: $error');
+            _showMessage(
+              'Không tải được bình luận: $error',
+            );
           },
         );
   }
@@ -182,7 +193,9 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
     await _commentSubscription?.cancel();
 
     final userId =
-        currentProfile?.uid ?? FirebaseAuth.instance.currentUser?.uid ?? '';
+        currentProfile?.uid ??
+            FirebaseAuth.instance.currentUser?.uid ??
+            '';
 
     if (userId.isNotEmpty) {
       try {
@@ -207,7 +220,11 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(content: Text('Bài viết không còn tồn tại.')),
+        const SnackBar(
+          content: Text(
+            'Bài viết không còn tồn tại.',
+          ),
+        ),
       );
 
     context.pop();
@@ -215,7 +232,8 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
 
   Future<void> _loadCurrentProfile() async {
     try {
-      final profile = await CustomerProfileService.getCurrentProfile();
+      final profile =
+      await CustomerProfileService.getCurrentProfile();
 
       if (!mounted || _isHandlingDeletedPost) {
         return;
@@ -262,16 +280,25 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
     return name.isEmpty ? 'Ẩn danh PetHub' : name;
   }
 
-  String _publicAvatarIconKey(CustomerProfile profile) {
+  String _publicAvatarIconKey(
+      CustomerProfile profile,
+      ) {
     final iconKey = profile.avatarIconKey.trim();
 
-    return iconKey.isEmpty ? 'default_person' : iconKey;
+    return iconKey.isEmpty
+        ? 'default_person'
+        : iconKey;
   }
 
-  String _anonymousAvatarIconKey(CustomerProfile profile) {
-    final iconKey = profile.anonymousAvatarIconKey.trim();
+  String _anonymousAvatarIconKey(
+      CustomerProfile profile,
+      ) {
+    final iconKey =
+    profile.anonymousAvatarIconKey.trim();
 
-    return iconKey.isEmpty ? 'anonymous' : iconKey;
+    return iconKey.isEmpty
+        ? 'anonymous'
+        : iconKey;
   }
 
   void _close() {
@@ -284,7 +311,11 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
     });
 
     context.pop(
-      PostDetailResult(post: post, isLiked: isLiked, isSaved: isSaved),
+      PostDetailResult(
+        post: post,
+        isLiked: isLiked,
+        isSaved: isSaved,
+      ),
     );
   }
 
@@ -296,7 +327,9 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
     final profile = currentProfile;
 
     if (profile == null) {
-      _showMessage('Không tìm thấy hồ sơ người dùng.');
+      _showMessage(
+        'Không tìm thấy hồ sơ người dùng.',
+      );
       return;
     }
 
@@ -305,14 +338,18 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
     }
 
     final userId = profile.uid;
-    final shouldLike = !post.likedBy.contains(userId);
+    final shouldLike =
+    !post.likedBy.contains(userId);
 
     setState(() {
       isUpdatingLike = true;
     });
 
     try {
-      await FirebaseCommunityService.toggleLike(post: post, userId: userId);
+      await FirebaseCommunityService.toggleLike(
+        post: post,
+        userId: userId,
+      );
 
       if (!mounted || _isHandlingDeletedPost) {
         return;
@@ -326,7 +363,9 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
         return;
       }
 
-      _showMessage('Không cập nhật được lượt thích: $error');
+      _showMessage(
+        'Không cập nhật được lượt thích: $error',
+      );
     } finally {
       if (mounted && !_isHandlingDeletedPost) {
         setState(() {
@@ -344,7 +383,9 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
     final profile = currentProfile;
 
     if (profile == null) {
-      _showMessage('Không tìm thấy hồ sơ người dùng.');
+      _showMessage(
+        'Không tìm thấy hồ sơ người dùng.',
+      );
       return;
     }
 
@@ -370,7 +411,11 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
         return;
       }
 
-      _showMessage(newSavedState ? 'Đã lưu bài viết.' : 'Đã bỏ lưu bài viết.');
+      _showMessage(
+        newSavedState
+            ? 'Đã lưu bài viết.'
+            : 'Đã bỏ lưu bài viết.',
+      );
     } catch (error) {
       if (!mounted || _isHandlingDeletedPost) {
         return;
@@ -380,7 +425,9 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
         isSaved = !newSavedState;
       });
 
-      _showMessage('Không cập nhật được bài viết đã lưu: $error');
+      _showMessage(
+        'Không cập nhật được bài viết đã lưu: $error',
+      );
     } finally {
       if (mounted && !_isHandlingDeletedPost) {
         setState(() {
@@ -399,12 +446,16 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
     final text = commentController.text.trim();
 
     if (profile == null) {
-      _showMessage('Không tìm thấy hồ sơ người dùng.');
+      _showMessage(
+        'Không tìm thấy hồ sơ người dùng.',
+      );
       return;
     }
 
     if (text.isEmpty) {
-      _showMessage('Nhập bình luận trước nha.');
+      _showMessage(
+        'Nhập bình luận trước nha.',
+      );
       return;
     }
 
@@ -428,7 +479,10 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
           : _publicName(profile),
       isAnonymous: commentAsAnonymous,
       avatarIconKey: avatarIconKey,
-      colorKey: CommunityPost.colorKeyFromIconKey(avatarIconKey),
+      colorKey:
+      CommunityPost.colorKeyFromIconKey(
+        avatarIconKey,
+      ),
       content: text,
       timeAgo: 'Vừa xong',
       createdAt: DateTime.now().toUtc(),
@@ -446,19 +500,24 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
 
       commentController.clear();
 
-      _showMessage('Đã gửi bình luận.');
+      _showMessage(
+        'Đã gửi bình luận.',
+      );
     } catch (error) {
       if (!mounted || _isHandlingDeletedPost) {
         return;
       }
 
-      if (error is FirebaseException && error.code == 'unavailable') {
+      if (error is FirebaseException &&
+          error.code == 'unavailable') {
         _showMessage(
           'Không kết nối được Firestore. '
-          'Kiểm tra mạng rồi thử lại nha.',
+              'Kiểm tra mạng rồi thử lại nha.',
         );
       } else {
-        _showMessage('Không gửi được bình luận: $error');
+        _showMessage(
+          'Không gửi được bình luận: $error',
+        );
       }
     } finally {
       if (mounted && !_isHandlingDeletedPost) {
@@ -469,15 +528,20 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
     }
   }
 
-  Future<void> _editComment(PostComment comment) async {
+  Future<void> _editComment(
+      PostComment comment,
+      ) async {
     if (_isHandlingDeletedPost) {
       return;
     }
 
     final profile = currentProfile;
 
-    if (profile == null || comment.authorId != profile.uid) {
-      _showMessage('Bạn chỉ có thể sửa bình luận của mình.');
+    if (profile == null ||
+        comment.authorId != profile.uid) {
+      _showMessage(
+        'Bạn chỉ có thể sửa bình luận của mình.',
+      );
       return;
     }
 
@@ -488,59 +552,117 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
       useSafeArea: true,
       builder: (dialogContext) {
         return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
           scrollable: true,
-          insetPadding: const EdgeInsets.symmetric(
+          insetPadding:
+          const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 24,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius:
+            BorderRadius.circular(24),
+            side: const BorderSide(
+              color: AppColors.peach,
+            ),
           ),
-          title: const Text('Sửa bình luận'),
+          title: const Text(
+            'Sửa bình luận',
+          ),
           content: SizedBox(
-            width: MediaQuery.sizeOf(dialogContext).width,
+            width:
+            MediaQuery.sizeOf(
+              dialogContext,
+            ).width,
             child: TextFormField(
               initialValue: comment.content,
               autofocus: true,
               minLines: 2,
               maxLines: 5,
-              keyboardType: TextInputType.multiline,
-              textInputAction: TextInputAction.newline,
+              keyboardType:
+              TextInputType.multiline,
+              textInputAction:
+              TextInputAction.newline,
               onChanged: (value) {
                 editedText = value;
               },
               decoration: InputDecoration(
-                hintText: 'Nhập nội dung bình luận mới...',
+                hintText:
+                'Nhập nội dung bình luận mới...',
+                filled: true,
+                fillColor: AppColors.peach
+                    .withValues(alpha: 0.25),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius:
+                  BorderRadius.circular(16),
+                  borderSide:
+                  const BorderSide(
+                    color: AppColors.peach,
+                  ),
                 ),
-                contentPadding: const EdgeInsets.all(14),
+                enabledBorder:
+                OutlineInputBorder(
+                  borderRadius:
+                  BorderRadius.circular(16),
+                  borderSide:
+                  const BorderSide(
+                    color: AppColors.peach,
+                  ),
+                ),
+                focusedBorder:
+                OutlineInputBorder(
+                  borderRadius:
+                  BorderRadius.circular(16),
+                  borderSide:
+                  const BorderSide(
+                    color: AppColors.primary,
+                    width: 1.5,
+                  ),
+                ),
+                contentPadding:
+                const EdgeInsets.all(14),
               ),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop();
+                Navigator.of(
+                  dialogContext,
+                ).pop();
               },
               child: const Text('Hủy'),
             ),
             FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor:
+                AppColors.primary,
+              ),
               onPressed: () {
-                final newText = editedText.trim();
+                final newText =
+                editedText.trim();
 
                 if (newText.isEmpty) {
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  ScaffoldMessenger.of(
+                    dialogContext,
+                  ).showSnackBar(
                     const SnackBar(
-                      content: Text('Bình luận không được để trống.'),
+                      content: Text(
+                        'Bình luận không được để trống.',
+                      ),
                     ),
                   );
                   return;
                 }
 
-                Navigator.of(dialogContext).pop(newText);
+                Navigator.of(
+                  dialogContext,
+                ).pop(newText);
               },
-              icon: const Icon(Icons.save_rounded),
+              icon: const Icon(
+                Icons.save_rounded,
+              ),
               label: const Text('Lưu'),
             ),
           ],
@@ -548,14 +670,18 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
       },
     );
 
-    if (!mounted || _isHandlingDeletedPost || result == null) {
+    if (!mounted ||
+        _isHandlingDeletedPost ||
+        result == null) {
       return;
     }
 
     final newContent = result.trim();
 
     if (newContent.isEmpty) {
-      _showMessage('Bình luận không được để trống.');
+      _showMessage(
+        'Bình luận không được để trống.',
+      );
       return;
     }
 
@@ -570,7 +696,8 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
     );
 
     try {
-      await FirebaseCommunityCommentService.updateComment(
+      await FirebaseCommunityCommentService
+          .updateComment(
         postId: post.id,
         comment: updatedComment,
         currentUserId: profile.uid,
@@ -580,52 +707,80 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
         return;
       }
 
-      _showMessage('Đã sửa bình luận.');
+      _showMessage(
+        'Đã sửa bình luận.',
+      );
     } catch (error) {
       if (!mounted || _isHandlingDeletedPost) {
         return;
       }
 
-      _showMessage('Không sửa được bình luận: $error');
+      _showMessage(
+        'Không sửa được bình luận: $error',
+      );
     }
   }
 
-  Future<void> _deleteComment(PostComment comment) async {
+  Future<void> _deleteComment(
+      PostComment comment,
+      ) async {
     if (_isHandlingDeletedPost) {
       return;
     }
 
     final profile = currentProfile;
 
-    if (profile == null || comment.authorId != profile.uid) {
-      _showMessage('Bạn chỉ có thể xóa bình luận của mình.');
+    if (profile == null ||
+        comment.authorId != profile.uid) {
+      _showMessage(
+        'Bạn chỉ có thể xóa bình luận của mình.',
+      );
       return;
     }
 
-    final shouldDelete = await showDialog<bool>(
+    final shouldDelete =
+    await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius:
+            BorderRadius.circular(24),
+            side: const BorderSide(
+              color: AppColors.peach,
+            ),
           ),
-          title: const Text('Xóa bình luận?'),
+          title: const Text(
+            'Xóa bình luận?',
+          ),
           content: const Text(
             'Bình luận này sẽ bị xóa '
-            'khỏi bài viết.',
+                'khỏi bài viết.',
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop(false);
+                Navigator.of(
+                  dialogContext,
+                ).pop(false);
               },
               child: const Text('Hủy'),
             ),
             FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor:
+                Colors.redAccent,
+              ),
               onPressed: () {
-                Navigator.of(dialogContext).pop(true);
+                Navigator.of(
+                  dialogContext,
+                ).pop(true);
               },
-              icon: const Icon(Icons.delete_outline_rounded),
+              icon: const Icon(
+                Icons.delete_outline_rounded,
+              ),
               label: const Text('Xóa'),
             ),
           ],
@@ -633,12 +788,15 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
       },
     );
 
-    if (!mounted || _isHandlingDeletedPost || shouldDelete != true) {
+    if (!mounted ||
+        _isHandlingDeletedPost ||
+        shouldDelete != true) {
       return;
     }
 
     try {
-      await FirebaseCommunityCommentService.deleteComment(
+      await FirebaseCommunityCommentService
+          .deleteComment(
         postId: post.id,
         commentId: comment.id,
         currentUserId: profile.uid,
@@ -648,13 +806,17 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
         return;
       }
 
-      _showMessage('Đã xóa bình luận.');
+      _showMessage(
+        'Đã xóa bình luận.',
+      );
     } catch (error) {
       if (!mounted || _isHandlingDeletedPost) {
         return;
       }
 
-      _showMessage('Không xóa được bình luận: $error');
+      _showMessage(
+        'Không xóa được bình luận: $error',
+      );
     }
   }
 
@@ -668,7 +830,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
         ShareParams(
           title: 'Chia sẻ bài viết PetHub',
           text:
-              '''
+          '''
 ${post.authorName} chia sẻ trên PetHub:
 
 ${post.content}
@@ -682,7 +844,9 @@ ${post.content}
         return;
       }
 
-      _showMessage('Không chia sẻ được: $error');
+      _showMessage(
+        'Không chia sẻ được: $error',
+      );
     }
   }
 
@@ -693,16 +857,24 @@ ${post.content}
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = currentProfile?.uid ?? '';
+    final currentUserId =
+        currentProfile?.uid ?? '';
 
     return PopScope(
       canPop: _allowPop,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvokedWithResult: (
+          didPop,
+          result,
+          ) {
         if (didPop) {
           return;
         }
@@ -710,36 +882,63 @@ ${post.content}
         _close();
       },
       child: Scaffold(
+        backgroundColor: Colors.white,
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
+          backgroundColor: Colors.white,
+          foregroundColor:
+          AppColors.textDark,
+          surfaceTintColor:
+          Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
           leading: IconButton(
             onPressed: _close,
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+            ),
           ),
-          title: const Text('Chi tiết bài viết'),
+          title: const Text(
+            'Chi tiết bài viết',
+          ),
           actions: [
             IconButton(
-              tooltip: isSaved ? 'Bỏ lưu bài viết' : 'Lưu bài viết',
-              onPressed: isUpdatingSave || _isHandlingDeletedPost
+              tooltip: isSaved
+                  ? 'Bỏ lưu bài viết'
+                  : 'Lưu bài viết',
+              onPressed: isUpdatingSave ||
+                  _isHandlingDeletedPost
                   ? null
                   : _toggleSave,
               icon: isUpdatingSave
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                width: 20,
+                height: 20,
+                child:
+                CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                ),
+              )
                   : Icon(
-                      isSaved
-                          ? Icons.bookmark_rounded
-                          : Icons.bookmark_border_rounded,
-                      color: isSaved ? AppColors.primary : null,
-                    ),
+                isSaved
+                    ? Icons.bookmark_rounded
+                    : Icons
+                    .bookmark_border_rounded,
+                color: isSaved
+                    ? AppColors.primary
+                    : AppColors.textSoft,
+              ),
             ),
           ],
         ),
         body: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
+          padding: const EdgeInsets.fromLTRB(
+            18,
+            8,
+            18,
+            20,
+          ),
           children: [
             _AuthorBlock(post: post),
             if (post.hasTag) ...[
@@ -749,7 +948,10 @@ ${post.content}
             const SizedBox(height: 16),
             Text(
               post.content,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(
                 height: 1.45,
                 color: AppColors.textDark,
               ),
@@ -758,27 +960,33 @@ ${post.content}
               const SizedBox(height: 16),
               _PostDetailImage(post: post),
             ],
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Row(
               children: [
                 _DetailActionButton(
                   icon: isLiked
                       ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  label: isUpdatingLike ? '...' : '$displayLikes',
+                      : Icons
+                      .favorite_border_rounded,
+                  label: isUpdatingLike
+                      ? '...'
+                      : '$displayLikes',
                   active: isLiked,
-                  onTap: isUpdatingLike || _isHandlingDeletedPost
+                  onTap: isUpdatingLike ||
+                      _isHandlingDeletedPost
                       ? () {}
                       : _toggleLike,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 _DetailActionButton(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  label: '${post.totalComments}',
+                  icon: Icons
+                      .chat_bubble_outline_rounded,
+                  label:
+                  '${post.totalComments}',
                   active: false,
                   onTap: () {},
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 _DetailActionButton(
                   icon: Icons.share_rounded,
                   label: 'Chia sẻ',
@@ -787,59 +995,91 @@ ${post.content}
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-            Text(
-              'Tất cả bình luận',
-              style: Theme.of(context).textTheme.titleMedium,
+            const SizedBox(height: 26),
+            Row(
+              children: [
+                Container(
+                  width: 5,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius:
+                    BorderRadius.circular(99),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Tất cả bình luận',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(
+                    color:
+                    AppColors.textDark,
+                    fontWeight:
+                    FontWeight.w900,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             if (isLoadingComments)
               const Center(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: CircularProgressIndicator(),
+                  padding:
+                  EdgeInsets.symmetric(
+                    vertical: 24,
+                  ),
+                  child:
+                  CircularProgressIndicator(
+                    color: AppColors.primary,
+                  ),
                 ),
               )
             else if (post.commentList.isEmpty)
-              const SoftCard(
-                color: Colors.white,
-                child: Text(
-                  'Chưa có bình luận nào. '
-                  'Hãy là người đầu tiên bình luận.',
-                  style: TextStyle(color: AppColors.textSoft),
-                ),
-              )
+              const _EmptyCommentCard()
             else
-              ...post.commentList.map((comment) {
-                final canManage =
-                    currentUserId.isNotEmpty &&
-                    comment.authorId == currentUserId;
+              ...post.commentList.map(
+                    (comment) {
+                  final canManage =
+                      currentUserId.isNotEmpty &&
+                          comment.authorId ==
+                              currentUserId;
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _CommentTile(
-                    comment: comment,
-                    canManage: canManage,
-                    onEdit: () {
-                      _editComment(comment);
-                    },
-                    onDelete: () {
-                      _deleteComment(comment);
-                    },
-                  ),
-                );
-              }),
+                  return Padding(
+                    padding:
+                    const EdgeInsets.only(
+                      bottom: 12,
+                    ),
+                    child: _CommentTile(
+                      comment: comment,
+                      canManage: canManage,
+                      onEdit: () {
+                        _editComment(comment);
+                      },
+                      onDelete: () {
+                        _deleteComment(comment);
+                      },
+                    ),
+                  );
+                },
+              ),
           ],
         ),
-        bottomNavigationBar: _CommentInputBar(
+        bottomNavigationBar:
+        _CommentInputBar(
           controller: commentController,
-          isLoadingProfile: isLoadingProfile,
+          isLoadingProfile:
+          isLoadingProfile,
           isSending: isSendingComment,
-          commentAsAnonymous: commentAsAnonymous,
-          isPostDeleted: _isHandlingDeletedPost,
+          commentAsAnonymous:
+          commentAsAnonymous,
+          isPostDeleted:
+          _isHandlingDeletedPost,
           onToggleAnonymous: () {
             setState(() {
-              commentAsAnonymous = !commentAsAnonymous;
+              commentAsAnonymous =
+              !commentAsAnonymous;
             });
           },
           onSend: _sendComment,
@@ -849,38 +1089,104 @@ ${post.content}
   }
 }
 
-class _AuthorBlock extends StatelessWidget {
-  final CommunityPost post;
+class _PastelCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final VoidCallback? onTap;
+  final double borderRadius;
 
-  const _AuthorBlock({required this.post});
+  const _PastelCard({
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+    this.onTap,
+    this.borderRadius = 24,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SoftCard(
+    return Material(
       color: Colors.white,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius:
+        BorderRadius.circular(
+          borderRadius,
+        ),
+        side: const BorderSide(
+          color: AppColors.peach,
+          width: 1.3,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius:
+        BorderRadius.circular(
+          borderRadius,
+        ),
+        child: Padding(
+          padding: padding,
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthorBlock extends StatelessWidget {
+  final CommunityPost post;
+
+  const _AuthorBlock({
+    required this.post,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _PastelCard(
       child: Row(
         children: [
           CircleAvatar(
             radius: 28,
-            backgroundColor: post.color,
-            child: Icon(post.petIcon, color: AppColors.textDark),
+            backgroundColor:
+            AppColors.peach,
+            child: Icon(
+              post.petIcon,
+              color: AppColors.primary,
+              size: 27,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
               children: [
                 Text(
                   post.authorName,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(fontSize: 16),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(
+                    fontSize: 16,
+                    fontWeight:
+                    FontWeight.w900,
+                    color:
+                    AppColors.textDark,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '${post.authorRole} • '
-                  '${post.displayTimeLabel}',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                      '${post.displayTimeLabel}',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(
+                    color:
+                    AppColors.textSoft,
+                  ),
                 ),
               ],
             ),
@@ -894,22 +1200,32 @@ class _AuthorBlock extends StatelessWidget {
 class _TagChip extends StatelessWidget {
   final CommunityPost post;
 
-  const _TagChip({required this.post});
+  const _TagChip({
+    required this.post,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding:
+        const EdgeInsets.symmetric(
+          horizontal: 13,
+          vertical: 8,
+        ),
         decoration: BoxDecoration(
-          color: post.color.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(99),
+          color: AppColors.peach,
+          borderRadius:
+          BorderRadius.circular(99),
+          border: Border.all(
+            color: AppColors.primarySoft,
+          ),
         ),
         child: Text(
           '#${post.category}',
           style: const TextStyle(
-            color: AppColors.textDark,
+            color: AppColors.primary,
             fontWeight: FontWeight.w900,
             fontSize: 12,
           ),
@@ -919,31 +1235,39 @@ class _TagChip extends StatelessWidget {
   }
 }
 
-class _PostDetailImage extends StatefulWidget {
+class _PostDetailImage
+    extends StatefulWidget {
   final CommunityPost post;
 
-  const _PostDetailImage({required this.post});
+  const _PostDetailImage({
+    required this.post,
+  });
 
   @override
-  State<_PostDetailImage> createState() => _PostDetailImageState();
+  State<_PostDetailImage> createState() =>
+      _PostDetailImageState();
 }
 
-class _PostDetailImageState extends State<_PostDetailImage> {
+class _PostDetailImageState
+    extends State<_PostDetailImage> {
   int currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    final imageUrls = widget.post.allImageUrls;
+    final imageUrls =
+        widget.post.allImageUrls;
 
     if (imageUrls.isEmpty) {
       return const SizedBox.shrink();
     }
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius:
+      BorderRadius.circular(24),
       child: AspectRatio(
         aspectRatio: 16 / 10,
         child: Stack(
+          fit: StackFit.expand,
           children: [
             PageView.builder(
               itemCount: imageUrls.length,
@@ -952,60 +1276,150 @@ class _PostDetailImageState extends State<_PostDetailImage> {
                   currentIndex = index;
                 });
               },
-              itemBuilder: (context, index) {
-                final imageUrl = CloudinaryUploadService.optimizedImageUrl(
+              itemBuilder: (
+                  context,
+                  index,
+                  ) {
+                final imageUrl =
+                CloudinaryUploadService
+                    .optimizedImageUrl(
                   imageUrls[index],
                 );
 
-                return Image.network(
-                  imageUrl,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) {
-                      return child;
-                    }
+                return GestureDetector(
+                  behavior:
+                  HitTestBehavior.opaque,
+                  onTap: () {
+                    _openImageViewer(
+                      context,
+                      imageUrls: imageUrls,
+                      initialIndex: index,
+                    );
+                  },
+                  child: Image.network(
+                    imageUrl,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (
+                        context,
+                        child,
+                        loadingProgress,
+                        ) {
+                      if (loadingProgress ==
+                          null) {
+                        return child;
+                      }
 
-                    return Container(
-                      color: AppColors.cream,
-                      alignment: Alignment.center,
-                      child: const CircularProgressIndicator(),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: AppColors.cream,
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Không tải được ảnh.',
-                        style: TextStyle(
-                          color: AppColors.textSoft,
-                          fontWeight: FontWeight.w700,
+                      return Container(
+                        color:
+                        AppColors.peach,
+                        alignment:
+                        Alignment.center,
+                        child: const
+                        CircularProgressIndicator(
+                          color:
+                          AppColors.primary,
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                    errorBuilder: (
+                        context,
+                        error,
+                        stackTrace,
+                        ) {
+                      return Container(
+                        color:
+                        AppColors.peach,
+                        alignment:
+                        Alignment.center,
+                        child: const Column(
+                          mainAxisSize:
+                          MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons
+                                  .broken_image_outlined,
+                              color: AppColors
+                                  .textSoft,
+                              size: 34,
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Không tải được ảnh.',
+                              style: TextStyle(
+                                color:
+                                AppColors
+                                    .textSoft,
+                                fontWeight:
+                                FontWeight
+                                    .w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
+            ),
+            Positioned(
+              left: 12,
+              bottom: 12,
+              child: IgnorePointer(
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary
+                        .withValues(
+                      alpha: 0.92,
+                    ),
+                    borderRadius:
+                    BorderRadius.circular(
+                      13,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.fullscreen_rounded,
+                    color: Colors.white,
+                    size: 25,
+                  ),
+                ),
+              ),
             ),
             if (imageUrls.length > 1)
               Positioned(
                 top: 12,
                 right: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
+                  padding:
+                  const EdgeInsets
+                      .symmetric(
+                    horizontal: 11,
+                    vertical: 7,
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(99),
+                  decoration:
+                  BoxDecoration(
+                    color: AppColors.primary
+                        .withValues(
+                      alpha: 0.92,
+                    ),
+                    borderRadius:
+                    BorderRadius.circular(
+                      99,
+                    ),
                   ),
                   child: Text(
-                    '${currentIndex + 1}/${imageUrls.length}',
-                    style: const TextStyle(
+                    '${currentIndex + 1}'
+                        '/${imageUrls.length}',
+                    style:
+                    const TextStyle(
                       color: Colors.white,
-                      fontWeight: FontWeight.w800,
+                      fontWeight:
+                      FontWeight.w900,
                       fontSize: 12,
                     ),
                   ),
@@ -1018,7 +1432,201 @@ class _PostDetailImageState extends State<_PostDetailImage> {
   }
 }
 
-class _DetailActionButton extends StatelessWidget {
+Future<void> _openImageViewer(
+    BuildContext context, {
+      required List<String> imageUrls,
+      required int initialIndex,
+    }) async {
+  if (imageUrls.isEmpty) {
+    return;
+  }
+
+  final safeIndex = initialIndex
+      .clamp(0, imageUrls.length - 1)
+      .toInt();
+
+  await Navigator.of(
+    context,
+    rootNavigator: true,
+  ).push<void>(
+    MaterialPageRoute<void>(
+      fullscreenDialog: true,
+      builder: (context) {
+        return _FullScreenImageViewer(
+          imageUrls: imageUrls,
+          initialIndex: safeIndex,
+        );
+      },
+    ),
+  );
+}
+
+class _FullScreenImageViewer
+    extends StatefulWidget {
+  final List<String> imageUrls;
+  final int initialIndex;
+
+  const _FullScreenImageViewer({
+    required this.imageUrls,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_FullScreenImageViewer>
+  createState() =>
+      _FullScreenImageViewerState();
+}
+
+class _FullScreenImageViewerState
+    extends State<_FullScreenImageViewer> {
+  late final PageController pageController;
+  late int currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+
+    currentIndex = widget.initialIndex;
+
+    pageController = PageController(
+      initialPage: widget.initialIndex,
+    );
+  }
+
+  @override
+  void dispose() {
+    pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        surfaceTintColor:
+        Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          tooltip: 'Quay lại',
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+          ),
+        ),
+        title: Text(
+          '${currentIndex + 1}'
+              '/${widget.imageUrls.length}',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Đóng',
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: const Icon(
+              Icons.close_rounded,
+            ),
+          ),
+        ],
+      ),
+      body: PageView.builder(
+        controller: pageController,
+        itemCount: widget.imageUrls.length,
+        onPageChanged: (index) {
+          setState(() {
+            currentIndex = index;
+          });
+        },
+        itemBuilder: (
+            context,
+            index,
+            ) {
+          final imageUrl =
+          CloudinaryUploadService
+              .optimizedImageUrl(
+            widget.imageUrls[index],
+          );
+
+          return InteractiveViewer(
+            minScale: 1,
+            maxScale: 5,
+            panEnabled: true,
+            scaleEnabled: true,
+            boundaryMargin:
+            const EdgeInsets.all(100),
+            child: Center(
+              child: Image.network(
+                imageUrl,
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.contain,
+                loadingBuilder: (
+                    context,
+                    child,
+                    loadingProgress,
+                    ) {
+                  if (loadingProgress == null) {
+                    return child;
+                  }
+
+                  return const Center(
+                    child:
+                    CircularProgressIndicator(
+                      color:
+                      AppColors.primary,
+                    ),
+                  );
+                },
+                errorBuilder: (
+                    context,
+                    error,
+                    stackTrace,
+                    ) {
+                  return const Center(
+                    child: Column(
+                      mainAxisSize:
+                      MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons
+                              .broken_image_outlined,
+                          color: Colors.white70,
+                          size: 48,
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'Không tải được ảnh.',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight:
+                            FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _DetailActionButton
+    extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool active;
@@ -1036,15 +1644,48 @@ class _DetailActionButton extends StatelessWidget {
     return Expanded(
       child: OutlinedButton.icon(
         onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          backgroundColor: active
+              ? AppColors.peach
+              : Colors.white,
+          foregroundColor: active
+              ? AppColors.primary
+              : AppColors.textSoft,
+          side: BorderSide(
+            color: active
+                ? AppColors.primary
+                : AppColors.peach,
+            width: 1.2,
+          ),
+          padding:
+          const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 12,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius:
+            BorderRadius.circular(16),
+          ),
+        ),
         icon: Icon(
           icon,
-          color: active ? AppColors.primary : AppColors.textSoft,
+          size: 20,
+          color: active
+              ? AppColors.primary
+              : AppColors.textSoft,
         ),
         label: Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: active ? AppColors.primary : AppColors.textSoft,
+            color: active
+                ? AppColors.primary
+                : AppColors.textSoft,
             fontWeight: FontWeight.w800,
+            fontSize: 12,
           ),
         ),
       ),
@@ -1052,7 +1693,43 @@ class _DetailActionButton extends StatelessWidget {
   }
 }
 
-class _CommentTile extends StatelessWidget {
+class _EmptyCommentCard
+    extends StatelessWidget {
+  const _EmptyCommentCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return const _PastelCard(
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor:
+            AppColors.peach,
+            child: Icon(
+              Icons.chat_bubble_outline_rounded,
+              color: AppColors.primary,
+            ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Chưa có bình luận nào. '
+                  'Hãy là người đầu tiên bình luận.',
+              style: TextStyle(
+                color: AppColors.textSoft,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CommentTile
+    extends StatelessWidget {
   final PostComment comment;
   final bool canManage;
   final VoidCallback onEdit;
@@ -1067,59 +1744,98 @@ class _CommentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SoftCard(
-      color: Colors.white,
+    return _PastelCard(
       padding: const EdgeInsets.all(14),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+        CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            radius: 19,
-            backgroundColor: comment.color,
-            child: Icon(comment.petIcon, size: 18, color: AppColors.textDark),
+            radius: 20,
+            backgroundColor:
+            AppColors.peach,
+            child: Icon(
+              comment.petIcon,
+              size: 19,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     Expanded(
                       child: Text(
                         '${comment.authorName} • '
-                        '${comment.displayTimeLabel}',
-                        style: const TextStyle(
-                          color: AppColors.textDark,
-                          fontWeight: FontWeight.w800,
+                            '${comment.displayTimeLabel}',
+                        style:
+                        const TextStyle(
+                          color:
+                          AppColors.textDark,
+                          fontWeight:
+                          FontWeight.w900,
                           fontSize: 12,
                         ),
                       ),
                     ),
                     if (canManage)
                       PopupMenuButton<String>(
+                        color: Colors.white,
+                        surfaceTintColor:
+                        Colors.white,
                         icon: const Icon(
-                          Icons.more_horiz_rounded,
-                          color: AppColors.textSoft,
+                          Icons
+                              .more_horiz_rounded,
+                          color: AppColors
+                              .textSoft,
+                        ),
+                        shape:
+                        RoundedRectangleBorder(
+                          borderRadius:
+                          BorderRadius.circular(
+                            18,
+                          ),
+                          side:
+                          const BorderSide(
+                            color:
+                            AppColors.peach,
+                          ),
                         ),
                         onSelected: (value) {
                           if (value == 'edit') {
                             onEdit();
                           }
 
-                          if (value == 'delete') {
+                          if (value ==
+                              'delete') {
                             onDelete();
                           }
                         },
-                        itemBuilder: (context) {
+                        itemBuilder: (
+                            context,
+                            ) {
                           return const [
                             PopupMenuItem(
                               value: 'edit',
                               child: Row(
                                 children: [
-                                  Icon(Icons.edit_rounded),
-                                  SizedBox(width: 8),
-                                  Text('Sửa bình luận'),
+                                  Icon(
+                                    Icons
+                                        .edit_rounded,
+                                    color:
+                                    AppColors
+                                        .primary,
+                                  ),
+                                  SizedBox(
+                                    width: 8,
+                                  ),
+                                  Text(
+                                    'Sửa bình luận',
+                                  ),
                                 ],
                               ),
                             ),
@@ -1128,13 +1844,21 @@ class _CommentTile extends StatelessWidget {
                               child: Row(
                                 children: [
                                   Icon(
-                                    Icons.delete_outline_rounded,
-                                    color: Colors.redAccent,
+                                    Icons
+                                        .delete_outline_rounded,
+                                    color: Colors
+                                        .redAccent,
                                   ),
-                                  SizedBox(width: 8),
+                                  SizedBox(
+                                    width: 8,
+                                  ),
                                   Text(
                                     'Xóa bình luận',
-                                    style: TextStyle(color: Colors.redAccent),
+                                    style:
+                                    TextStyle(
+                                      color: Colors
+                                          .redAccent,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1144,12 +1868,12 @@ class _CommentTile extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 5),
                 Text(
                   comment.content,
                   style: const TextStyle(
                     color: AppColors.textSoft,
-                    height: 1.35,
+                    height: 1.4,
                   ),
                 ),
               ],
@@ -1161,7 +1885,8 @@ class _CommentTile extends StatelessWidget {
   }
 }
 
-class _CommentInputBar extends StatelessWidget {
+class _CommentInputBar
+    extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoadingProfile;
   final bool isSending;
@@ -1182,48 +1907,129 @@ class _CommentInputBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final disabled = isLoadingProfile || isSending || isPostDeleted;
+    final disabled =
+        isLoadingProfile ||
+            isSending ||
+            isPostDeleted;
 
     return Material(
-      color: AppColors.cream,
+      color: Colors.white,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      surfaceTintColor:
+      Colors.transparent,
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              top: BorderSide(
+                color: AppColors.peach,
+              ),
+            ),
+          ),
+          padding:
+          const EdgeInsets.fromLTRB(
+            12,
+            9,
+            12,
+            10,
+          ),
           child: Row(
             children: [
               IconButton(
                 tooltip: commentAsAnonymous
                     ? 'Đổi sang công khai'
                     : 'Đổi sang ẩn danh',
-                onPressed: disabled ? null : onToggleAnonymous,
+                onPressed: disabled
+                    ? null
+                    : onToggleAnonymous,
+                style: IconButton.styleFrom(
+                  backgroundColor:
+                  AppColors.peach,
+                  foregroundColor:
+                  AppColors.primary,
+                ),
                 icon: Icon(
                   commentAsAnonymous
                       ? Icons.face_rounded
                       : Icons.person_rounded,
-                  color: AppColors.primary,
                 ),
               ),
+              const SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   controller: controller,
                   enabled: !disabled,
                   minLines: 1,
                   maxLines: 4,
-                  textInputAction: TextInputAction.newline,
-                  decoration: InputDecoration(
+                  textInputAction:
+                  TextInputAction.newline,
+                  decoration:
+                  InputDecoration(
                     hintText: isPostDeleted
                         ? 'Bài viết đã bị xóa.'
                         : commentAsAnonymous
                         ? 'Viết bình luận ẩn danh...'
                         : 'Viết bình luận công khai...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(22),
-                      borderSide: BorderSide.none,
-                    ),
                     filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(
+                    fillColor: AppColors.peach
+                        .withValues(
+                      alpha: 0.35,
+                    ),
+                    border:
+                    OutlineInputBorder(
+                      borderRadius:
+                      BorderRadius.circular(
+                        22,
+                      ),
+                      borderSide:
+                      const BorderSide(
+                        color:
+                        AppColors.peach,
+                      ),
+                    ),
+                    enabledBorder:
+                    OutlineInputBorder(
+                      borderRadius:
+                      BorderRadius.circular(
+                        22,
+                      ),
+                      borderSide:
+                      const BorderSide(
+                        color:
+                        AppColors.peach,
+                      ),
+                    ),
+                    focusedBorder:
+                    OutlineInputBorder(
+                      borderRadius:
+                      BorderRadius.circular(
+                        22,
+                      ),
+                      borderSide:
+                      const BorderSide(
+                        color:
+                        AppColors.primary,
+                        width: 1.5,
+                      ),
+                    ),
+                    disabledBorder:
+                    OutlineInputBorder(
+                      borderRadius:
+                      BorderRadius.circular(
+                        22,
+                      ),
+                      borderSide:
+                      const BorderSide(
+                        color:
+                        AppColors.peach,
+                      ),
+                    ),
+                    contentPadding:
+                    const EdgeInsets
+                        .symmetric(
                       horizontal: 16,
                       vertical: 12,
                     ),
@@ -1232,14 +2038,29 @@ class _CommentInputBar extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               IconButton.filled(
-                onPressed: disabled ? null : onSend,
+                onPressed:
+                disabled ? null : onSend,
+                style: IconButton.styleFrom(
+                  backgroundColor:
+                  AppColors.primary,
+                  foregroundColor:
+                  Colors.white,
+                  disabledBackgroundColor:
+                  AppColors.primarySoft,
+                ),
                 icon: isSending
                     ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.send_rounded),
+                  width: 18,
+                  height: 18,
+                  child:
+                  CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+                    : const Icon(
+                  Icons.send_rounded,
+                ),
               ),
             ],
           ),
