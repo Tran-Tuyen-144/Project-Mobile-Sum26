@@ -23,7 +23,6 @@ class CustomerBookingScreen extends StatefulWidget {
 }
 
 class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
-  int selectedBranch = 0;
   int selectedGuest = 2;
   int? selectedTable;
   String? selectedTableName;
@@ -37,11 +36,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
   List<BookingHistoryItem> _bookingHistory = [];
   final Set<String> _locallyBookedTables = {};
 
-  final branches = const [
-    'PetHub Quận 1',
-    'PetHub Bình Thạnh',
-    'PetHub Thủ Đức',
-  ];
+  static const String _venueName = 'PetHub';
 
   final tables = const [
     _TableItem(id: 1, name: 'Bàn A1', seats: 2, status: TableStatus.available),
@@ -134,24 +129,6 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
 
           const SizedBox(height: 24),
 
-          const SectionTitle(title: 'Chọn chi nhánh'),
-
-          const SizedBox(height: 12),
-
-          _BranchSelector(
-            branches: branches,
-            selectedIndex: selectedBranch,
-            onSelected: (index) {
-              setState(() {
-                selectedBranch = index;
-                selectedTable = null;
-                selectedTableName = null;
-              });
-            },
-          ),
-
-          const SizedBox(height: 24),
-
           SectionTitle(
             title: 'Chọn bàn',
             actionText: 'Thêm bàn',
@@ -165,11 +142,11 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
           const SizedBox(height: 12),
 
           StreamBuilder<List<TableBookingItem>>(
-            stream: TableBookingService.tableStream(branches[selectedBranch]),
+            stream: TableBookingService.tableStream(_venueName),
             builder: (context, snapshot) {
               final isLoading =
                   snapshot.connectionState == ConnectionState.waiting;
-              final branch = branches[selectedBranch];
+              const branch = _venueName;
               final tableItems = snapshot.data?.isNotEmpty == true
                   ? snapshot.data!
                   : _localTableItems(branch);
@@ -277,7 +254,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
           const SizedBox(height: 26),
 
           _BookingSummary(
-            branch: branches[selectedBranch],
+            branch: _venueName,
             day: selectedDayText,
             time: selectedTimeText,
             guests: selectedGuest,
@@ -287,29 +264,6 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
           ),
 
           const SizedBox(height: 18),
-
-          if (_bookingHistory.isNotEmpty) ...[
-            SectionTitle(
-              title: 'Lịch sử đặt bàn',
-              actionText: '${_bookingHistory.length} lịch',
-            ),
-            const SizedBox(height: 12),
-            _BookingHistoryList(
-              bookings: _bookingHistory.take(3).toList(),
-              onCancel: (booking) async {
-                await BookingHistoryStorage.updateStatus(
-                  booking.id,
-                  BookingStatus.cancelled,
-                );
-                await TableBookingService.releaseTable(
-                  booking.branch,
-                  booking.tableId,
-                );
-                await _loadBookingHistory();
-              },
-            ),
-            const SizedBox(height: 18),
-          ],
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -337,7 +291,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
                               petNames: const [],
                               petStatus: '',
                               customerName: customerName,
-                              branch: branches[selectedBranch],
+                              branch: _venueName,
                               day: selectedDayText,
                               time: selectedTimeText,
                               guests: selectedGuest,
@@ -406,10 +360,10 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
                       }
                       final tableName =
                           selectedTableName ?? 'Bàn $selectedTable';
-                      final branch = branches[selectedBranch];
+                      const branch = _venueName;
                       final tableId = selectedTable!;
                       final now = DateTime.now();
-                      var bookingStatus = BookingStatus.confirmed;
+                      var bookingStatus = BookingStatus.pendingApproval;
                       final bookingData = BookingConfirmData(
                         branch: branch,
                         day: selectedDayText,
@@ -495,7 +449,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
     final tableId = selectedTable;
     if (tableId == null) return null;
 
-    final liveTables = TableBookingService.tablesFor(branches[selectedBranch]);
+    final liveTables = TableBookingService.tablesFor(_venueName);
     for (final table in liveTables) {
       if (table.tableId == tableId) return table.seats;
     }
@@ -513,7 +467,7 @@ class _CustomerBookingScreenState extends State<CustomerBookingScreen> {
     );
     if (data == null) return;
     await TableBookingService.addTable(
-      branch: branches[selectedBranch],
+      branch: _venueName,
       name: data['name'] as String? ?? '',
       seats: int.tryParse(data['seats']?.toString() ?? '') ?? 2,
     );

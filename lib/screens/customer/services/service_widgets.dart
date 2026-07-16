@@ -748,27 +748,6 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
                 setState(() => _selectedTherapy = value ?? _selectedTherapy),
           ),
           const SizedBox(height: 12),
-          SoftCard(
-            color: AppColors.sky,
-            child: Row(
-              children: [
-                const CircleAvatar(
-                  radius: 26,
-                  backgroundImage: AssetImage(
-                    'assets/images/bs_nguyen_xuan_hieu.jpg',
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Bác sĩ phụ trách: $_doctorForTherapy',
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: _healthConcern,
             decoration: const InputDecoration(
@@ -1106,7 +1085,6 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
       case 'Thú y':
         return {
           'Phương pháp hỗ trợ': _selectedTherapy,
-          'Bác sĩ phụ trách': _doctorForTherapy,
           'Vấn đề cần hỗ trợ': _healthConcern,
           'Thời gian triệu chứng': _symptomDuration,
         };
@@ -1157,14 +1135,6 @@ class _ServiceDetailSheetState extends State<ServiceDetailSheet> {
         ) ??
         false;
   }
-
-  String get _doctorForTherapy => switch (_selectedTherapy) {
-    'Châm cứu' => 'BS. Nguyễn Xuân Hiếu • Châm cứu & giảm đau',
-    'Laser therapy' => 'BS. Nguyễn Xuân Hiếu • Laser & phục hồi mô',
-    'Vật lý trị liệu' => 'BS. Nguyễn Xuân Hiếu • Phục hồi vận động',
-    'Thảo dược / dinh dưỡng' => 'BS. Nguyễn Xuân Hiếu • Dinh dưỡng & thảo dược',
-    _ => 'BS. Nguyễn Xuân Hiếu • Khám tổng quát',
-  };
 
   Future<bool> _showZaloPayPayment() async {
     final paymentCode = 'ZLP-${DateTime.now().millisecondsSinceEpoch}';

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../services/customer_booking_notification_service.dart';
 import '../../theme/app_colors.dart';
 import 'customer_home_screen.dart';
 import 'booking/customer_booking_screen.dart';
 import 'services/customer_services_screen.dart';
-import 'map/customer_map_screen.dart';
 import 'community/customer_community_screen.dart';
 
 class CustomerShellScreen extends StatefulWidget {
@@ -24,7 +24,6 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
     'PetHub',
     'Đặt bàn',
     'Dịch vụ',
-    'Bản đồ',
     'Cộng đồng',
   ];
 
@@ -62,16 +61,13 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
         onOpenBooking: () => _goToTab(1),
         onOpenOrder: () => context.push('/order'),
         onOpenServices: () => _goToTab(2),
-        onOpenMap: () => _goToTab(3),
-        onOpenCommunity: () => _goToTab(4),
+        onOpenCommunity: () => _goToTab(3),
         onOpenPetProfile: () => context.push('/pet-profile'),
       ),
 
       const CustomerBookingScreen(),
 
       const CustomerServicesScreen(),
-
-      const CustomerMapScreen(),
 
       const CustomerCommunityScreen(),
     ];
@@ -90,11 +86,19 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
           ),
           title: Text(_titles[_currentIndex]),
           actions: [
-            IconButton(
-              onPressed: () {
-                context.push('/notifications');
+            StreamBuilder<List<CustomerBookingNotification>>(
+              stream: CustomerBookingNotificationService.watch(),
+              builder: (context, snapshot) {
+                final count = snapshot.data?.length ?? 0;
+                return IconButton(
+                  onPressed: () => context.push('/notifications'),
+                  icon: Badge.count(
+                    count: count,
+                    isLabelVisible: count > 0,
+                    child: const Icon(Icons.notifications_none_rounded),
+                  ),
+                );
               },
-              icon: const Icon(Icons.notifications_none_rounded),
             ),
             IconButton(
               onPressed: () {
@@ -132,11 +136,6 @@ class _CustomerShellScreenState extends State<CustomerShellScreen> {
               icon: Icon(Icons.spa_outlined),
               selectedIcon: Icon(Icons.spa_rounded, color: AppColors.primary),
               label: 'Dịch vụ',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.map_outlined),
-              selectedIcon: Icon(Icons.map_rounded, color: AppColors.primary),
-              label: 'Map',
             ),
             NavigationDestination(
               icon: Icon(Icons.forum_outlined),

@@ -8,7 +8,6 @@ class CustomerHomeScreen extends StatelessWidget {
   final VoidCallback onOpenBooking;
   final VoidCallback onOpenOrder;
   final VoidCallback onOpenServices;
-  final VoidCallback onOpenMap;
   final VoidCallback onOpenCommunity;
   final VoidCallback onOpenPetProfile;
 
@@ -17,7 +16,6 @@ class CustomerHomeScreen extends StatelessWidget {
     required this.onOpenBooking,
     required this.onOpenOrder,
     required this.onOpenServices,
-    required this.onOpenMap,
     required this.onOpenCommunity,
     required this.onOpenPetProfile,
   });
@@ -65,15 +63,6 @@ class CustomerHomeScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: _QuickActionCard(
-                  icon: Icons.map_rounded,
-                  title: 'Tìm quán',
-                  color: AppColors.sky,
-                  onTap: onOpenMap,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _QuickActionCard(
                   icon: Icons.forum_rounded,
                   title: 'Cộng đồng',
                   color: AppColors.lavender,
@@ -106,18 +95,6 @@ class CustomerHomeScreen extends StatelessWidget {
               ),
             ],
           ),
-
-          const SizedBox(height: 26),
-
-          SectionTitle(
-            title: 'Chi nhánh gần bạn',
-            actionText: 'Xem thêm',
-            onActionTap: onOpenMap,
-          ),
-
-          const SizedBox(height: 12),
-
-          _BranchList(onOpenMap: onOpenMap),
 
           const SizedBox(height: 26),
 
@@ -234,78 +211,6 @@ class _QuickActionCard extends StatelessWidget {
             ).textTheme.titleMedium?.copyWith(fontSize: 16),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _BranchList extends StatelessWidget {
-  final VoidCallback onOpenMap;
-
-  const _BranchList({required this.onOpenMap});
-
-  @override
-  Widget build(BuildContext context) {
-    final branches = [
-      {
-        'name': 'PetHub Quận 1',
-        'address': 'Cafe mèo • 1.2 km',
-        'color': AppColors.mint,
-        'icon': Icons.location_on_rounded,
-      },
-      {
-        'name': 'PetHub Bình Thạnh',
-        'address': 'Cafe cún • 2.8 km',
-        'color': AppColors.sky,
-        'icon': Icons.location_on_rounded,
-      },
-      {
-        'name': 'PetHub Thủ Đức',
-        'address': 'Pet cafe & spa • 5.4 km',
-        'color': AppColors.lavender,
-        'icon': Icons.location_on_rounded,
-      },
-    ];
-
-    return SizedBox(
-      height: 150,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: branches.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final item = branches[index];
-
-          return SizedBox(
-            width: 230,
-            child: SoftCard(
-              color: item['color'] as Color,
-              onTap: onOpenMap,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    item['icon'] as IconData,
-                    color: AppColors.textDark,
-                    size: 30,
-                  ),
-                  const Spacer(),
-                  Text(
-                    item['name'] as String,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium?.copyWith(fontSize: 16),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item['address'] as String,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
   }

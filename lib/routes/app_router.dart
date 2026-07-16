@@ -99,14 +99,14 @@ final GoRouter appRouter = GoRouter(
       path: '/map',
       name: 'map',
       builder: (context, state) {
-        return const CustomerShellScreen(initialIndex: 3);
+        return const CustomerShellScreen(initialIndex: 0);
       },
     ),
     GoRoute(
       path: '/community',
       name: 'community',
       builder: (context, state) {
-        return const CustomerShellScreen(initialIndex: 4);
+        return const CustomerShellScreen(initialIndex: 3);
       },
     ),
     GoRoute(
@@ -184,7 +184,7 @@ final GoRouter appRouter = GoRouter(
             data:
                 data ??
                 const BookingConfirmData(
-                  branch: 'PetHub Quận 1',
+                  branch: 'PetHub',
                   day: 'Hôm nay',
                   time: '18:00',
                   guests: 2,

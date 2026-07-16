@@ -316,9 +316,7 @@ class _DoctorProfileCard extends StatelessWidget {
         children: [
           const CircleAvatar(
             radius: 34,
-            backgroundImage: AssetImage(
-              'assets/images/bs_nguyen_xuan_hieu.jpg',
-            ),
+            child: Icon(Icons.medical_services_rounded),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -326,12 +324,12 @@ class _DoctorProfileCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'BS. Nguyễn Xuân Hiếu',
+                  'Đội ngũ thú y PetHub',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Khám tổng quát • Châm cứu • Laser • Phục hồi vận động',
+                  'Khám tổng quát • Chăm sóc và phục hồi cho thú cưng',
                   style: TextStyle(height: 1.35),
                 ),
               ],

@@ -36,7 +36,7 @@ const List<PetNotification> petNotifications = [
   PetNotification(
     id: 1,
     title: 'Sắp tới giờ đặt bàn',
-    message: 'Bạn có lịch đặt bàn tại PetHub Quận 1 lúc 18:00 hôm nay.',
+    message: 'Bạn có lịch đặt bàn tại PetHub lúc 18:00 hôm nay.',
     time: '5 phút trước',
     type: 'Đặt bàn',
     isRead: false,
